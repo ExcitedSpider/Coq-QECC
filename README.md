@@ -1,22 +1,68 @@
-# Coq Program Verification Template
+# Coq-QECC
 
-[![Docker CI][docker-action-shield]][docker-action-link]
+# Formalism of the Stabilizer Theory 
 
-[docker-action-shield]: https://github.com/coq-community/coq-program-verification-template/actions/workflows/docker-action.yml/badge.svg?branch=master
-[docker-action-link]: https://github.com/coq-community/coq-program-verification-template/actions/workflows/docker-action.yml
+Author: Chew-Yi <qiuyif@student.unimelb.edu.au>
 
-Template project for program verification in Coq.
-Uses the Verified Software Toolchain and a classic binary
-search program in C as an example.
+This "Stabilizer" package is the formalism and verification of the quantum stabilizer theory.
 
-## Meta
+## Introduction to Math Background
 
-- License: [Unlicense](LICENSE) (change to your license of choice)
-- Compatible Coq versions: 8.16 or later
-- Additional dependencies:
-  - [CompCert](http://compcert.inria.fr) 3.13.1 or later
-  - [Verified Software Toolchain](https://vst.cs.princeton.edu) 2.13 or 2.14
-- Coq namespace: `ProgramVerificationTemplate`
+https://qubit.guide/7-stabilisers
+
+## Build this Project
+
+```bash
+opam repo add coq-released https://coq.inria.fr/opam/released
+opam pin coq-sqir https://github.com/inQWIRE/SQIR.git
+opam install . --deps-only
+
+# compile default mathcomp version
+make 
+
+# compile barebone version
+make barebone
+```
+
+## Structure Description
+
+There are two packages in the project.
+- barebone. Barebone is the initial attempt to formalize stabilizer using a from-scratch style. Only quantumLib is used in the project.
+- mathcomp. As the name suggests, we later did the formalization again using mathcomp and ssreflect, quantum-lib. 
+
+```
+.
+├── barebone 
+│   ├── ExtraSpecs.v # extra properties
+│   ├── Group.v # from-scratch group definition
+│   ├── PauliList.v # Coq.List based n-qubit pauli string
+│   ├── PauliString.v # Coq.Vector-based n-qubit pauli string
+│   ├── Pauli.v # inductively defined 1-qubit pauli operator
+│   ├── Stablizer.v # quantum stabilizer theory
+│   └── dune
+├── mathcomp
+│   ├── PauliGroup.v # Pauli group definition based on math-comp
+│   ├── Action.v # definitions of group actions
+│   ├── Stabilizer.v # quantum stabilizer theory
+│   ├── PauliProps.v # extra verified properties of pauli group
+│   ├── ExtraSpecs.v # extra definitions of specifications (TODO: replace with mathcomp)
+│   ├── WellForm.v # theories related to state well-formness 
+│   ├── Example.v # Some examples for demonstrating stabilizers
+│   ├── Assumption.v # Assumptions we used 
+│   ├── Adapter.v # adaptor to barebone.PauliString
+│   └── dune
+└── readme.md
+```
+
+## Status
+
+- Done: The single-qubit Pauli group.
+- Done: The n-qubit Pauli group
+- Done: Theorems of stabilizer theories. e.g. commute/anti-commute relations.
+- Done: Stabilizer Theories using mathcomp formalism
+- WIP: examples of proving larger QECC programs correct
+- WIP: fill in the holes of formalism.
+Verification 
 
 ## Building instructions
 
@@ -26,98 +72,4 @@ The recommended way to install Coq and other dependencies is via
 the [Coq Platform](https://github.com/coq/platform/releases/latest).
 To install dependencies manually via [opam](https://opam.ocaml.org/doc/Install.html):
 ```shell
-opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq.8.19.2 coq-compcert.3.13.1 coq-vst.2.14
 ```
-
-### Obtaining the project
-
-```shell
-git clone https://github.com/coq-community/coq-program-verification-template.git
-cd coq-program-verification-template
-```
-
-### Option 1: building the project using coq_makefile
-
-With make and the [coq_makefile tool][coq-makefile-url] bundled with Coq:
-```shell
-make   # or make -j <number-of-cores-on-your-machine> 
-```
-
-### Option 2: building the project using Dune
-
-With the [Dune build system][dune-url], version 3.5 or later:
-```shell
-dune build
-```
-
-### Compiling the program using CompCert (optional)
-
-```shell
-ccomp -o bsearch src/binary_search.c
-```
-
-## File and directory structure
-
-### Core files
-
-- [`src/binary_search.c`](src/binary_search.c): C program that performs binary
-  search in a sorted array, inspired by [Joshua Bloch's Java version][binary-search-url].
-- [`theories/binary_search.v`](theories/binary_search.v): Coq representation
-  of the binary search C program in [CompCert's Clight language][compcert-c-url].
-- [`theories/binary_search_theory.v`](theories/binary_search_theory.v): General
-  Coq definitions and facts relevant to binary search, adapted from code in the
-  [Verified Software Toolchain][vst-url].
-- [`theories/binary_search_verif.v`](theories/binary_search_verif.v): Contract for the
-  Clight program following the [Java specification][java-specification-url] and a
-  Coq proof using the Verified Software Toolchain that the program upholds the contract.
-
-### General configuration
-
-- [`coq-program-verification-template.opam`](coq-program-verification-template.opam):
-  Project [opam package][opam-url] definition, including dependencies.
-- [`_CoqProject`](_CoqProject): File used by Coq editors to determine the Coq logical path,
-  and by the make-based build to obtain the list of files to include. 
-- [`.github/workflows/docker-action.yml`](.github/workflows/docker-action.yml):
-  [GitHub Actions][github-actions-ci-url] continuous integration configuration for Coq,
-  using the opam package definition.
-
-### Make configuration
-
-- [`Makefile`](Makefile): Generic delegating makefile using [coq_makefile][coq-makefile-url].
-- [`Makefile.coq.local`](Makefile.coq.local): Custom optional Make tasks, including compilation
-  of the C program.
-
-### Dune configuration
-
-- [`dune-project`](dune-project): General configuration for the [Dune][dune-url] build system.
-- [`theories/dune`](theories/dune): Dune build configuration for Coq.
-
-## Caveats
-
-### coq_makefile vs. Dune
-
-coq_makefile and Dune builds are independent. However, for local development,
-it is recommended to use coq_makefile, since Coq editors may not be able find
-files compiled by Dune. Due to its build hygiene requirements, Dune will
-refuse to build when binary (`.vo`) files are present in `theories`;
-run `make clean` to remove them.
-
-### Generating Clight for Coq
-
-The Coq representation of the C program (`binary_search.v`) is kept in version
-control due to licensing concerns for CompCert's `clightgen` tool.
-If you have a license to use `clightgen`, you can delete the generated file
-and have the build system regenerate it. To regenerate the file manually, you need to run:
-```shell
-clightgen -o theories/binary_search.v -normalize src/binary_search.c
-```
-
-[binary-search-url]: http://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html
-[java-specification-url]: https://hg.openjdk.java.net/jdk10/jdk10/jdk/file/ffa11326afd5/src/java.base/share/classes/java/util/Arrays.java#l1846
-[vst-url]: https://vst.cs.princeton.edu
-[compcert-c-url]: https://compcert.org/compcert-C.html
-[coq-makefile-url]: https://coq.inria.fr/refman/practical-tools/utilities.html#building-a-coq-project-with-coq-makefile
-[github-actions-ci-url]: https://github.com/coq-community/docker-coq-action
-[opam-url]: https://opam.ocaml.org
-[dune-url]: https://dune.build

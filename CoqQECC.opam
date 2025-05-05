@@ -1,0 +1,35 @@
+opam-version: "2.0"
+maintainer: "qiuyifeng1997@outlook.com"
+version: "dev"
+
+homepage: "https://github.com/coq-community/Coq-QECC"
+dev-repo: "git+https://github.com/ExcitedSpider/Coq-QECC.git"
+bug-reports: "https://github.com/ExcitedSpider/Coq-QECC/issues"
+license: "My Licence"
+
+synopsis: "Quantum Error Correction Codes in Coq"
+description: """
+Template project for program verification in Coq.
+Uses the Verified Software Toolchain and a classic binary
+search program in C as an example.
+"""
+
+build: ["dune" "build" "-p" name "-j" jobs]
+depends: [
+  "odoc" {with-doc}
+  "dune" {>= "3.8"}
+  "coq" {>= "8.18"}
+  "coq-quantumlib" {>= "1.6.0"}
+  "coq-sqir" {>= "1.1.0"}
+  "coq-mathcomp-ssreflect" {>= "2.2.0"}
+  "coq-mathcomp-fingroup" {>= "2.2.0"}
+]
+
+tags: [
+  "category:Computer Science/Decision Procedures and Certified Algorithms/Correctness proofs of algorithms"
+  "keyword:program verification"
+  "keyword:quantum computing"
+]
+authors: [
+  "Qiuyi Feng"
+]

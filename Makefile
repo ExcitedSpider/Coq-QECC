@@ -1,9 +1,17 @@
-all: Makefile.coq
-	@+$(MAKE) -f Makefile.coq all
+all: 
+	@dune build mathcomp
+	
+barebone:
+	@dune build barebone
 
-clean: Makefile.coq
-	@+$(MAKE) -f Makefile.coq cleanall
-	@rm -f Makefile.coq Makefile.coq.conf
+clean:
+	@dune clean
+
+install:
+	@dune install
+
+uninstall:
+	@dune uninstall
 
 Makefile.coq: _CoqProject
 	$(COQBIN)coq_makefile -f _CoqProject -o Makefile.coq

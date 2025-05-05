@@ -1,5 +1,2 @@
--Q theories ProgramVerificationTemplate
-
-theories/binary_search.v
-theories/binary_search_theory.v
-theories/binary_search_verif.v
+-R _build/default/mathcomp StabilizerMC
+-R _build/default/barebone Stabilizer
