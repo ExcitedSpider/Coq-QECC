@@ -62,14 +62,10 @@ There are two packages in the project.
 - Done: Stabilizer Theories using mathcomp formalism
 - WIP: examples of proving larger QECC programs correct
 - WIP: fill in the holes of formalism.
-Verification 
+ 
+## Acknowledge
 
-## Building instructions
+This project is developed upon the foundations laid by the [INQWIRE/SQIR](https://github.com/inQWIRE/SQIR) framework, which has provided both inspiration and technical guidance throughout our work. 
+We acknowledge and deeply appreciate the exceptional contributions of the SQIR team to the field of quantum programming and formal verification. 
+Their open-source efforts have significantly advanced the accessibility and rigor of quantum software development, and we are grateful to be building upon such a well-crafted and thoughtfully designed foundation.
 
-### Installing dependencies
-
-The recommended way to install Coq and other dependencies is via
-the [Coq Platform](https://github.com/coq/platform/releases/latest).
-To install dependencies manually via [opam](https://opam.ocaml.org/doc/Install.html):
-```shell
-```
