@@ -707,30 +707,27 @@ Proof.
 Qed.
 
 Lemma obs0_stb:
-  stb obs0 psi.
+  obs0 ∝1 psi.
 Proof.
   rewrite /psi.
-  apply stb_scale; apply stb_addition; apply stb_scale.
-  - rewrite stb_meas_p_to_1 /L0; Qsimpl.
-    rewrite kron_assoc; auto with wf_db.
+  apply stb_scale; apply stb_addition; apply stb_scale;
+  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+  - rewrite kron_assoc; auto with wf_db.
     replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@meas_p_to_11_krons 3 6).
-    + rewrite -stb_meas_p_to_1. apply stb_part.
-    replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
-    apply (@meas_p_to_11_krons 3 3).
-    + rewrite -stb_meas_p_to_1. apply stb_part.
-    + rewrite meas_p_to_applyP applyP_id. by Qsimpl.
-      auto with wf_db. 
-  - rewrite stb_meas_p_to_1 /L1; Qsimpl.
-    rewrite kron_assoc; auto with wf_db.
+    + SimplApplyPauli; lma.
+    + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
+      apply (@meas_p_to_11_krons 3 3).
+        by rewrite -stb_meas_p_to_1; apply stb_part.
+        by rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl.
+  - rewrite kron_assoc; auto with wf_db.
     replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@meas_p_to_mm_krons 3 6).
     + SimplApplyPauli; lma.
-    replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
-    apply (@meas_p_to_m1_krons 3 3).
-    + SimplApplyPauli; lma.
-    + rewrite meas_p_to_applyP applyP_id. by Qsimpl.
-      auto with wf_db.
+    + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
+      apply (@meas_p_to_m1_krons 3 3).
+      + SimplApplyPauli; lma.
+      + by rewrite meas_p_to_applyP applyP_id; auto with wf_db; by Qsimpl.
 Qed. 
 
 Lemma obs0_err_state0:
