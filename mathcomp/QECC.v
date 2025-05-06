@@ -125,21 +125,70 @@ Definition indistinguishable (ecc: ErrorCorrectionCode) E1 E2 :=
     ('Meas M on psi_e1 --> -1) -> ('Meas M on psi_e2 --> -1)
   .
 
-(* (error, recover), in which recover operator can restore error  *)
-Definition RecoverInstruction {n} := prod (PauliOperator n) (PauliOperator n).
+(* The recover is trivial: simply by apply the error again.  *)
+(* So we don't make them  in examples  *)
+(* But we provide a theorem, see get_recover_correct *)
+Definition get_recover {n}: (ErrorOperator n) -> (PauliOperator n) := Datatypes.id.
 
-(* The recover instruction is actaully 
-apply the error operator again  *)
-(* Therefore, it is trivial. we don't make this in example actually *)
-(* But we provide a theorem here *)
-Definition recover_insts (ecc: ErrorCorrectionCode) :=
-  [set (x, x) | x in ecc.(err)].
+Lemma get_phase_png_involutive:
+forall {n} (t: PauliOperator n), get_phase_png (One, t) (One, t) = One.
+Proof.
+  move => n t.
+  by rewrite /get_phase_png get_phase_pn_involutive /=.
+Qed.
 
-(* for every pauli operator P we have PP = I *)
-Theorem recover_insts_correct :
-  forall ecc inst, inst \in (recover_insts ecc) ->
-  recover_by (fst inst) (snd inst).
-Admitted.
+Lemma png_id_simpl:
+forall {n} (t: PauliOperator n),
+  (t = (oneg (PauliOperator n))) <-> ((One, t) = (oneg (PauliElement n)) ).
+Proof.
+  split.
+  - move => H.
+    by rewrite H /oneg /=.
+  - rewrite /oneg /= /id_png => H.
+    by inversion H; subst.
+Qed.
+
+Lemma png_idP:
+  forall n (t: PauliOperator n),
+  t = oneg (Observable n) ->
+  [tuple of I ::t] = oneg (Observable n.+1).
+Proof.
+  move => n t ->.
+  rewrite /oneg /= /id_pn /=.
+  Fail by [].
+Admitted. (* Both sides are identical but cannot solve *)
+
+Theorem get_recover_correct {n}:
+  forall (E: ErrorOperator n), 
+  recover_by E (get_recover E).
+Proof.
+  rewrite /recover_by /get_recover /Datatypes.id /=.
+  induction n.
+  - move => E.
+    rewrite tuple0 /recover_by.
+    by apply /eqP.
+  - move => E.
+    case: E/tupleP => h t.
+    move: IHn.
+    rewrite /recover_by /=.
+    rewrite /PauliOpToElem /=.
+    rewrite /mult_png !mult_pn_cons get_phase_png_cons.
+    assert (H: get_phase h h = One).
+      by case h.
+    rewrite H; clear H.
+    change mult_phase with (@mulg phase).
+    rewrite mul1g.
+    assert (H: mult_p1 h h = I).
+      by case h.
+    rewrite H; clear H.
+    move => H.
+    move: (H t).
+    clear H.
+    rewrite !get_phase_png_involutive.
+    rewrite -!png_id_simpl => H.
+    apply (png_idP n).
+    by rewrite H.
+Qed.
 
 
 End Structure.
