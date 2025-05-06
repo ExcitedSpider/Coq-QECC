@@ -869,7 +869,7 @@ Qed.
 
 Lemma png_int_Mmult n:
   forall (x y: PauliTuple n),
-  png_int x × png_int y = png_int (mulg x y).
+  png_int x × png_int y = png_int (mult_png x y).
 Proof.
   move  => [sx x] [sy y].
   rewrite /png_int /= /get_phase_png.

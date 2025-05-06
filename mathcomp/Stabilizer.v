@@ -134,6 +134,7 @@ Proof.
   rewrite <- Mmult_assoc.
   (* Search png_int "×". *)
   rewrite png_int_Mmult.
+  change mult_png with (@mulg (PauliElement n)).
   rewrite mulVg /=.
   apply one_stb_everything; easy.
 Qed.

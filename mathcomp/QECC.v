@@ -145,3 +145,66 @@ Admitted.
 
 End Structure.
 
+Section Theories.
+
+(* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
+Lemma meas_p_to_m1_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 --> (-1)) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Admitted.
+
+Lemma meas_p_to_1m_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 --> -1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Admitted.
+
+Lemma meas_p_to_11_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
+Admitted.
+
+Lemma meas_p_to_mm_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  -1) ->
+  ('Meas op1 on phi1 -->  -1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
+Admitted.
+(*
+  This theorem formalizes the **error detection condition** in stabilizer theory.
+
+  It states that if:
+    1. The observable `Ob` stabilizes the state `psi` (i.e., measuring `Ob` on `psi` always yields 1), and
+    2. The error operator `Er` anticommutes with `Ob`,
+
+  then:
+    - The corrupted state `Er ψ` becomes a -1 eigenstate of `Ob`, 
+      meaning `Ob` can detect the presence of the error by flipping the measurement outcome.
+
+  This theorem is extremely valuable in verification: 
+  to check whether an error `Er` is detectable by a stabilizer `Ob`, 
+  we **only need to test whether `Er` anticommutes with `Ob`** — no need to simulate or compute over the entire quantum state space. 
+  This greatly reduces both conceptual and computational effort in formal verification of quantum error-correcting codes.
+*)
+Theorem stabiliser_detect_error {n}:
+  forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
+  Ob ∝1 psi -> 
+  png_int (mult_png Ob Er) = -C1 .* png_int (mult_png Er Ob) ->
+  ('Meas Ob on ('Apply Er on psi) --> -1).
+Proof.
+  move => Er Ob psi Hob Hac.
+  rewrite /applyP /meas_p_to -Mmult_assoc png_int_one.
+  rewrite png_int_Mmult Hac Mscale_mult_dist_l.
+  apply Mscale_simplify.
+  rewrite /stb /act_n /= /applyP in Hob.
+  rewrite -png_int_Mmult Mmult_assoc Hob. 
+  by Qsimpl.
+  lca.
+Qed.
+
+End Theories.

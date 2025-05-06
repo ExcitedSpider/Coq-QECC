@@ -641,19 +641,21 @@ Proof.
   by move => -> ->.
 Qed.
 
-Definition obs0 := [p X, X, X, X, X, X, I, I, I].
-
 (* A helper to let coq make type right *)
 Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := id.
 
+Definition obs0: PauliOperator 9 := [p X, X, X, X, X, X, I, I, I].
+
 (* Z1 is a phase flip *)
 Definition Z1: PauliOperator dim := t2o [tuple of  Z :: nseq 8 I].
+
 
 Lemma applyP_kron {n m}:
   forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
   ('Apply t2o [tuple of op0 ++ op1] on (phi0 ⊗ phi1) ) = 
   ('Apply op0 on phi0) ⊗ ('Apply op1 on phi1).
 Admitted.
+
 
 Lemma apply_z1_L0_effect: 
   (('Apply Z1 on L0) = ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩)))).
@@ -695,27 +697,41 @@ Proof.
   by rewrite apply_z1_L0_effect apply_z1_L1_effect.
 Qed.
 
-(* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
-Lemma meas_p_to_m1_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 --> (-1)) ->
-  ('Meas op1 on phi1 -->  1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
-Admitted.
 
-Lemma meas_p_to_1m_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 -->  1) ->
-  ('Meas op1 on phi1 --> -1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
-Admitted.
+Definition X123 :PauliOperator 3 := [p X, X, X].
 
-Lemma meas_p_to_11_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 -->  1) ->
-  ('Meas op1 on phi1 -->  1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
-Admitted.
+Lemma stb_part:
+  stb (X123) (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩).
+Proof.
+  simpl_stbn.
+Qed.
+
+Lemma obs0_stb:
+  stb obs0 psi.
+Proof.
+  rewrite /psi.
+  apply stb_scale; apply stb_addition; apply stb_scale.
+  - rewrite stb_meas_p_to_1 /L0; Qsimpl.
+    rewrite kron_assoc; auto with wf_db.
+    replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+    apply (@meas_p_to_11_krons 3 6).
+    + rewrite -stb_meas_p_to_1. apply stb_part.
+    replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
+    apply (@meas_p_to_11_krons 3 3).
+    + rewrite -stb_meas_p_to_1. apply stb_part.
+    + rewrite meas_p_to_applyP applyP_id. by Qsimpl.
+      auto with wf_db. 
+  - rewrite stb_meas_p_to_1 /L1; Qsimpl.
+    rewrite kron_assoc; auto with wf_db.
+    replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+    apply (@meas_p_to_mm_krons 3 6).
+    + SimplApplyPauli; lma.
+    replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
+    apply (@meas_p_to_m1_krons 3 3).
+    + SimplApplyPauli; lma.
+    + rewrite meas_p_to_applyP applyP_id. by Qsimpl.
+      auto with wf_db.
+Qed. 
 
 Lemma obs0_err_state0:
   'Meas obs0 on (∣ 0, 0, 0 ⟩ .+ - C1 .* ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩)
@@ -755,6 +771,19 @@ Proof.
   move/meas_p_to_applyP : obs0_err_state1 => ->.
   rewrite Mscale_plus_distr_r !Mscale_assoc.
   by rewrite !(Cmult_comm (-1)).
+Qed.
+
+(* Now we do it again but using error correct condition *)
+(* It's so much easier *)
+(* maybe we can define the negation more properly *)
+Theorem obs0_detect_phase_flip':
+  'Meas obs0 on ('Apply Z1 on psi) --> -1.
+Proof.
+  apply stabiliser_detect_error.
+  - apply obs0_stb.
+  - rewrite /=.  
+    rewrite Mscale_assoc.
+    by replace (- C1 * Ci) with (-Ci) by lca.
 Qed.
 
 End VarScope.
