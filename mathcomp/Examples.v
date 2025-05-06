@@ -599,8 +599,164 @@ Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 
 Theorem undetectable_bitflip:
  undetectable PhaseFlipCode BitFlip0.
-Admitted.
+Admitted. (* TODO *)
 
 End VarScope.
 
 End PhaseFlip311.
+
+Module ShorsNineQubitCode. 
+
+Section VarScope.
+
+Import all_ssreflect.
+
+(* This is for solving some notation conflicts *)
+Notation I := P1Group.I.
+Notation X := P1Group.X.
+Notation Z := P1Group.Z.
+Notation Y := P1Group.Y.
+
+Variable (α β: C).
+
+Definition dim:nat := 9.
+
+(* For a proper renderred expression: https://errorcorrectionzoo.org/c/shor_nine *)
+Notation L0 := (3 ⨂ (∣0,0,0⟩ .+       ∣1,1,1⟩)).
+Notation L1 := (3 ⨂ (∣0,0,0⟩ .+ -C1.* ∣1,1,1⟩)).
+Notation norm := (/C2 * /√ 2).
+
+Definition psi: Vector (2^dim) := norm .* (α .* L0 .+ β .* L1).
+
+(* This could be made generic *)
+Lemma applyP_linear:
+  forall (E: PauliOperator dim) (L0' L1': Vector (2^dim)),
+  ('Apply E on L0) = L0' ->
+  ('Apply E on L1) = L1' ->
+  ('Apply E on psi) = norm .* (α .* L0' .+ β .* L1').
+Proof.
+  move => E L0' L1'.
+  rewrite /psi.
+  rewrite !applyP_mscale applyP_plus !applyP_mscale.
+  by move => -> ->.
+Qed.
+
+Definition obs0 := [p X, X, X, X, X, X, I, I, I].
+
+(* A helper to let coq make type right *)
+Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := id.
+
+(* Z1 is a phase flip *)
+Definition Z1: PauliOperator dim := t2o [tuple of  Z :: nseq 8 I].
+
+Lemma applyP_kron {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Apply t2o [tuple of op0 ++ op1] on (phi0 ⊗ phi1) ) = 
+  ('Apply op0 on phi0) ⊗ ('Apply op1 on phi1).
+Admitted.
+
+Lemma apply_z1_L0_effect: 
+  (('Apply Z1 on L0) = ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩)))).
+Proof.
+  rewrite kron_n_assoc; auto with wf_db.
+  assert (H: Z1 = t2o [tuple of [p Z, I, I] ++ t2o (nseq 6 I)]). 
+    by apply /eqP.
+  rewrite H /t2o; clear H.
+  rewrite (applyP_kron ([p Z, I, I])).
+  rewrite applyP_plus applyP_id; restore_dims; auto with wf_db.
+  apply kron_simplify; auto.
+  apply Mplus_simplify.
+  - by SimplApplyPauli; lma.
+  - by SimplApplyPauli; lma.
+Qed.
+
+Lemma apply_z1_L1_effect: 
+  (('Apply Z1 on L1) = ((∣0,0,0⟩ .+ ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩)))).
+Proof.
+  rewrite kron_n_assoc; auto with wf_db.
+  assert (H: Z1 = t2o [tuple of [p Z, I, I] ++ t2o (nseq 6 I)]). 
+    by apply /eqP.
+  rewrite H /t2o; clear H.
+  rewrite (@applyP_kron 3).
+  rewrite applyP_plus applyP_id; restore_dims; auto 10 with wf_db.
+  apply kron_simplify; auto.
+  apply Mplus_simplify.
+  - by SimplApplyPauli; lma.
+  - by SimplApplyPauli; lma.
+Qed.
+
+Lemma apply_z1_effect:
+('Apply Z1 on psi) = norm .* (
+  α .* ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩))) .+ 
+  β .* ((∣0,0,0⟩ .+ ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩)))).
+Proof.
+  rewrite /psi applyP_mscale.
+  rewrite applyP_plus !applyP_mscale.
+  by rewrite apply_z1_L0_effect apply_z1_L1_effect.
+Qed.
+
+(* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
+Lemma meas_p_to_m1_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 --> (-1)) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Admitted.
+
+Lemma meas_p_to_1m_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 --> -1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Admitted.
+
+Lemma meas_p_to_11_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
+Admitted.
+
+Lemma obs0_err_state0:
+  'Meas obs0 on (∣ 0, 0, 0 ⟩ .+ - C1 .* ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩)
+    --> -1 .
+Proof.
+  replace obs0 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+  apply (@meas_p_to_m1_krons 3).
+  - SimplApplyPauli. lma.
+  - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
+    apply (@meas_p_to_11_krons 3).
+    SimplApplyPauli; lma.
+    SimplApplyPauli; lma.
+Qed.
+
+Lemma obs0_err_state1:
+  'Meas obs0 on (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ -C1 .* ∣ 1, 1, 1 ⟩)
+    --> -1 .
+Proof.
+  replace obs0 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+  apply (@meas_p_to_1m_krons 3).
+  - SimplApplyPauli. lma.
+  - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
+    apply (@meas_p_to_m1_krons 3).
+    SimplApplyPauli; lma.
+    SimplApplyPauli; lma.
+Qed.
+
+Theorem obs0_detect_phase_flip:
+  'Meas obs0 on ('Apply Z1 on psi) --> -1.
+Proof.
+  rewrite apply_z1_effect meas_p_to_applyP.
+  rewrite !applyP_mscale !applyP_plus !applyP_mscale.
+  remember (/ C2 * / √ 2) as norm.
+  rewrite !Mscale_assoc (Cmult_comm _ norm) -Mscale_assoc.
+  apply Mscale_simplify; auto.
+  move/meas_p_to_applyP : obs0_err_state0 => ->.
+  move/meas_p_to_applyP : obs0_err_state1 => ->.
+  rewrite Mscale_plus_distr_r !Mscale_assoc.
+  by rewrite !(Cmult_comm (-1)).
+Qed.
+
+End VarScope.
+
+End ShorsNineQubitCode.

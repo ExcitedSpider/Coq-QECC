@@ -136,7 +136,7 @@ Qed.
  *)
 Definition meas_p_to {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :=
   (pn_int P) × psi = m .* psi.
-
+  
 Theorem meas_p_to_correct {n}:
   forall (m:C) (P: PauliOperator n) (psi: Vector (2^n)),
   meas_p_to m P psi <-> meas_to m (pn_int P) psi.
@@ -150,6 +150,14 @@ Proof.
   - move => [_ [_ H]].
     exact H.
 Qed. 
+
+Lemma meas_p_to_applyP {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :
+  meas_p_to m P psi <->
+  applyP psi P = m .* psi.
+Proof.
+  rewrite /meas_p_to /applyP;
+  split.
+Admitted. (** TODO: fix a type issue *)
 
 Corollary stb_meas_p_to_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),

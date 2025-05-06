@@ -19,6 +19,7 @@ Lemma involutive_eigenvalue n:
     lambda = 1 \/ lambda = -1.
 Admitted.
 
+(* Let A be a non-zero matrix. if c1 * A = c2 * A, c1 = c2  *)
 Lemma Mscale_cancel:
   forall {n m : nat} (c1 c2 : C) (A: Matrix n m),
   A <> (@Zero n m) ->  c1 .* A = c2 .* A -> c1 = c2.
