@@ -77,3 +77,5 @@ Proof.
 Qed.
 
 End WellFormness.
+
+#[export] Hint Resolve p1_int_wf p1g_int_wf pn_int_wf png_int_wf apply_n_wf apply_1_wf : wf_db.

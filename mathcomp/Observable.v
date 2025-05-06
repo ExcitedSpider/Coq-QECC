@@ -4,8 +4,8 @@ Important Definition:
 - "'Meas P on psi --> m" := measuring P on state psi yields m
 *)
 From QuantumLib Require Import Quantum.
-From mathcomp Require Import seq tuple fingroup eqtype.
-From mathcomp Require Import ssreflect ssrbool.
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import fingroup.
 Require Import PauliGroup.
 Require Import Action.
 Require Import Assumption.
@@ -108,8 +108,6 @@ Proof.
     by rewrite kron_adjoint IHn pauli_base_hermitian.
 Qed.
 
-
-
 (* 
 If a quantum state ψ is stabilized by a Pauli operator p (i.e., p ψ = ψ), 
 then measuring the corresponding observable yields outcome 1 with certainty.
@@ -155,9 +153,11 @@ Lemma meas_p_to_applyP {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :
   meas_p_to m P psi <->
   applyP psi P = m .* psi.
 Proof.
-  rewrite /meas_p_to /applyP;
-  split.
-Admitted. (** TODO: fix a type issue *)
+  rewrite /meas_p_to /applyP.
+  by rewrite !/PauliOpToElem !png_int_one.
+Qed.
+
+
 
 Corollary stb_meas_p_to_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
@@ -297,6 +297,10 @@ End BornRule.
 (* Notation Just for readability *)
 Notation ErrorOperator := PauliOperator.
 Notation Observable := PauliOperator.
+(* A helper to let coq make type right *)
+
+Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := Datatypes.id.
+
 
 Lemma meas_p_to_unique {n}:
   forall (phi: Vector (2^n)) (ob: Observable n)  (r q: C),
@@ -312,3 +316,93 @@ Proof.
   by apply Mscale_cancel.
 Qed.
 
+Lemma pn_int_concat {n m}:
+  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  (pn_int [tuple of op0 ++ op1]) = 
+  (pn_int op0) ⊗ (pn_int op1).
+Proof.
+  simpl.
+  move => p q.
+  induction n.
+  - rewrite tuple0.
+    Qsimpl. 
+    + by rewrite tupleE catNil. 
+  - case: p / tupleP => hp tp.
+    rewrite !tupleE !catCons.
+    rewrite pn_int_cons /= theadCons beheadCons IHn /=.
+    rewrite /pow_add. 
+    rewrite (kron_assoc (p1_int hp ) (pn_int tp) (pn_int q)); auto with wf_db.
+Qed. 
+
+Lemma applyP_kron {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Apply t2o [tuple of op0 ++ op1] on (phi0 ⊗ phi1) ) = 
+  ('Apply op0 on phi0) ⊗ ('Apply op1 on phi1).
+Proof.
+  move => op0 op1 phi0 phi1.
+  rewrite /applyP /=. Qsimpl.
+  rewrite /t2o /Datatypes.id.
+  rewrite pn_int_concat.
+  rewrite kron_mixed_product'; try auto;
+  by rewrite Nat.pow_add_r.
+Qed.
+(* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
+Lemma meas_p_to_m1_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 --> (-1)) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Proof.
+  rewrite /meas_p_to.
+  move => op0 op1 phi0 phi1 H0 H1.
+  rewrite pn_int_concat.
+  rewrite kron_mixed_product'; try auto.
+  - by rewrite H0 H1 Mscale_1_l Mscale_kron_dist_l.
+  - by rewrite Nat.pow_add_r.
+  - by rewrite Nat.pow_add_r.
+Qed.
+
+Lemma meas_p_to_1m_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 --> -1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
+Proof.
+  rewrite /meas_p_to.
+  move => op0 op1 phi0 phi1 H0 H1.
+  rewrite pn_int_concat.
+  rewrite kron_mixed_product'; try auto.
+  - by rewrite H0 H1  Mscale_kron_dist_l; lma.
+  - by rewrite Nat.pow_add_r.
+  - by rewrite Nat.pow_add_r.
+Qed.
+
+Lemma meas_p_to_11_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  1) ->
+  ('Meas op1 on phi1 -->  1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
+Proof.
+  rewrite /meas_p_to.
+  move => op0 op1 phi0 phi1 H0 H1.
+  rewrite pn_int_concat.
+  rewrite kron_mixed_product'; try auto.
+  - by rewrite H0 H1  Mscale_kron_dist_l; lma.
+  - by rewrite Nat.pow_add_r.
+  - by rewrite Nat.pow_add_r.
+Qed.
+
+Lemma meas_p_to_mm_krons {n m}:
+  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
+  ('Meas op0 on phi0 -->  -1) ->
+  ('Meas op1 on phi1 -->  -1) ->
+  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
+Proof.
+  rewrite /meas_p_to.
+  move => op0 op1 phi0 phi1 H0 H1.
+  rewrite pn_int_concat.
+  rewrite kron_mixed_product'; try auto.
+  - by rewrite H0 H1  Mscale_kron_dist_l; lma.
+  - by rewrite Nat.pow_add_r.
+  - by rewrite Nat.pow_add_r.
+Qed.

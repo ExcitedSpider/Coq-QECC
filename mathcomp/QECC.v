@@ -31,7 +31,6 @@ Ltac SimplApplyPauli :=
     autorewrite with ket_db.
 
 (* Notation for applying an operator on a state *)
-Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 Section QECCTheories.
 
 Variable (dim: nat).
@@ -145,36 +144,9 @@ Admitted.
 
 End Structure.
 
+
 Section Theories.
 
-(* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
-Lemma meas_p_to_m1_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 --> (-1)) ->
-  ('Meas op1 on phi1 -->  1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
-Admitted.
-
-Lemma meas_p_to_1m_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 -->  1) ->
-  ('Meas op1 on phi1 --> -1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
-Admitted.
-
-Lemma meas_p_to_11_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 -->  1) ->
-  ('Meas op1 on phi1 -->  1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
-Admitted.
-
-Lemma meas_p_to_mm_krons {n m}:
-  forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
-  ('Meas op0 on phi0 -->  -1) ->
-  ('Meas op1 on phi1 -->  -1) ->
-  'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
-Admitted.
 (*
   This theorem formalizes the **error detection condition** in stabilizer theory.
 

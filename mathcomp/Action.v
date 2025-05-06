@@ -526,3 +526,5 @@ Proof.
   rewrite /act_id /= in H.
   apply H.
 Qed.
+
+Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).

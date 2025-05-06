@@ -614,24 +614,20 @@ Definition distance_s (d: nat):=
 (* Prove that detectable is correct *)
 End Syndrome.
 
-Lemma not_detactable n:
+(* Lemma not_detactable n:
   forall (E: PauliTupleBase n) (s: {set PauliElement n}),
   ( exists (pstr: PauliElement n), 
     pstr \in s /\  mulg pstr (with_1 _ E) = mulg (with_1 _ E) pstr)
     -> not (detectable _ s E) 
     .
-Admitted. (* Related to generated group *)
-
+//Admitted. 
 
 Lemma stb_generator {n}:
   forall (g: { set (PauliElement n) }) (v: Vector (2^n)), 
     (forall x, x \in g -> x ∝1 v) -> forall y, y \in <<g>> -> y ∝1 v.
-Admitted. (* Related to generated group *)
+//Admitted. Related to generated group *)
 
-Check kron_mixed_product.
 
-Check ∣ 0, 0 ⟩: Vector 4.
-Check ∣ 0 ⟩.
 
 Lemma pn_int_apply_cons:
   forall {n} (p: PauliBase) (operator: PauliOperator n)  
