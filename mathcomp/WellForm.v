@@ -1,5 +1,4 @@
 Require Import PauliGroup.
-Require Import Action.
 From mathcomp Require Import tuple ssreflect.
 
 Require Import SQIR.UnitaryOps.
@@ -56,26 +55,6 @@ Proof.
   by apply: pn_int_wf.
 Qed.
 
-Lemma apply_1_wf:
-  forall (op: PauliOp) (v: Vector 2),
-  WF_Matrix v -> WF_Matrix (apply_1 v op).
-Proof.
-  move => op v.
-  rewrite /apply_1.
-  apply WF_mult.
-  apply p1g_int_wf.
-Qed.
-
-Lemma apply_n_wf n:
-  forall (op: PauliTuple n) (v: Vector (2^n)),
-  WF_Matrix v -> WF_Matrix (applyP v op).
-Proof.
-  move => op v.
-  rewrite /applyP.
-  apply WF_mult.
-  apply png_int_wf.
-Qed.
-
 End WellFormness.
 
-#[export] Hint Resolve p1_int_wf p1g_int_wf pn_int_wf png_int_wf apply_n_wf apply_1_wf : wf_db.
+#[export] Hint Resolve p1_int_wf p1g_int_wf pn_int_wf png_int_wf : wf_db.

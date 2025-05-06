@@ -2,6 +2,8 @@ Require Import PauliGroup.
 Require Import QuantumLib.Quantum.
 From mathcomp Require Import all_ssreflect fingroup.
 
+Require Import WellForm.
+Require Import PauliProps.
 Section Operations.
 Import PNGGroup.
 Import PNGroup.
@@ -28,27 +30,23 @@ Proof.
   - apply /eqP. by [].
 Qed.
 
-Lemma pn_int_comp_concat :
-  forall {n m: nat} (ps1: PauliTupleBase n) (ps2: PauliTupleBase m),
-  pn_int ([tuple of ps1 ++ ps2]) =
-  pn_int ps1 ⊗ pn_int ps2.
+Lemma pn_int_concat {n m}:
+  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  (pn_int [tuple of op0 ++ op1]) = 
+  (pn_int op0) ⊗ (pn_int op1).
 Proof.
-  move => n m ps1 ps2.
+  simpl.
+  move => p q.
   induction n.
-  - rewrite (tuple0 ps1) /=.
-    Qsimpl.
-    rewrite tupleE.
-    by rewrite catNil.
-    Fail by apply pn_int_wf.
-    admit. (* Dependency Issues, fix later *) 
-  - induction m.
-    + case: ps1 / tupleP => hx tx.
-      Qsimpl.
-      rewrite (tuple0 ps2) /=.
-      assert (tx ++ [::] = tx). admit.
-      (* Some dependent type eroor *)
-      Fail rewrite cats0.
-Admitted. (* Coq dependent type error*)
+  - rewrite tuple0.
+    Qsimpl. 
+    + by rewrite tupleE catNil; auto with wf_db. 
+  - case: p / tupleP => hp tp.
+    rewrite !tupleE !catCons.
+    rewrite pn_int_cons /= theadCons beheadCons IHn /=.
+    rewrite /pow_add. 
+    rewrite (kron_assoc (p1_int hp ) (pn_int tp) (pn_int q)); auto with wf_db.
+Qed. 
 
 
 Theorem compose_pstring_correct:
@@ -59,7 +57,7 @@ Proof.
   move => n m [p1 t1] [p2 t2].
   rewrite /compose_pstring /png_int /=.
   rewrite Mscale_kron_dist_l Mscale_kron_dist_r.
-  rewrite pn_int_comp_concat.
+  rewrite pn_int_concat.
   by rewrite Mscale_assoc phase_int_comp.
 Qed.
 

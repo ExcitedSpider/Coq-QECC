@@ -14,7 +14,7 @@ Key definitions:
 From mathcomp Require Import ssreflect ssrbool ssrfun eqtype ssrnat div seq tuple.
 From mathcomp Require Import fintype bigop finset fingroup morphism perm.
 From QuantumLib Require Import Matrix.
-
+Require Import WellForm.
 Import GroupScope.
 
 (* Section ok. *)
@@ -528,3 +528,26 @@ Proof.
 Qed.
 
 Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
+
+Lemma apply_1_wf:
+  forall (op: PauliOp) (v: Vector 2),
+  WF_Matrix v -> WF_Matrix (apply_1 v op).
+Proof.
+  move => op v.
+  rewrite /apply_1.
+  apply WF_mult.
+  apply p1g_int_wf.
+Qed.
+
+Lemma apply_n_wf n:
+  forall (op: PauliTuple n) (v: Vector (2^n)),
+  WF_Matrix v -> WF_Matrix (applyP v op).
+Proof.
+  move => op v.
+  rewrite /applyP.
+  apply WF_mult.
+  apply png_int_wf.
+Qed.
+
+
+#[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
