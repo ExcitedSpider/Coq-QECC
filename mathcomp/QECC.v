@@ -155,8 +155,10 @@ Lemma png_idP:
 Proof.
   move => n t ->.
   rewrite /oneg /= /id_pn /=.
-  Fail by [].
-Admitted. (* Both sides are identical but cannot solve *)
+  (* weird proof because of mathcomp weirdness *)
+  apply: eq_from_tnth=> i;
+  by rewrite !(tnth_nth I) /=.
+Qed.
 
 Theorem get_recover_correct {n}:
   forall (E: ErrorOperator n), 
