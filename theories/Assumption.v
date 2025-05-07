@@ -1,11 +1,6 @@
 (* Assumption we made for the formalization *)
 
 Require Import QuantumLib.Quantum.
-Require Import Coq.Lists.List.
-From mathcomp Require Import ssreflect.
-
-Require Import Classical.
-
 
 (* If P^2 = I, all eigenvalues λ of P satisfy λ^2 = 1 *)
 Lemma involutive_eigenvalue n:

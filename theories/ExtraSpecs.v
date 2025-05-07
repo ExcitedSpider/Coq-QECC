@@ -51,6 +51,18 @@ Proof.
   lma.
 Qed.
 
+Lemma zero_state_sufficient n:
+  forall (a: Vector n) (c: C), 
+    c .* a = Zero -> c <> C0 -> a = Zero.
+Proof.
+  move => a c Hac0 Hc0.
+  assert (c .* a = c .* Zero). {
+    rewrite Hac0.
+    lma.
+  }
+  apply Mscale_div in H; auto.
+Qed.
+
 Lemma negate_change_state n:
   forall (ψ:  Vector n), ψ <> Zero -> -C1 .* ψ <> ψ.
 Proof.
@@ -67,16 +79,6 @@ Proof.
   apply H1.
 Qed. 
 
-Lemma zero_state_sufficient n:
-  forall (a: Vector n) (c: C), 
-    c .* a = Zero -> c <> C0 -> a = Zero.
-Proof.
-  move => a c Hac0 Hc0.
-  assert (c .* a = c .* Zero). {
-    rewrite Hac0.
-    lma.
-  }
-  apply Mscale_div in H; auto.
-Qed.
+
 
 End QuantumlibExtra.
