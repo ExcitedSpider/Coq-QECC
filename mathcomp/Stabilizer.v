@@ -215,52 +215,28 @@ Theorem stb_group_no_m1:
   pstr1 ∝1 ψ ->
   pstr2 ∝1 ψ ->
   WF_Matrix ψ ->
+  ψ <> Zero ->
   mulg pstr1 pstr2 <> (NOne, id_pn n).
 Proof.
   unfold not.
   intros.
-  assert ((NOne, id_pn n) ∝1 ψ) as H3.
+  assert ((NOne, id_pn n) ∝1 ψ) as H4.
   {
-    rewrite <- H2.
+    rewrite <- H3.
     apply stb_closed; easy.
   }
-  contradict H3.
+  contradict H4.
   move: (one_stb_everything ψ H1).
   unfold_stb; Qsimpl => Hid.
   rewrite Mscale_mult_dist_l Hid.
-  apply negate_change_state. 
+  apply negate_change_state.
+  unfold not. intros.
+  by apply H2. 
 Qed.
 
 Require Import ExtraSpecs.
 
 
-Theorem stabilizer_must_commute: 
-  forall {n: nat} (pstr1 pstr2: PauliElement n) (ψ:  Vector (2^n)),
-  pstr1 ∝1 ψ ->
-  pstr2 ∝1 ψ ->
-  fingroup.commute pstr1 pstr2.
-Proof.
-  move => n.
-  move: (pstring_bicommute n).
-  rewrite /commute_at /fingroup.commute /= /mulg /= => H0 pstr1 pstr2 psi H1 H2.
-  case (H0 pstr1 pstr2) => H3.
-  {
-    apply H3.
-  }
-  {
-    exfalso.
-    assert (-C1 .* psi = psi) as HC. {
-      move: H1 H2.
-      unfold_stb => H1 H2.
-    rewrite -{2}H1 -{2}H2.
-    rewrite -Mmult_assoc png_int_Mmult H3.
-    rewrite -png_int_Mmult Mscale_mult_dist_l Mmult_assoc.
-    by rewrite H1 H2.
-    }
-    contradict HC.
-    apply negate_change_state.
-  }
-Qed.
 
 (* TODO This is not so efficient *)
 (* Try using seq.take and drop  *)
@@ -520,44 +496,6 @@ Definition is_stb_set {n} (S: { set PauliElement n }) :=
 Definition is_stb_set_spec {n} (S: {set PauliElement n}) (v: Vector (2^n)):=
   forall x, x \in << S >> -> x ∝1 v.
 
-(* TODO: consider make this equivalent *)
-Theorem is_stb_set_correct:
-  forall {n} (S: {set PauliElement n}),
-  (exists v, WF_Matrix v /\ is_stb_set_spec S v) <-> is_stb_set S.
-Proof.
-  move => n S.
-  split.
-  {
-    rewrite /is_stb_set_spec /is_stb_set /=.
-    move => [v [Hwf H]] a b Ha Hb.
-    move: (H a Ha) => Has.
-    move: (H b Hb) => Hbs.
-    split.
-    - move: (stabilizer_must_commute a b v Has Hbs).
-      rewrite /fingroup.commute /= /mulg /= => H0.
-      apply H0.
-    (* - move: (stb_group_no_m1 a b v Ha Hb) => H0.
-      apply H0 in Hwf; clear H0. *)
-    - unfold minus_id_png.
-      (* Search (_ \in << _ >>). *)
-      rewrite /negb.
-      move: (stb_group_no_m1 a b v Has Hbs Hwf) => H0.
-      (* Ha : a  \in <<S>>
-      Hb : b  \in <<S>>
-      Has : a ∝1 v
-      Hbs : b ∝1 v
-      H0 : mulg a b <> (NOne, id_pn n) *)
-      (* Do not know how to do this proof in ssreflect *)
-      (* TODO: Ask Zoe *)
-      admit.
-  }
-  {
-    rewrite /is_stb_set /is_stb_set_spec /= => H.
-    (* for this part, we need a way to construct the eigenvector
-    of a and b  *)
-    (* TODO Maybe Ask Udaya for this *)
-Abort.
-
 (* The weight of a stabilizer group is the number of qubits that are not I *)
 (* in the stabilizer group *)
 Definition weight {n} (pt: PauliTupleBase n): nat := 
@@ -613,21 +551,6 @@ Definition distance_s (d: nat):=
 (* It's nice if we can verify their physical meanning *)
 (* Prove that detectable is correct *)
 End Syndrome.
-
-(* Lemma not_detactable n:
-  forall (E: PauliTupleBase n) (s: {set PauliElement n}),
-  ( exists (pstr: PauliElement n), 
-    pstr \in s /\  mulg pstr (with_1 _ E) = mulg (with_1 _ E) pstr)
-    -> not (detectable _ s E) 
-    .
-//Admitted. 
-
-Lemma stb_generator {n}:
-  forall (g: { set (PauliElement n) }) (v: Vector (2^n)), 
-    (forall x, x \in g -> x ∝1 v) -> forall y, y \in <<g>> -> y ∝1 v.
-//Admitted. Related to generated group *)
-
-
 
 Lemma pn_int_apply_cons:
   forall {n} (p: PauliBase) (operator: PauliOperator n)  

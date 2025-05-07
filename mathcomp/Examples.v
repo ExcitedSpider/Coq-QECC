@@ -15,6 +15,7 @@ Require Import Action.
 Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.
+Require Import ExtraSpecs.
 Require Import Observable.
 Require Import Assumption.
 Require Export SQIR.UnitaryOps.

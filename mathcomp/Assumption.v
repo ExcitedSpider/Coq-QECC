@@ -2,12 +2,12 @@
 
 Require Import QuantumLib.Quantum.
 Require Import Coq.Lists.List.
-(* 
-  TODO: This is apparent but actually hard to prove
-  As QuantumLib does not provide any lemmas about inequality
-  *)
+(*
+For any non-zero vector ψ,
+-1 * ψ <> ψ
+*)
 Lemma negate_change_state n:
-  forall (ψ:  Vector n), -C1 .* ψ <> ψ.
+  forall (ψ:  Vector n), ψ <> Zero -> -C1 .* ψ <> ψ.
 Admitted.
 
 (* If P^2 = I, all eigenvalues λ of P satisfy λ^2 = 1 *)
