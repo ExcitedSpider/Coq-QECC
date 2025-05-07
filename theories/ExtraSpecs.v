@@ -1,4 +1,5 @@
 From mathcomp Require Import ssreflect fingroup.
+Require Import Assumption.
 
 Section commutative.
 
@@ -30,6 +31,8 @@ Definition commuteg (T: finGroupType) :=
 
 End commutative.
 
+Section QuantumlibExtra.
+
 From QuantumLib Require Import Quantum.
 
 Lemma C1_neq_mC1: C1 <> -C1.
@@ -39,3 +42,41 @@ Proof.
   assert (H: 1 <> (-1)%R) by lra.
   apply (H H0).
 Qed.
+
+
+Lemma state_linear n:
+  forall (a b: Vector n), a = b -> a .+ -C1 .* b = Zero.
+Proof.
+  move => a b ->.
+  lma.
+Qed.
+
+Lemma negate_change_state n:
+  forall (ψ:  Vector n), ψ <> Zero -> -C1 .* ψ <> ψ.
+Proof.
+  move => psi Hnz Heq.
+  apply state_linear in Heq.
+  rewrite -Mscale_plus_distr_l in Heq. 
+  apply zero_state_sufficient in Heq.
+  apply Hnz.
+  apply Heq.
+  move => H.
+  inversion H.
+  assert ((- (1) + - (1))%R <> 0) by lra.
+  apply H0.
+  apply H1.
+Qed. 
+
+Lemma zero_state_sufficient n:
+  forall (a: Vector n) (c: C), 
+    c .* a = Zero -> c <> C0 -> a = Zero.
+Proof.
+  move => a c Hac0 Hc0.
+  assert (c .* a = c .* Zero). {
+    rewrite Hac0.
+    lma.
+  }
+  apply Mscale_div in H; auto.
+Qed.
+
+End QuantumlibExtra.

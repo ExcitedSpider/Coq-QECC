@@ -2,13 +2,10 @@
 
 Require Import QuantumLib.Quantum.
 Require Import Coq.Lists.List.
-(*
-For any non-zero vector ψ,
--1 * ψ <> ψ
-*)
-Lemma negate_change_state n:
-  forall (ψ:  Vector n), ψ <> Zero -> -C1 .* ψ <> ψ.
-Admitted.
+From mathcomp Require Import ssreflect.
+
+Require Import Classical.
+
 
 (* If P^2 = I, all eigenvalues λ of P satisfy λ^2 = 1 *)
 Lemma involutive_eigenvalue n:
