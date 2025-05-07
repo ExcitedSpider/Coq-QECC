@@ -1,4 +1,4 @@
-From mathcomp Require Import fingroup.
+From mathcomp Require Import ssreflect fingroup.
 
 Section commutative.
 
@@ -32,13 +32,10 @@ End commutative.
 
 From QuantumLib Require Import Quantum.
 
-Section Projector.
-
-
-Record Projector {n:nat} := ProjectorBuild {
-  P : Square (2^n)
-; is_hermitian : P† = P
-; is_idempotent : P × P = P 
-}.
-
-End Projector.
+Lemma C1_neq_mC1: C1 <> -C1.
+Proof.
+  move => F.
+  inversion F.
+  assert (H: 1 <> (-1)%R) by lra.
+  apply (H H0).
+Qed.
