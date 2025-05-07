@@ -1,8 +1,8 @@
 all: 
-	@dune build mathcomp
+	@dune build theories
 	
-barebone:
-	@dune build barebone
+legacy:
+	@dune build theories_legacy
 
 clean:
 	@dune clean

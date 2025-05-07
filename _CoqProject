@@ -1,2 +1,2 @@
--R _build/default/mathcomp StabilizerMC
--R _build/default/barebone Stabilizer
+-R _build/default/theories StabilizerMC
+-R _build/default/theories_legacy Stabilizer
