@@ -568,39 +568,50 @@ Proof.
 Qed.
 
 
+Print get_phase_png.
+
+Notation "A %* B" := (mult_phase A B) (at level 30).
+
+Lemma mult_phase_simplify:
+  forall (a b c d: phase),
+  a = c -> b = d ->
+  a %* b = c %* d.
+Proof. by move => a b c d -> ->. Qed.
+
 Lemma get_phase_png_assoc n:
   forall (a b c: PauliTuple n),
   get_phase_png (get_phase_png a b, mult_pn a.2 b.2) c = 
   get_phase_png a (get_phase_png b c, mult_pn b.2 c.2).
 Proof.
+  move => [sx px] [sy py] [sz pz];
+  (* Fist do all possible simplification *)
+  rewrite /get_phase_png /= !mult_phase_assoc.
+  apply mult_phase_simplify; try easy.
+  apply mult_phase_simplify; try easy.
+  rewrite -!mult_phase_assoc (mult_phase_comm sx) ?mult_phase_assoc.
+  apply mult_phase_simplify; try easy.
+  (* Nothing can be done. let's induction *)
   induction n.
-  - move => [sx px] [sy py] [sz pz].
-    rewrite (tuple0 px) (tuple0 py) (tuple0 pz) /=.
-    rewrite /get_phase_png /=.
-    by rewrite mult_phase_assoc.
-  - move => [sx px] [sy py] [sz pz] /=.
-    case : px / tupleP => hx tx.
+  - by rewrite (tuple0 px) (tuple0 py) (tuple0 pz) /=.
+  - case : px / tupleP => hx tx.
     case : py / tupleP => hy ty.
     case : pz / tupleP => hz tz.
-    move:  (IHn (sx, tx) (sy, ty) (sz, tz)) => IHn0.
-    clear IHn.
-    rewrite ?mult_pn_cons /get_phase_png ?get_phase_pn_cons.
-    rewrite /get_phase_png /= in IHn0.
-    (* case hx, hy, hz. *) 
-    (* all: try by rewrite IHn0. *)
-    rewrite -?mult_phase_assoc.  
-    remember 
-      (get_phase_pn (mult_pn tx ty) tz) as pt.
-    rewrite (mult_phase_comm  pt).
-    rewrite mult_phase_assoc.
-    rewrite mult_phase_assoc.
-    remember 
-      ((mult_phase (get_phase (mult_p1 hx hy) hz) (get_phase hx hy))) as const.
-    rewrite -mult_phase_assoc.
-    rewrite (mult_phase_comm _ pt).
-(* Too Tedious to continue *)
-Admitted. (* Need to construct some autowrite mechanism *) 
-
+    rewrite !mult_pn_cons !get_phase_pn_cons.
+    rewrite -!mult_phase_assoc.
+    rewrite (mult_phase_comm (get_phase hx hy)).
+    rewrite (mult_phase_comm (get_phase hy hz)).
+    rewrite !mult_phase_assoc.
+    rewrite -(mult_phase_assoc (get_phase (mult_p1 hx hy) hz)) IHn.
+    rewrite -!mult_phase_assoc.
+    rewrite !(mult_phase_comm (get_phase_pn ty _)).
+    rewrite !mult_phase_assoc.
+    apply mult_phase_simplify; try easy.
+    rewrite -!mult_phase_assoc.
+    rewrite !(mult_phase_comm (get_phase_pn tx (mult_pn ty tz))).
+    rewrite !mult_phase_assoc.
+    apply mult_phase_simplify; try easy.
+    by case hx; case hy; case hz.
+Qed.
 
 (* Do not try to attempt this! *)
 (* This is not valid *)
