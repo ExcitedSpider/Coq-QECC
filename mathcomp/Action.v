@@ -256,37 +256,6 @@ Lemma pair_inj:
   }
 Qed.
 
-
-Lemma png_int_injection: forall n px py (tx ty: PauliTupleBase n),
-  png_int (px, tx) = png_int (py, ty) -> px = py /\ tx = ty.
-Proof.
-  move => n px py tx ty.
-  rewrite /png_int /=.
-  case: (classic (px=py)) => Hc.
-  - rewrite Hc.
-    case : (classic (tx = ty)) => Hc2.
-    + by rewrite Hc2.
-    + intros H. 
-      (* tx <> ty -> there exists an index i such that tx[i] <> ty[i] *)
-      (* therefore, we know that pn_int tx <> pn_int ty *)
-      (* because pauli string are interpreted by component *)
-      (* e.g. [[X, Y]] = σx ⊗ σy  *)
-      (* and this contradict with H *)
-      admit.
-  - intros H.
-    case : (classic (tx = ty)) => Hc2.
-    + exfalso.
-      apply Hc. subst.
-      (* since H:  phase_int px .* pn_int ty = phase_int py .* pn_int ty  *)
-      (* we know that px = py *)
-      (* this contradicts with Hc: px <> py *)
-      admit.
-    + exfalso.
-      (* We have $Hc : px <> py$ and $Hc2 : tx <> ty$ *)
-      (* Therefore, it is impossible to have H *)
-      (* H : phase_int px .* pn_int tx = phase_int py .* pn_int ty *)
-Admitted. (* An informal proof is presented instead due to the difficulty in quantumlib *)
-
 End Prerequisites.
 
 Section Negation.
@@ -333,7 +302,7 @@ Proof.
   }
 Qed. 
 
-Lemma pstring_neg_implies: 
+(* Lemma pstring_neg_implies: 
 forall n (x y: PauliTuple n), 
   png_int x = -C1 .* png_int y -> x = mult_png (NOne, id_pn n) y.
 Proof.
@@ -356,16 +325,16 @@ Proof.
   apply png_int_injection in H1.
   elim H1 => Hp Ht.
   by subst.
-Qed.
+Qed. *)
 
-Lemma png_neg_alt:
+(* Lemma png_neg_alt:
   forall n (x y: PauliTuple n),
   png_int (mulg x y) = -C1 .* png_int (mulg y x) ->
   mulg x y = mult_png (NOne, id_pn n) (mulg y x).
 Proof. 
   move => n x y H.
   by apply pstring_neg_implies in H.
-Qed.
+Qed. *)
 
 
 
@@ -425,7 +394,7 @@ Qed.
 (* all PauliOperators are either commute or anticommute *)
 (* TODO: the definition of anticommute is too loose. *)
 (* find something in mathcomp to make it work *)
-Theorem pstring_bicommute n:
+(* Theorem pstring_bicommute n:
   forall (x y: PauliTuple n), commute_at mulg x y \/ 
   png_int (mulg x y) = -C1 .* png_int (mulg y x).
 Proof.
@@ -485,7 +454,7 @@ Proof.
       rewrite mult_phase_id !mult_phase_assoc.
       by rewrite (mult_phase_comm _  NOne) mult_phase_assoc.
     }
-Qed.
+Qed. *)
 
 End Commutativity.
 

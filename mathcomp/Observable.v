@@ -25,60 +25,6 @@ Definition hermitian {n:nat} (H: Square (2^n)): Prop :=
 Definition meas_to {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
   WF_Matrix M /\ hermitian M /\ M × psi = m .* psi.
 
-(* 
-  This section verifies the meas_to is consistent 
-  with quantumlib measurement definition .
-  Quantumlib only defines measurement in computational basis and if we 
-  want to achieve verification, we neeed to map the state and result to 
-  computational basis based on the observable.  
-
-  Which i find very hard to do because:
-  - it involves a lot of theories in linear algebra, which we don't have in quantumlib
-  - the theory is non-trivial. 
-  - i don't have much time
-  - The projective measurement postulate itself can be considered as an axiom,
-    i.e. it is more foundamental in theory.
-  - Quantumlib does not have sparse measurement primitive.
-    e.g. for 4 qubits, only measure the 2nd and the 4th 
-      (related to observables like Z2Z4 )
-  - And also, i find it is not our focus of research. 
-
-  A better way of doing this is that, make a more fundamental definition of 
-  measurement. 
-  For example, we can have _Quantum Measurement Postulate_[1], and then use this
-  definition to verify both measurements are correct, that is, they are be proved
-  by the postulate.
-
-  It will be more suitable to be considerred as a foundational change to quantumlib.
-
-  [1]: Nielsen, M. A., & Chuang, I. L. (2010). Quantum computation and quantum information. 
-  Cambridge university press. Page 87.
-*)
-Section QuantumLibMeas.
-
-Require Import QuantumLib.Measurement.
-(* QuantumLib only supports measure in computational basis *)
-(* We need to apply reduction operations to measure *)
-Variable (n:nat).
-
-(* Perform basis tranformation (projection) in SQIR according to the observable *)
-Variable proj_basis: Square (2^n) -> Vector (2^n) -> Vector (2^n).
-(* Map the eigenvalue measurement result to a basic bitstring *)
-Variable proj_result: Square (2^n) -> C -> Vector (2^n).
-
-(* 
-  This theorem tris verifies that measurement by observable
-  can be converted to measurement on basis state by projection
- *)
-Theorem meas_to_correct:
-  forall (m: C) (M: Square (2^n)) (psi psi': Vector (2^n)) ,
-  meas_to m M psi ->
-  proj_basis M psi = psi' ->
-  probability_of_outcome psi' (proj_result M m) = 1.
-Abort.
-
-End QuantumLibMeas.
-
 (* because every pauli operator is hermitian, 
   they can all be viewed as observable *)
 Notation PauliObservable := PauliTuple.
@@ -240,58 +186,6 @@ Qed.
 End Eigenvalue.
 
 Require Import ExtraSpecs.
-
-(* The Born rule is a postulate of quantum mechanics that gives 
-the probability that a measurement of a quantum system will yield 
-a given result. *)
-Section BornRule.
-
-Variable (n: nat).
-
-(*  (The Born Rule) Let Pm be a projector. Upon measuring a state ψ, 
-the probability of successful measurment is ⟨ ψ | Pm | ψ ⟩. 
-https://en.wikipedia.org/wiki/Born_rule *)
-Definition prob_meas_projector 
-  (proj: Projector) (psi: Vector (2^n)) :=
- inner_product psi ((proj.(P)) × psi).
-
-(* Nielsen, M. A., & Chuang, I. L. (2010). Quantum computation and quantum
- information. Cambridge university press. Page 72. *)
-Definition spectrual_decomposition 
-(M: Square (2^n)) (list: nat -> prod C (Projector)) (k:nat):=
-  M = big_sum (
-    fun k => 
-      let item := list k in 
-      let m := fst item in
-      let projector := snd item in
-      m .* projector.(P) 
-  ) k.
-
-(* This one attempt to verify the correctness of `meas_to m M psi` *)
-(* If `meas_to m M psi` holds,  *)
-(* Then the component (m, P) in the specturm decomposition of M *)
-(* have the property that *)
-(* The probability of getting the result m by measuring P is 1 *)
-(* That is, it verifies meas_to is the sufficient condition that *)
-(* Measuring P on psi yeilds m with certainty *)
-(* However it does look horrible and i don't want to attempt *)
-(* The main problem is that `big_sum` from quantumlib restricts *)
-(* the set of specturm components to be represented in nat -> matrix.  *)
-(* And this makes expression of member relation extremely complicated *)
-(* It would be better to use some advanced representation like {set} *)
-(* from mathcomp. *)
-(* But this requires a major refactor of quantumlib, which is out of the scope *)
-(* of our research *)
-Theorem meas_to_correct':
-  forall m (M: Square (2^n)) (psi: Vector (2^n)) setProj k,
-  meas_to m M psi ->
-  spectrual_decomposition M setProj k ->
-  exists (i: nat), le i k /\ fst (setProj i) = m /\
-    let P := (snd (setProj i)) in
-    prob_meas_projector P psi = 1.
-Abort.
-
-End BornRule.
 
 
 (* Notation Just for readability *)
