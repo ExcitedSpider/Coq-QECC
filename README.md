@@ -27,20 +27,11 @@ make barebone
 ## Structure Description
 
 There are two packages in the project.
-- barebone. Barebone is the initial attempt to formalize stabilizer using a from-scratch style. Only quantumLib is used in the project.
-- mathcomp. As the name suggests, we later did the formalization again using mathcomp and ssreflect, quantum-lib. 
-
+- theoreis-legacy. It is the initial attempt to formalize stabilizer using a from-scratch style. Only quantumLib is used in the project.
+- theories. We later did the formalization again using mathcomp and ssreflect, quantum-lib. 
 ```
 .
-├── barebone 
-│   ├── ExtraSpecs.v # extra properties
-│   ├── Group.v # from-scratch group definition
-│   ├── PauliList.v # Coq.List based n-qubit pauli string
-│   ├── PauliString.v # Coq.Vector-based n-qubit pauli string
-│   ├── Pauli.v # inductively defined 1-qubit pauli operator
-│   ├── Stablizer.v # quantum stabilizer theory
-│   └── dune
-├── mathcomp
+├── theoreis
 │   ├── PauliGroup.v # Pauli group definition based on math-comp
 │   ├── Action.v # definitions of group actions
 │   ├── Stabilizer.v # quantum stabilizer theory
@@ -51,6 +42,7 @@ There are two packages in the project.
 │   ├── Assumption.v # Assumptions we used 
 │   ├── Adapter.v # adaptor to barebone.PauliString
 │   └── dune
+├── theoreis_legacy
 └── readme.md
 ```
 
