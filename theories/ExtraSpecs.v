@@ -31,9 +31,95 @@ Definition commuteg (T: finGroupType) :=
 
 End commutative.
 
+Require Import Reals.
+Require Import DiscrR.
+Require Import Lra.
 Section QuantumlibExtra.
+Open Scope R_scope.
+
+Lemma l1:
+1 <> 0. Proof. by discrR. Qed.
+
+Lemma r_sqrt_1_spec:
+  forall (r: R),
+  r^2 = 1 -> r = 1 \/ r = -1.
+Proof.
+  intros r H.
+  move: (Rsqr_sol_eq_0_0 (mknonzeroreal 1 l1) 0 (-1) r).
+  rewrite /sol_x1 /sol_x2 /Delta /Rsqr /Delta_is_pos /Delta //=.
+  replace (0² - 4 * 1 * -1) with 4.
+  replace ((- 0 + sqrt (0 * 0 - 4 * 1 * -1)) / (2 * 1)) with (1).
+  replace ((- 0 - sqrt (0 * 0 - 4 * 1 * -1)) / (2 * 1)) with (-1).
+  intros H0.
+  assert (H1: 0 <= 4) by lra. 
+  apply H0 in H1.
+  apply H1. lra.
+  replace (0 * 0 - 4 * 1 * -1) with 4 by lra.
+  replace 4 with (2 ^ 2) by (simpl; lra).
+  replace (sqrt (2 ^ 2)) with 2. lra.
+  symmetry. apply (sqrt_pow2 2). lra.
+  replace ((0 * 0 - 4 * 1 * -1)) with 4 by lra.
+  replace 4 with (2 ^ 2) by (simpl; lra).
+  replace (sqrt (2 ^ 2)) with 2. lra.
+  symmetry. apply (sqrt_pow2 2). lra.
+  rewrite Rsqr_0. lra.
+Qed.
+
+Lemma r_system_20:
+  forall (r1 r2: R),
+  (r1 * r1 - r2 * r2 = 1) ->
+  (r1 * r2 + r2 * r1 = 0) ->
+  (r1, r2) = (1, 0) \/ (r1, r2) = (-1, 0).
+Proof.
+  move => a b H0 H1.
+  assert (a * b = 0).
+  {
+    rewrite Rmult_comm in H1. 
+    rewrite Rplus_diag in H1.
+    apply Rmult_integral in H1.
+    destruct H1.
+    - exfalso. contradict H. discrR.
+    - rewrite Rmult_comm. by apply H.
+  }
+  apply Rmult_integral in H.
+  destruct H.
+  - exfalso. subst. 
+    move: H0.
+    rewrite Rmult_0_l Rminus_0_l.
+    replace (b * b) with (b ^ 2) by lra.
+    move => H.
+    apply Ropp_eq_compat in H.
+    rewrite Ropp_involutive in H.
+    assert (b^2 + 1 <> 0). {
+      apply Rplus_le_lt_0_neq_0.
+      apply pow2_ge_0.
+      lra.
+    }
+    apply H0.
+    rewrite H. lra.
+  - subst. move: H0.
+    rewrite Rmult_0_r Rminus_0_r.
+    replace (a * a) with (a ^ 2) by lra.
+    move => H.
+    move: (r_sqrt_1_spec a H) => H0.
+    destruct H0.
+    subst. by left.
+    subst. by right.
+Qed. 
 
 From QuantumLib Require Import Quantum.
+
+Theorem c_sqrt_1_spec:
+  forall (c: Complex.C),
+  c ^ 2 = 1 -> c = 1 \/ c = -1.
+Proof.
+  move => [r1 r2].
+  rewrite /C1 /RtoC.
+  rewrite /RtoC //= Cmult_1_r /Cmult //= => H.
+  apply pair_equal_spec in H.
+  case H => H1 H2. clear H.
+  by apply r_system_20.
+Qed.
 
 Lemma Msub_self {n m}:
   forall (A: Matrix n m),
