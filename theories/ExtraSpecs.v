@@ -48,6 +48,18 @@ Proof.
   apply (H H0).
 Qed.
 
+Lemma Cmult_neq:
+  forall (a c1 c2: C),
+  a <> 0 -> c1 <> c2 -> c1 * a <> c2 * a.
+Proof. 
+  move => a c1 c2 Anz H F.
+  assert (HF: c1 = c2). {
+    apply (Cmult_cancel_r a); auto.
+  }
+  apply H.
+  apply HF.
+Qed.
+
 
 Lemma state_linear n:
   forall (a b: Vector n), a = b -> a .+ -C1 .* b = Zero.

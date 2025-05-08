@@ -22,8 +22,3 @@ Lemma Mnonzero_spec:
   A <> Zero -> 
   exists i j , (i < n)%nat /\ (j < m)%nat /\ A i j <> 0.
 Admitted.
-
-Lemma Cmult_neq:
-  forall (a c1 c2: C),
-  a <> 0 -> c1 <> c2 -> c1 * a <> c2 * a.
-Admitted. 
