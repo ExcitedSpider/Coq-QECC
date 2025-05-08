@@ -34,8 +34,9 @@ End commutative.
 Require Import Reals.
 Require Import DiscrR.
 Require Import Lra.
-Section QuantumlibExtra.
 Open Scope R_scope.
+
+Section RealExtra.
 
 Lemma l1:
 1 <> 0. Proof. by discrR. Qed.
@@ -107,7 +108,12 @@ Proof.
     subst. by right.
 Qed. 
 
+End RealExtra.
+
 From QuantumLib Require Import Quantum.
+
+Section QuantumlibExtra.
+
 
 Theorem c_sqrt_1_spec:
   forall (c: Complex.C),
