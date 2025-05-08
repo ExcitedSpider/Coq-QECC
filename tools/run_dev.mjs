@@ -3,7 +3,7 @@ import path from 'path';
 
 $.verbose = true;
 
-await cd(path.join(__dirname, "../mathcomp"));
+await cd(path.join(__dirname, "../theories"));
 
 console.log('Start Dune')
 
