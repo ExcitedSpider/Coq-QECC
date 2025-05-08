@@ -12,6 +12,7 @@ Require Import Assumption.
 Require Import Stabilizer.
 Require Import WellForm.
 Require Import PauliProps.
+Require Import ExtraSpecs.
 Open Scope form_scope.
 Set Bullet Behavior "Strict Subproofs".
 
