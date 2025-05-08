@@ -228,8 +228,8 @@ Proof.
   - SimplApplyPauli. lma.
   - contradict H => F.
     apply C1_neq_mC1.
-    (* TODO: Try to not use meas_p_to_unique *)
     apply (meas_p_to_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
+    + auto with wf_db.
     + SimplApplyPauli; lma.
     + move: F. replace (RtoC (-1)) with (-C1) by lca. 
       auto.

@@ -223,16 +223,17 @@ Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := Datatypes.id.
 
 Lemma meas_p_to_unique {n}:
   forall (phi: Vector (2^n)) (ob: Observable n)  (r q: C),
+  WF_Matrix phi ->
   'Meas ob on phi --> r ->
   'Meas ob on phi --> q ->
   phi <> Zero -> 
   r = q.
 Proof.
-  move => phi ob r q.
+  move => phi ob r q Hwf.
   rewrite /meas_p_to => H1 H2 Hnt.
   have: (pn_int ob × phi = pn_int ob × phi) by auto.
   rewrite {1}H1 H2.
-  by apply Mscale_cancel.
+  apply Mscale_cancel; auto.
 Qed.
 
 Lemma pn_int_concat {n m}:

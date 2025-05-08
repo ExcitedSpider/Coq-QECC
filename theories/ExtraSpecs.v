@@ -84,13 +84,42 @@ Proof.
   apply H1.
 Qed. 
 
+Lemma Maccess_scale:
+  forall {n m : nat} (A: Matrix n m) (c:C) (i j : nat),
+  (c .* A) i j = c * (A i j).
+Proof. by intros; lca. Qed.
 
+Lemma Mscale_cancel:
+  forall {n m : nat} (c1 c2 : C) (A: Matrix n m),
+  WF_Matrix A ->
+  A <> Zero ->  
+  c1 .* A = c2 .* A -> c1 = c2.
+Proof.
+  move => n m c1 c2 A Hwf Hnz H.
+  apply Mnonzero_spec in Hnz.
+  destruct Hnz as [i [j Hnzs]].
+  case (Ceq_dec c1 c2); auto => Hc.
+  assert (Hright: (c1 .* A) i j = (c2 .* A) i j).
+  {
+    by rewrite H.
+  }
+  assert (Hleft: (c1 .* A) i j <> (c2 .* A) i j).
+  {
+    rewrite !Maccess_scale.
+    apply Cmult_neq; auto.
+    destruct Hnzs as [_ [_ Aijneq]].
+    apply Aijneq.
+  }
+  contradict Hright.
+  apply Hleft.
+  apply Hwf.
+Qed.  
 
 Lemma Mscale_cancel_0 {n m}:
   forall (A: Matrix n m) (c: C),
-  A <> Zero -> c .* A = Zero -> c = 0.
+  WF_Matrix A -> A <> Zero -> c .* A = Zero -> c = 0.
 Proof.
-  move => A C HAz.
+  move => A C Hwf HAz.
   replace Zero with (0 .* A).
   by apply Mscale_cancel.
   by rewrite Mscale_0_l.
