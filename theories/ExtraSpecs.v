@@ -35,6 +35,11 @@ Section QuantumlibExtra.
 
 From QuantumLib Require Import Quantum.
 
+Lemma Msub_self {n m}:
+  forall (A: Matrix n m),
+  A .+ -1 .* A = Zero.
+Proof. by move => A; lma. Qed.
+
 Lemma C1_neq_mC1: C1 <> -C1.
 Proof.
   move => F.
@@ -103,7 +108,7 @@ Lemma involutive_eigenvalue n:
     lambda = 1 \/ lambda = -1.
 Proof.
   move => A psi lambda Hnz Hwfa HdetA Hwfpsi Hinv Heigen.
-  move: (involutoray_matrix_spec A Hinv) => Aspec.
+  move: (involutary_matrix_spec A Hinv) => Aspec.
   assert (
     Step1: Minverse A × (A × psi) = Minverse A × (lambda .* psi) 
   ). by rewrite Heigen.
@@ -133,7 +138,7 @@ Proof.
   rewrite -Cplus_assoc.
   replace ((- C1 + C1)) with C0 by by lca.
   Csimpl.
-  apply c_sqrt_1_sepcs.
+  apply c_sqrt_1_spec.
   apply Hwfa.
   apply HdetA.
 Qed.

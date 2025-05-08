@@ -166,22 +166,46 @@ Proof.
    by case h.
 Qed.
 
-(* Pauli operators *)
+
+Lemma operator_nonzero_det:
+  forall (n:nat) (op: PauliOperator n),
+  Determinant (png_int op) <> 0.
+Proof.
+  move => n op.
+  apply invertible_iff_det_neq_0.
+  auto with wf_db.
+  rewrite /invertible /PauliOpToElem.
+  remember ((One, op): PauliElement n) as p.
+  exists (png_int (invg p)).
+  split.
+  auto with wf_db.
+  rewrite /Minv !png_int_Mmult.
+  change mult_png with (@mulg (PauliElement n)).
+  rewrite mulgV mulVg /=.
+  rewrite id_pn_int. 
+  by Qsimpl.
+Qed.
+
+
+(* Pauli operators has eivenvalue either 1 or -1 *)
 Theorem operator_eigenvalue {n}:
   forall (op: PauliOperator n) (psi: Vector (2^n)) (lambda: C),
+    psi <> Zero ->
+    WF_Matrix psi ->
     applyP psi op = lambda .* psi ->
     lambda = 1 \/ lambda = -1.
 Proof.
-  move => op psi lambda Happ.
+  move => op psi lambda Hnz Hpwf Happ.
   rewrite /applyP in Happ.
   remember (png_int _) as m.
-  apply (involutive_eigenvalue _ m psi).
+  apply (involutive_eigenvalue n (png_int op) psi lambda); auto with wf_db.
+  apply (operator_nonzero_det).
   subst.
   move: (pauli_involutive op).
   rewrite /mulg /= => H.
   Qsimpl.
   rewrite -pn_int_Mmult H get_phase_pn_involutive PauliProps.id_pn_int //=. 
-  by Qsimpl. by [].
+  by Qsimpl. subst. by [].
 Qed.
 
 End Eigenvalue.
