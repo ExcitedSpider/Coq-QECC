@@ -402,9 +402,16 @@ Definition PhaseFlipCode := MkECC 3 psi SyndromeMeas PhaseFlipError obs_be_stabi
 
 Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 
+Check undetectable.
+
+(* this 3-1-1 phase flip code cannot detect a bit flip error *)
 Theorem undetectable_bitflip:
  undetectable PhaseFlipCode BitFlip0.
-Admitted. (* TODO: use stabiliser_detect_error similarly here *)
+Proof.
+  apply ecc_cannot_detect_error.
+  move => //= s.
+  by rewrite /BitFlip0 !inE /= => /orP [/eqP -> | /eqP ->]; apply /eqP.
+Qed.
 
 End VarScope.
 

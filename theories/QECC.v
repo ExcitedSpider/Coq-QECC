@@ -220,7 +220,7 @@ Theorem stabiliser_detect_error {n}:
   png_int (mult_png Ob Er) = -C1 .* png_int (mult_png Er Ob) ->
   ('Meas Ob on ('Apply Er on psi) --> -1).
 Proof.
-  move => Er Ob psi Hob Hac.
+  move => Ob psi Er Hob Hac.
   rewrite /applyP /meas_p_to -Mmult_assoc png_int_one.
   rewrite png_int_Mmult Hac Mscale_mult_dist_l.
   apply Mscale_simplify.
@@ -228,6 +228,41 @@ Proof.
   rewrite -png_int_Mmult Mmult_assoc Hob. 
   by Qsimpl.
   lca.
+Qed.
+
+(* On the opposite of error detection condition *)
+(* If an stabiliser S conmmute with the error E *)
+(* then this S is not able to detect the E      *)
+Theorem stabiliser_undetectable_error {n}:
+  forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
+  Ob ∝1 psi -> 
+  mult_png Ob Er = mult_png Er Ob ->
+  ('Meas Ob on ('Apply Er on psi) --> 1).
+Proof.
+  move => Ob psi Er Hob Hac.
+  rewrite /applyP /meas_p_to -Mmult_assoc !png_int_one.
+  rewrite png_int_Mmult Hac; Qsimpl.
+  rewrite -png_int_Mmult.
+  rewrite /stb /act_n /= /applyP in Hob.
+  rewrite -{2}Hob.
+  by rewrite Mmult_assoc.
+Qed.
+
+(* If all stabiliser in a ecc cannot detect an error,
+then the error is not detectable *)
+Corollary ecc_cannot_detect_error 
+  (ecc: ErrorCorrectionCode) (Er: PauliOperator ecc.(dim)):
+  (forall (s: Observable ecc.(dim)), 
+    s \in ecc.(obs) -> mult_png s Er = mult_png Er s
+  ) ->
+  undetectable ecc Er.
+Proof.
+  rewrite /undetectable.
+  move => H M Hm.
+  apply stabiliser_undetectable_error.
+  move: ecc.(ob1). 
+  rewrite /obs_be_stabiliser => Hstb'; auto.
+  by apply H; auto.
 Qed.
 
 End Theories.
