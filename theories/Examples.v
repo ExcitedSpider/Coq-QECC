@@ -377,7 +377,26 @@ Definition PhaseFlipError: {set ErrorOperator 3 } :=
 
 Theorem errors_detectable_i:
   errors_detectable SyndromeMeas PhaseFlipError psi.
-Admitted.
+Proof.
+  rewrite /errors_detectable => E.
+  rewrite !inE -orb_assoc /detectable => memE.
+  case/or3P: memE => /eqP ->.
+  
+  exists X12. split. by rewrite !inE. 
+  apply stabiliser_detect_error.
+  apply obs_be_stabiliser_i. by rewrite !inE.
+  simpl; Qsimpl; lma.
+  
+  exists X12. split. by rewrite !inE. 
+  apply stabiliser_detect_error.
+  apply obs_be_stabiliser_i. by rewrite !inE.
+  simpl; Qsimpl; lma.
+
+  exists X23. split. by rewrite !inE. 
+  apply stabiliser_detect_error.
+  apply obs_be_stabiliser_i. by rewrite !inE.
+  simpl; Qsimpl; lma.
+Qed.
 
 Definition PhaseFlipCode := MkECC 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
 
@@ -385,7 +404,7 @@ Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 
 Theorem undetectable_bitflip:
  undetectable PhaseFlipCode BitFlip0.
-Admitted. (* TODO *)
+Admitted. (* TODO: use stabiliser_detect_error similarly here *)
 
 End VarScope.
 
@@ -427,13 +446,10 @@ Proof.
   by move => -> ->.
 Qed.
 
-
 Definition obs0: PauliOperator 9 := [p X, X, X, X, X, X, I, I, I].
 
 (* Z1 is a phase flip *)
 Definition Z1: PauliOperator dim := t2o [tuple of  Z :: nseq 8 I].
-
-
 
 
 Lemma apply_z1_L0_effect: 
