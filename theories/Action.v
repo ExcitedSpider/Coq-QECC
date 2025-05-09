@@ -278,6 +278,8 @@ Definition neg_p1g (p: PauliOp): PauliOp :=
 Definition neg_phase (p: phase): phase :=
   mulg NOne p.
 
+Open Scope C_scope.
+
 Lemma neg_phase_correct:
   forall x y, phase_int x = -C1 * phase_int y <-> 
       x = mult_phase NOne y.

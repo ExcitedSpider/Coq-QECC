@@ -108,6 +108,9 @@ Proof.
     subst. by right.
 Qed. 
 
+Close Scope R_scope.
+Open Scope C_scope.
+
 End RealExtra.
 
 From QuantumLib Require Import Quantum.

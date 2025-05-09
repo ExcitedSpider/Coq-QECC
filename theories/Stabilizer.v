@@ -6,6 +6,7 @@ From mathcomp Require Import ssreflect ssrbool ssrfun eqtype ssrnat div seq tupl
 From mathcomp Require Import fintype bigop finset fingroup morphism perm.
 
 Require Import SQIR.UnitaryOps.
+From QuantumLib Require Import Complex.
 Require Import Action.
 Require Import PauliGroup.
 Import P1Group.
@@ -412,14 +413,7 @@ Example z1_f:
   [ p1 Z ] ∝-1  ∣ 1 ⟩.
 Proof. by simpl_stbn. Qed.
 
-Goal ∣ 1, 0, 1 ⟩ == kron (kron (ket 1) (ket 0)) (ket 1).
-Proof. by []. Qed.
-
-Goal ∣ 1, 0, 1 ⟩ = ∣ 1  ⟩ ⊗ ∣ 0 ⟩ ⊗ ∣ 1 ⟩.
-Proof. by []. Qed.
-
-Check ∣ 1, 0, 1 ⟩: Square 8.
-
+From QuantumLib Require Import Complex.
 (* two anti-stabilizers combine into a stabilizer under the tensor product *)
 Theorem stb_even_slign_flip:
   forall {n m: nat} (pstr1: PauliElement n) (pstr2: PauliElement m) (ψ1:  Vector (2^n)) (ψ2:  Vector (2^m)),
@@ -439,10 +433,14 @@ Proof.
   restore_dims. 
   rewrite Mscale_kron_dist_l.
   rewrite Mscale_assoc.
-  replace (-1 * -1) with C1 by lca.
+  replace (-1 * -1) with (C1) by lca.
   by Qsimpl.
   all: try by rewrite - Nat.pow_add_r.
 Qed.
+
+Import all_pauligroup.
+
+Definition ZZ := ([p1 Z, Z]) : PauliTuple 2.
 
 Example stb_z11:
   ([ p1 Z, Z]) ∝1 ∣ 1, 1 ⟩.

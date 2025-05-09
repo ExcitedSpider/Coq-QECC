@@ -5,10 +5,7 @@ From mathcomp Require Import all_ssreflect fingroup.
 Require Import WellForm.
 Require Import PauliProps.
 Section Operations.
-Import PNGGroup.
-Import PNGroup.
-Import P1GGroup.
-Import P1Group.
+Import all_pauligroup.
 
 Definition compose_pstring {n m: nat} 
   (ps1 : PauliTuple n) (ps2 : PauliTuple m) : PauliTuple (n + m) :=
@@ -48,7 +45,6 @@ Proof.
     rewrite (kron_assoc (p1_int hp ) (pn_int tp) (pn_int q)); auto with wf_db.
 Qed. 
 
-
 Theorem compose_pstring_correct:
   forall {n m: nat}  (ps1: PauliTuple n) (ps2: PauliTuple m),
   png_int (compose_pstring ps1 ps2) =
@@ -68,8 +64,40 @@ End Operations.
 
 Section HardamardConjugation.
 
-Definition h_conj {n:nat} (from to: PauliTuple n): Prop :=
-   (hadamard_k n) × png_int (from) × (hadamard_k n) = png_int to.
+Notation "[[ p ]]" := (png_int p) (at level 200): form_scope.
+
+Definition h_conj {n:nat} (p: PauliTuple n):=
+   (hadamard_k n) × [[ p ]] × (hadamard_k n) .
+
+Lemma MmultHHk {n}:
+  hadamard_k n × (hadamard_k n) = I (2^n).
+Proof.
+  induction n.
+  - rewrite /hadamard_k //=. solve_matrix.
+  rewrite /=. restore_dims.
+  rewrite kron_mixed_product IHn.
+  rewrite MmultHH.
+  rewrite id_kron.
+  lma.
+Qed.
+
+(* Simplify hadamard transformation  *)
+Theorem simplify_htrans {n} :
+  forall (psi phi: Vector (2^n)) (p: PauliTuple n),
+  WF_Matrix psi ->
+  [[ p ]] × psi = phi ->
+  (h_conj p) × ((hadamard_k n) × psi) = (hadamard_k n) × phi.
+Proof.
+  move => psi phi p Hwf.
+  rewrite /h_conj => H .
+  rewrite -!Mmult_assoc.
+  rewrite (Mmult_assoc (hadamard_k n × [[p]]) ).
+  rewrite MmultHHk.
+  rewrite (Mmult_assoc (hadamard_k n × [[p]]) ).
+  rewrite Mmult_1_l.
+  by rewrite (Mmult_assoc) H; auto.
+  auto.
+Qed.
 
 Notation "[ 'p' x1 , .. , xn ]" := [tuple of x1 :: .. [:: xn] ..] (at level 200): form_scope.
 
@@ -85,11 +113,12 @@ Proof. by solve_matrix. Qed.
 
 (* $ H^3 Z1Z2 H^3$ = X1X2 *)
 Lemma h_conj_z1z2:
-  h_conj ([p1 Z, Z, I]) ([p1 X, X, I]).
+  h_conj ([p1 Z, Z, I]) = [[ [p1 X, X, I] ]].
 Proof.
   rewrite /h_conj /=.
   Qsimpl.
-  by rewrite MmultHH h_conj_z.
+  rewrite MmultHH.
+  by rewrite -!Mmult_assoc h_conj_z.
 Qed.
 
 End HardamardConjugation.
