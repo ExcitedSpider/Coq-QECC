@@ -453,7 +453,8 @@ Proof.
   by move => -> ->.
 Qed.
 
-Definition obs0: PauliOperator 9 := [p X, X, X, X, X, X, I, I, I].
+Definition obsX12: PauliOperator 9 := [p X, X, X, X, X, X, I, I, I].
+Definition obsZ12: PauliOperator 9 := [p Z, Z, I, I, I, I, I, I, I].
 
 (* Z1 is a phase flip *)
 Definition Z1: PauliOperator dim := t2o [tuple of  Z :: nseq 8 I].
@@ -508,14 +509,14 @@ Proof.
   simpl_stbn.
 Qed.
 
-Lemma obs0_stb:
-  obs0 ∝1 psi.
+Lemma obsx12_stb:
+  obsX12 ∝1 psi.
 Proof.
   rewrite /psi.
   apply stb_scale; apply stb_addition; apply stb_scale;
   rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
   - rewrite kron_assoc; auto with wf_db.
-    replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+    replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@meas_p_to_11_krons 3 6).
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
@@ -523,7 +524,7 @@ Proof.
         by rewrite -stb_meas_p_to_1; apply stb_part.
         by rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl.
   - rewrite kron_assoc; auto with wf_db.
-    replace obs0 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+    replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@meas_p_to_mm_krons 3 6).
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
@@ -532,11 +533,11 @@ Proof.
       + by rewrite meas_p_to_applyP applyP_id; auto with wf_db; by Qsimpl.
 Qed. 
 
-Lemma obs0_err_state0:
-  'Meas obs0 on (∣ 0, 0, 0 ⟩ .+ - C1 .* ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩)
+Lemma obsx12_err_state0:
+  'Meas obsX12 on (∣ 0, 0, 0 ⟩ .+ - C1 .* ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩)
     --> -1 .
 Proof.
-  replace obs0 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+  replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
   apply (@meas_p_to_m1_krons 3).
   - SimplApplyPauli. lma.
   - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
@@ -545,11 +546,11 @@ Proof.
     SimplApplyPauli; lma.
 Qed.
 
-Lemma obs0_err_state1:
-  'Meas obs0 on (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ -C1 .* ∣ 1, 1, 1 ⟩)
+Lemma obsx12_err_state1:
+  'Meas obsX12 on (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ -C1 .* ∣ 1, 1, 1 ⟩)
     --> -1 .
 Proof.
-  replace obs0 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
+  replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
   apply (@meas_p_to_1m_krons 3).
   - SimplApplyPauli. lma.
   - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
@@ -558,16 +559,16 @@ Proof.
     SimplApplyPauli; lma.
 Qed.
 
-Theorem obs0_detect_phase_flip:
-  'Meas obs0 on ('Apply Z1 on psi) --> -1.
+Theorem obsx12_detect_phase_flip:
+  'Meas obsX12 on ('Apply Z1 on psi) --> -1.
 Proof.
   rewrite apply_z1_effect meas_p_to_applyP.
   rewrite !applyP_mscale !applyP_plus !applyP_mscale.
   remember (/ C2 * / √ 2) as norm.
   rewrite !Mscale_assoc (Cmult_comm _ norm) -Mscale_assoc.
   apply Mscale_simplify; auto.
-  move/meas_p_to_applyP : obs0_err_state0 => ->.
-  move/meas_p_to_applyP : obs0_err_state1 => ->.
+  move/meas_p_to_applyP : obsx12_err_state0 => ->.
+  move/meas_p_to_applyP : obsx12_err_state1 => ->.
   rewrite Mscale_plus_distr_r !Mscale_assoc.
   by rewrite !(Cmult_comm (-1)).
 Qed.
@@ -575,15 +576,28 @@ Qed.
 (* Now we do it again but using error correct condition *)
 (* It's so much easier *)
 (* maybe we can define the negation more properly *)
-Theorem obs0_detect_phase_flip':
-  'Meas obs0 on ('Apply Z1 on psi) --> -1.
+Theorem obsx12_detect_phase_flip':
+  'Meas obsX12 on ('Apply Z1 on psi) --> -1.
 Proof.
   apply stabiliser_detect_error.
-  - apply obs0_stb.
+  - apply obsx12_stb.
   - rewrite /=.  
     rewrite Mscale_assoc.
     by replace (- C1 * Ci) with (-Ci) by lca.
 Qed.
+
+Definition X1: PauliOperator dim := t2o [tuple of X :: nseq 8 I].
+Definition Y1: PauliOperator dim := t2o [tuple of Y :: nseq 8 I].
+Definition BPFlipE0 := Y1.
+
+(* Y1 is a combination of bit flip and phase flip error *)
+Lemma Y1_bit_phase_flip: mulg X1 Z1 = Y1. Proof. by apply /eqP. Qed.
+
+(* we show that shor's code is able to correct a bit-phase flip *)
+Theorem obsZ12_detect_bit_phase_flip:
+  'Meas obsZ12 on ('Apply Y1 on psi) --> -1.
+Abort. (* TODO *)
+
 
 End VarScope.
 
