@@ -44,6 +44,8 @@ Variable (psi: Vector (2^dim)).
   The measurement result is 1.
   Therefore, if we find any other measurement result, 
   we say the error is _detectable_.
+
+  And since -1 is not 
   For pauli operators, the eigenvalue is always +-1 see `operator_eigenvalue` 
   so a error is detectable -> syndrome measurement is -1
 *)
@@ -59,6 +61,24 @@ Definition errors_detectable :=
   forall (E: ErrorOperator dim),
   E \in DetectableErrors -> detectable E.
 
+(* If detectable, then there is a measurement that produces non-1 result *)
+(* This is strong enough, but it might appear to be interesting  *)
+(* to do the necessary proof by using operator_eigenvalue *)
+Theorem detectable_correct :
+  forall E, 
+  detectable E -> 
+  let psi' := 'Apply E on psi in
+    exists M m,  M \in SyndromeMeas /\ 'Meas M on psi' --> m /\ m <> 1.
+Proof.
+  move => //= E.
+  rewrite /detectable => [[M [H0 H1]]].
+  exists M, (-1).
+  repeat try (split; auto).
+  move => F.
+  inversion F.
+  contradict H2.
+  discrR.
+Qed.
 
 (* error E can be recovered by R *)
 Definition recover_by {n} (E: ErrorOperator n) (R: PauliOperator n) :=
