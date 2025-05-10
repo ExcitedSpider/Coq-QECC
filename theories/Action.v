@@ -431,17 +431,48 @@ Proof.
   apply png_int_wf.
 Qed.
 
-
-(* This can be proved by the fact that *)
-(* Fact 1: all pauli oprators are unitary *)
-(* > This can be proved using induction and kron_unitary  *)
-(* Fact 2: unitary operators preserve norms *)
-(* > Could be an axiom *)
-(* Fact 3: zero vector alwasy has norm = 1 *)
-(* Lemma: norm_nonzero_iff_nonzero *)
-Theorem applyP_nonzero n:
-  forall (op: PauliTuple n) (v: Vector (2^n)),
-  v <> Zero -> (applyP v op) <> Zero.
-Admitted.
-
 #[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
+
+Lemma pauli_unitary n:
+  forall (op: PauliTupleBase n),
+  WF_Unitary (png_int op).
+Proof.
+  move => t //=; Qsimpl.
+  induction n.
+    by rewrite tuple0 //=; apply id_unitary.
+  case /tupleP: t => h t.
+  rewrite pn_int_cons.
+  apply kron_unitary.
+  - case h; simpl.
+    apply id_unitary. 
+    apply σx_unitary. 
+    apply σy_unitary. 
+    apply σz_unitary.
+  - apply IHn.
+Qed. 
+
+Theorem unitary_preseve_norm n:
+  forall (A: Square n) (v: Vector n),
+  WF_Matrix v -> WF_Unitary A -> norm v = norm (A × v).
+Proof.
+  rewrite /WF_Unitary => A v Hwfv [Hwf Hu].
+  rewrite /norm //=.
+  rewrite inner_product_adjoint_l -Mmult_assoc Hu Mmult_1_l.
+  - by [].
+  - apply Hwfv.
+Qed.  
+
+Theorem applyP_nonzero n:
+  forall (op: PauliTupleBase n) (v: Vector (2^n)),
+  WF_Matrix v -> v <> Zero -> (applyP v op) <> Zero.
+Proof.
+  move => op v Hwf Hnz.
+  apply norm_nonzero_iff_nonzero.
+  apply apply_n_wf; auto.
+  move: (pauli_unitary n op) => Hopu.
+  eapply (unitary_preseve_norm) in Hopu.
+  rewrite /applyP -Hopu.
+  apply norm_nonzero_iff_nonzero; auto. 
+  Unshelve. apply Hwf.
+Qed.
+

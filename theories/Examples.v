@@ -279,7 +279,7 @@ Ltac prove_undetectable E M:=
   | apply stabiliser_undetectable_error;
       [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
       | by rewrite /M /M //=; apply /eqP ]
-  | apply applyP_nonzero; apply psi_nonzero ].
+  | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
 
 Ltac prove_detectable E M :=
   apply (meas_p_to_unique ('Apply E on psi) M); auto;
@@ -287,7 +287,7 @@ Ltac prove_detectable E M :=
   | apply (stabiliser_detect_error_c M psi E);
       [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
       | by apply negate_phase_simpl; apply /eqP ]
-  | by apply applyP_nonzero; apply psi_nonzero ].
+  | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
 
 (* every error in bitflip code has unique syndrome. *)
 (* that is, they can be recovered *)
