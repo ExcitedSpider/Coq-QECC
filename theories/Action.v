@@ -304,42 +304,6 @@ Proof.
   }
 Qed. 
 
-(* Lemma pstring_neg_implies: 
-forall n (x y: PauliTuple n), 
-  png_int x = -C1 .* png_int y -> x = mult_png (NOne, id_pn n) y.
-Proof.
-  move => n [px tx] [py ty].
-  rewrite /= /mult_png => H. 
-  Qsimpl.
-  rewrite /get_phase_png get_phase_pn_id.
-  rewrite mult_phase_id mult_pn_id.
-  move: H.
-  assert (
-  forall n px (tx: PauliTupleBase n),
-    phase_int px .* pn_int tx = png_int (px, tx)
-  ). by easy.
-  rewrite H.
-  replace (phase_int px .* pn_int tx) with (png_int (px, tx)) by easy.
-  replace (-C1) with (phase_int NOne) by easy.
-  rewrite Mscale_assoc mult_phase_comp. 
-  rewrite H.
-  move => H1.
-  apply png_int_injection in H1.
-  elim H1 => Hp Ht.
-  by subst.
-Qed. *)
-
-(* Lemma png_neg_alt:
-  forall n (x y: PauliTuple n),
-  png_int (mulg x y) = -C1 .* png_int (mulg y x) ->
-  mulg x y = mult_png (NOne, id_pn n) (mulg y x).
-Proof. 
-  move => n x y H.
-  by apply pstring_neg_implies in H.
-Qed. *)
-
-
-
 Lemma PauliOp_bicommute:
   forall x y,
   get_phase x y = get_phase y x \/
@@ -351,6 +315,7 @@ Proof.
   all: try(by left); rewrite -neg_phase_correct.
   all: try(right; lca).
 Qed.
+
 
 End Negation.
 
@@ -391,74 +356,20 @@ Proof.
   by case x; case y.
 Qed.
 
-
-(* A very profound theorem: *)
-(* all PauliOperators are either commute or anticommute *)
-(* TODO: the definition of anticommute is too loose. *)
-(* find something in mathcomp to make it work *)
-(* Theorem pstring_bicommute n:
-  forall (x y: PauliTuple n), commute_at mulg x y \/ 
-  png_int (mulg x y) = -C1 .* png_int (mulg y x).
-Proof.
-  induction n.
-  {
-    move =>[sx px] [sy py].
-    left.
-    rewrite (trivial_tuples px py) /commute_at.
-    by rewrite /mulg /= phase_comm.
-  }
-  {
-    move => [px tx] [py ty].
-    case: tx / tupleP => hx tx.
-    case: ty / tupleP => hy ty.
-    move: (IHn (px, tx) (py, ty)) => IHn'.
-    rewrite /= /commute_at /= /mulg /= /mult_png !mult_pn_cons.
-    destruct IHn'.
-    apply commute_png_implies in H.
-    destruct H as [Hmtuple  Hmphase].
-    {
-      (* tail commute *)
-      rewrite !get_phase_png_cons !Hmphase.
-      rewrite !Hmtuple.
-      case (PauliOp_bicommute hx hy) => Hhead.
-      - left; by rewrite !Hhead mult_p1_comm. 
-      - right. rewrite !phase_int_comp Hhead !Mscale_assoc !Cmult_assoc. 
-          (* by rewrite !beheadCons !theadCons mult_p1_comm. *)
-          rewrite !beheadCons !theadCons /neg_phase /= phase_int_comp /=. 
-          by rewrite mult_p1_comm.
-    }
-    (* tail anticommute *)
-    case (PauliOp_bicommute hx hy) => Hhead.
-    - apply png_neg_alt in H.
-      rewrite /mult_png /= mult_pn_id /mulg /= /mult_png in H.
-      rewrite /get_phase_png get_phase_pn_id mult_phase_id in H.
-      apply pair_inj in H.
-      elim H => H0 H1.
-      right. 
-      rewrite !get_phase_png_cons !theadCons !beheadCons.
-      rewrite /get_phase_png.
-      rewrite !Hhead !H0 !H1.
-      rewrite phase_mult_p1_comm.
-      rewrite !phase_int_comp /= Mscale_assoc !Cmult_assoc.
-      remember (phase_int (get_phase hy hx)) as a.
-      remember (phase_int (get_phase_pn ty tx)) as b.
-      by rewrite (Cmult_comm a _).
-      exact Hhead.
-    - left.
-      rewrite /neg_phase in Hhead.
-      rewrite !get_phase_png_cons !Hhead.
-      apply pstring_neg_implies in H.
-      rewrite /mulg /= /mult_png in H.
-      apply pair_inj in H.
-      destruct H.
-      rewrite H H0 mult_p1_comm.
-      rewrite mult_pn_id /get_phase_png get_phase_pn_id.
-      rewrite mult_phase_id !mult_phase_assoc.
-      by rewrite (mult_phase_comm _  NOne) mult_phase_assoc.
-    }
-Qed. *)
-
 End Commutativity.
+
+Theorem negate_phase_simpl {n}:
+  forall (a b: PauliTuple n),
+  a = mult_png (NOne, id_pn n) b ->
+  png_int (a) = -C1 .* png_int b.
+Proof.
+  move => [sa pa] [sb pb]  //=.
+  Qsimpl.
+  rewrite /mult_png /get_phase_png.
+  rewrite get_phase_pn_id //= mult_pn_id; case sb => H;
+  inversion H; subst.
+  all: lma.
+Qed.
 
 
 Lemma applyP_plus { n: nat }:

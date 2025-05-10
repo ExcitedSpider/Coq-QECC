@@ -29,7 +29,9 @@ Definition meas_to {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
 
 (* because every pauli operator is hermitian, 
   they can all be viewed as observable *)
-Notation PauliObservable := PauliTuple.
+Notation PauliObservable := PauliTupleBase.
+(* Notation Just for readability *)
+Notation ErrorOperator := PauliOperator.
 
 Lemma pauli_base_hermitian:
   forall (p: PauliBase),
@@ -214,16 +216,13 @@ End Eigenvalue.
 Require Import ExtraSpecs.
 
 
-(* Notation Just for readability *)
-Notation ErrorOperator := PauliOperator.
-Notation Observable := PauliOperator.
 (* A helper to let coq make type right *)
 
 Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := Datatypes.id.
 
 
 Lemma meas_p_to_unique {n}:
-  forall (phi: Vector (2^n)) (ob: Observable n)  (r q: C),
+  forall (phi: Vector (2^n)) (ob: PauliObservable n)  (r q: C),
   WF_Matrix phi ->
   'Meas ob on phi --> r ->
   'Meas ob on phi --> q ->

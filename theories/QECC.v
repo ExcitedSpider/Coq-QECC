@@ -54,7 +54,7 @@ Definition detectable E :=
     exists M,  M \in SyndromeMeas /\ 'Meas M on psi' --> -1.
 
 Definition obs_be_stabiliser :=
-  forall (M: Observable dim),
+  forall (M: PauliObservable dim),
     M \in SyndromeMeas -> M ∝1 psi.
 
 Definition errors_detectable :=
@@ -114,7 +114,7 @@ Record ErrorCorrectionCode := MkECC {
 (* Codespace *)
 ; psi: Vector (2^dim)
 (* Observables *)
-; obs: {set Observable dim}
+; obs: {set PauliObservable dim}
 (* Detectable Errors *)
 ; err: {set PauliOperator dim}
 (* Obligation1: observables must be stabilisers of codespace *)
@@ -170,8 +170,8 @@ Qed.
 
 Lemma png_idP:
   forall n (t: PauliOperator n),
-  t = oneg (Observable n) ->
-  [tuple of I ::t] = oneg (Observable n.+1).
+  t = oneg (PauliObservable n) ->
+  [tuple of I ::t] = oneg (PauliObservable n.+1).
 Proof.
   move => n t ->.
   rewrite /oneg /= /id_pn /=.
@@ -272,7 +272,7 @@ Qed.
 then the error is not detectable *)
 Corollary ecc_cannot_detect_error 
   (ecc: ErrorCorrectionCode) (Er: PauliOperator ecc.(dim)):
-  (forall (s: Observable ecc.(dim)), 
+  (forall (s: PauliObservable ecc.(dim)), 
     s \in ecc.(obs) -> mult_png s Er = mult_png Er s
   ) ->
   undetectable ecc Er.

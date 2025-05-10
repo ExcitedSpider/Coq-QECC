@@ -98,13 +98,13 @@ Definition BitFlipError: {set ErrorOperator 3 } :=
 (* Syndrome measurement *)
 Definition Z12 := [p Z, Z, I].
 Definition Z23 := [p I, Z, Z].
-Definition SyndromeMeas: {set Observable 3} :=
+Definition SyndromeMeas: {set PauliObservable 3} :=
   [set Z12, Z23].
 
 
 (* Syndrome Measurement Does not change the correct code *)
 Theorem SyndromeMeas_stab :
-  forall (M: Observable dim),
+  forall (M: PauliObservable dim),
     M \in SyndromeMeas -> 'Meas M on psi --> 1.
 Proof.
   move => M.
@@ -319,7 +319,7 @@ Notation "[ 'set' a1 , a2 , .. , an ]" := (setU .. (a1 |: [set a2]) .. [set an])
 (* TODO let's talk about how stabiliser will change *)
 Definition X12 := [p X, X, I].
 Definition X23 := [p I, X, X].
-Definition SyndromeMeas: {set Observable 3} :=
+Definition SyndromeMeas: {set PauliObservable 3} :=
   [set X12, X23].
 
 (* move them to somewhere suits *)
@@ -327,7 +327,7 @@ Lemma MmultXPl: σx × ∣+⟩ =       ∣+⟩. Proof. by solve_matrix. Qed.
 Lemma MmultXMi: σx × ∣-⟩ = -1 .* ∣-⟩. Proof. by solve_matrix. Qed.
 
 Theorem meas_codespace_1 :
-  forall (M: Observable dim),
+  forall (M: PauliObservable dim),
     M \in SyndromeMeas -> 'Meas M on psi --> 1.
 Proof.
   move => M.
@@ -340,25 +340,6 @@ Proof.
   SimplApplyPauli;
   by replace (β * (-1) * (-1)) with (β) by lca.
 Qed.
-
-(* This one i'm tring to compare it stb is more easy to prove *)
-(* Corollary meas_stabliser :
-  forall (M: Observable dim), M \in SyndromeMeas -> 
-    M ∝1 psi.
-Proof.
-  move => M.
-  rewrite !inE => /orP [/eqP -> | /eqP ->].
-  rewrite /X12 /psi. 
-  apply stb_addition; apply stb_scale;
-   unfold_stb; Qsimpl; SimplApplyPauli.
-  - by rewrite ?MmultXMi ?MmultXPl; lma.
-  - by rewrite ?MmultXMi ?MmultXPl; lma.
-
-  apply stb_addition; apply stb_scale;
-   unfold_stb; Qsimpl; SimplApplyPauli.
-  - by rewrite ?MmultXMi ?MmultXPl; lma.
-  - by rewrite ?MmultXMi ?MmultXPl; lma.
-Qed. *)
 
 (* In fact there is an easier proof *)
 Corollary obs_be_stabiliser_i :
@@ -593,11 +574,33 @@ Definition BPFlipE0 := Y1.
 (* Y1 is a combination of bit flip and phase flip error *)
 Lemma Y1_bit_phase_flip: mulg X1 Z1 = Y1. Proof. by apply /eqP. Qed.
 
+Lemma obsZ12_stb:
+  obsZ12 ∝1 psi.
+Proof.
+  rewrite /psi.
+  apply stb_scale; apply stb_addition; apply stb_scale;
+  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+  - rewrite kron_assoc; auto with wf_db.
+    replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
+    apply (@meas_p_to_11_krons 3 6).
+    + SimplApplyPauli; lma.
+    + by rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl.
+  - rewrite kron_assoc; auto with wf_db.
+    replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
+    apply (@meas_p_to_11_krons 3 6).
+    + SimplApplyPauli; lma.
+    + rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
+Qed.
+
+
 (* we show that shor's code is able to correct a bit-phase flip *)
 Theorem obsZ12_detect_bit_phase_flip:
   'Meas obsZ12 on ('Apply Y1 on psi) --> -1.
-Abort. (* TODO *)
-
+Proof.
+  apply stabiliser_detect_error.
+  - apply obsZ12_stb.
+  - by apply negate_phase_simpl; apply /eqP.
+Qed.
 
 End VarScope.
 
