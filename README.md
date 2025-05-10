@@ -14,7 +14,7 @@ https://qubit.guide/7-stabilisers
 
 ```bash
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam pin coq-sqir https://github.com/inQWIRE/SQIR.git
+pam pin coq-sqir https://github.com/inQWIRE/SQIR.git
 opam install . --deps-only
 
 # compile default mathcomp version

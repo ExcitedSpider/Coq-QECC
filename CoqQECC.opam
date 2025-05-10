@@ -18,11 +18,11 @@ build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "odoc" {with-doc}
   "dune" {>= "3.8"}
-  "coq" {>= "8.18"}
+  "coq" {= "8.18.0"}
   "coq-quantumlib" {>= "1.6.0"}
   "coq-sqir" {>= "1.1.0"}
-  "coq-mathcomp-ssreflect" {>= "2.2.0"}
-  "coq-mathcomp-fingroup" {>= "2.2.0"}
+  "coq-mathcomp-ssreflect" {= "2.2.0"}
+  "coq-mathcomp-fingroup" {= "2.2.0"}
 ]
 
 tags: [
