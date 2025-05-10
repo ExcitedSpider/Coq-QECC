@@ -107,29 +107,35 @@ End QECCTheories.
 Arguments obs_be_stabiliser {dim}.
 Arguments errors_detectable {dim}.
 
-Section Structure.
+Section DetectionCode.
 
-Record ErrorCorrectionCode := MkECC {
+(* EDC represents a code structure in which the code space is `code`
+ EDC  can detect errors \in err using stabiliser observables \in obs *)
+Record ErrorDetectionCode := MkDCC {
   dim: nat
 (* Codespace *)
-; psi: Vector (2^dim)
+; code: Vector (2^dim)
 (* Observables *)
 ; obs: {set PauliObservable dim}
 (* Detectable Errors *)
 ; err: {set PauliOperator dim}
 (* Obligation1: observables must be stabilisers of codespace *)
-; ob1: obs_be_stabiliser obs psi 
+; ob1: obs_be_stabiliser obs code 
 (* Obligation2: all errors must be detectable by measurement *)
-; ob2: errors_detectable obs err psi
+; ob2: errors_detectable obs err code
 }.
 
 (* Undetectable is that the error state has the same measurement
   as the codespace
   There is an implicit requirement that E should be non-trivial (not I)
 *)
-Definition undetectable (ecc: ErrorCorrectionCode) E := 
-  let psi' := 'Apply E on ecc.(psi) in
-    forall M,  M \in ecc.(obs) -> 'Meas M on psi' --> 1.
+Definition undetectable (edc: ErrorDetectionCode) E := 
+  let psi' := 'Apply E on edc.(code) in
+    forall M,  M \in edc.(obs) -> 'Meas M on psi' --> 1.
+
+End DetectionCode.
+
+Section ErrorCorrectionCode.
 
 (* 
 Two errors are indistinguishable when all syndrome measurment
@@ -138,10 +144,10 @@ TODO: enforce E1 to be in the correctable error set
 And derive distance of codewords based on the minimul weight of 
 indistinguishable errors.
 *)
-Definition indistinguishable (ecc: ErrorCorrectionCode) E1 E2 :=
-  forall M, M \in ecc.(obs) -> 
-  let psi_e1 := 'Apply E1 on ecc.(psi) in
-  let psi_e2 := 'Apply E2 on ecc.(psi) in
+Definition indistinguishable (edc: ErrorDetectionCode) E1 E2 :=
+  forall M, M \in edc.(obs) -> 
+  let psi_e1 := 'Apply E1 on edc.(code) in
+  let psi_e2 := 'Apply E2 on edc.(code) in
     ('Meas M on psi_e1 --> -1) -> ('Meas M on psi_e2 --> -1)
   .
 
@@ -149,6 +155,25 @@ Definition indistinguishable (ecc: ErrorCorrectionCode) E1 E2 :=
 (* So we don't make them  in examples  *)
 (* But we provide a theorem, see get_recover_correct *)
 Definition get_recover {n}: (ErrorOperator n) -> (PauliOperator n) := Datatypes.id.
+
+(* 
+An error correction code ECC is a detection code that satisfies:
+- error_identified_uniquely: every error E in the error set can be detect
+  by a unique syndrome  
+*)
+Definition error_identified_uniquely (edc: ErrorDetectionCode): Prop := 
+  forall (E1 E2: PauliOperator (dim edc)), 
+    E1 \in edc.(err) -> E2 \in edc.(err) -> 
+  E1 <> E2 -> not (indistinguishable edc E1 E2) . 
+
+Record ErrorCorrectionCode := MkECC {
+  edc :> ErrorDetectionCode;
+  correction_obligation: error_identified_uniquely edc
+}.
+
+End ErrorCorrectionCode.
+
+Section Theories.
 
 Lemma get_phase_png_involutive:
 forall {n} (t: PauliOperator n), get_phase_png (One, t) (One, t) = One.
@@ -213,10 +238,8 @@ Proof.
 Qed.
 
 
-End Structure.
 
 
-Section Theories.
 
 (*
   This theorem formalizes the **error detection condition** in stabilizer theory.
@@ -268,19 +291,33 @@ Proof.
   by rewrite Mmult_assoc.
 Qed.
 
-(* If all stabiliser in a ecc cannot detect an error,
+
+(* The specification of a member of stabilizer *)
+(* if M is an observer of edc: edc, then M stabilize edc.psi *)
+Corollary edc_stb_mem_spec:
+  forall (edc: ErrorDetectionCode) (M: PauliObservable edc.(dim)),
+  M \in edc.(obs) -> M ∝1 edc.(code).
+Proof.
+  move => edc M H.
+  move: edc.(ob1).
+  rewrite /obs_be_stabiliser => Hob.
+  apply (Hob).
+  apply H.
+Qed.
+
+(* If all stabiliser in a edc cannot detect an error,
 then the error is not detectable *)
-Corollary ecc_cannot_detect_error 
-  (ecc: ErrorCorrectionCode) (Er: PauliOperator ecc.(dim)):
-  (forall (s: PauliObservable ecc.(dim)), 
-    s \in ecc.(obs) -> mult_png s Er = mult_png Er s
+Corollary undetectable_sufficient 
+  (edc: ErrorDetectionCode) (Er: PauliOperator edc.(dim)):
+  (forall (s: PauliObservable edc.(dim)), 
+    s \in edc.(obs) -> mult_png s Er = mult_png Er s
   ) ->
-  undetectable ecc Er.
+  undetectable edc Er.
 Proof.
   rewrite /undetectable.
   move => H M Hm.
   apply stabiliser_undetectable_error.
-  move: ecc.(ob1). 
+  move: edc.(ob1). 
   rewrite /obs_be_stabiliser => Hstb'; auto.
   by apply H; auto.
 Qed.

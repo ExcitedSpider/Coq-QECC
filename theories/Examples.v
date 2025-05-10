@@ -153,7 +153,7 @@ Fact flip0_recover_by_x0:
   (recover_by X1 X1).
 Proof. by rewrite /recover_by; apply /eqP. Qed.
 
-Definition BitFlipCode := MkECC 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition BitFlipCode := MkDCC 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
 
@@ -242,7 +242,7 @@ Proof.
   rewrite !inE => /orP [/eqP H | /eqP H].
   - move => _.
     apply stabiliser_detect_error.
-    apply (ecc_stb_mem_spec BitFlipCode); auto.
+    apply (edc_stb_mem_spec BitFlipCode); auto.
     apply negate_phase_simpl.
     rewrite H /Z12 /Y1 //=.
     by apply /eqP.
@@ -406,7 +406,7 @@ Proof.
   simpl; Qsimpl; lma.
 Qed.
 
-Definition PhaseFlipCode := MkECC 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition PhaseFlipCode := MkDCC 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 
@@ -416,7 +416,7 @@ Check undetectable.
 Theorem undetectable_bitflip:
  undetectable PhaseFlipCode BitFlip0.
 Proof.
-  apply ecc_cannot_detect_error.
+  apply undetectable_sufficient.
   move => //= s.
   by rewrite /BitFlip0 !inE /= => /orP [/eqP -> | /eqP ->]; apply /eqP.
 Qed.
