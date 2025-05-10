@@ -203,18 +203,18 @@ Proof.
   by auto with wf_db.
 Qed.
 
+Lemma apply_X1_effect:
+  ('Apply X1 on psi) = (α .* ∣1,0,0⟩ .+ β .* ∣0,1,1⟩).
+Proof. by SimplApplyPauli. Qed.
+
 (* X1 and X23 are indistinguishable errors to this code *)
-Theorem indistinguishable_errors:
+Theorem indistinguishable_X1_X23:
   indistinguishable BitFlipCode
   X1 X23.
 Proof.
   move => M m.
   simpl.
-  assert (Hx1: ('Apply X1 on psi) = (α .* ∣1,0,0⟩ .+ β .* ∣0,1,1⟩)). {
-    by SimplApplyPauli.
-  }
-  rewrite Hx1; clear Hx1.
-  
+  rewrite apply_X1_effect.
   assert (Hx1: ('Apply X23 on psi) = (α .* ∣0,1,1⟩ .+ β .* ∣1,0,0⟩)). {
     by SimplApplyPauli.
   }
@@ -231,6 +231,33 @@ Proof.
       auto.
     + apply state_nonzero.
 Qed.
+
+Definition Y1: PauliOperator dim := [p Y, I, I].
+
+(* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
+Theorem indistinguishable_X1_Y1:
+  indistinguishable BitFlipCode X1 Y1.
+Proof.
+  move => //= M H; move: (H) => H'; move: H.
+  rewrite !inE => /orP [/eqP H | /eqP H].
+  - move => _.
+    apply stabiliser_detect_error.
+    apply (ecc_stb_mem_spec BitFlipCode); auto.
+    apply negate_phase_simpl.
+    rewrite H /Z12 /Y1 //=.
+    by apply /eqP.
+  - rewrite !apply_X1_effect => F.
+    exfalso.
+    apply C1_neq_mC1.
+    apply (meas_p_to_unique ('Apply X1 on psi) M).
+    all: try rewrite apply_X1_effect.
+    + auto with wf_db.
+    + rewrite H. SimplApplyPauli; lma.
+    + move: F. 
+      replace (RtoC (-1)) with (- C1) by lca; auto. 
+    + apply state_nonzero.
+Qed.
+
 
 End VarScope.
 
@@ -490,12 +517,15 @@ Proof.
   simpl_stbn.
 Qed.
 
+Ltac unfold_stb_psi := 
+  rewrite /psi;
+  apply stb_scale; apply stb_addition; apply stb_scale;
+  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+
 Lemma obsx12_stb:
   obsX12 ∝1 psi.
 Proof.
-  rewrite /psi.
-  apply stb_scale; apply stb_addition; apply stb_scale;
-  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+  unfold_stb_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@meas_p_to_11_krons 3 6).
@@ -577,9 +607,7 @@ Lemma Y1_bit_phase_flip: mulg X1 Z1 = Y1. Proof. by apply /eqP. Qed.
 Lemma obsZ12_stb:
   obsZ12 ∝1 psi.
 Proof.
-  rewrite /psi.
-  apply stb_scale; apply stb_addition; apply stb_scale;
-  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+  unfold_stb_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
     apply (@meas_p_to_11_krons 3 6).
@@ -592,13 +620,13 @@ Proof.
     + rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
 Qed.
 
-
 (* we show that shor's code is able to correct a bit-phase flip *)
 Theorem obsZ12_detect_bit_phase_flip:
   'Meas obsZ12 on ('Apply Y1 on psi) --> -1.
 Proof.
   apply stabiliser_detect_error.
   - apply obsZ12_stb.
+  (* transform to group multiplication for quicker check  *)
   - by apply negate_phase_simpl; apply /eqP.
 Qed.
 
@@ -606,214 +634,3 @@ End VarScope.
 
 End ShorsNineQubitCode.
 
-
-(* Module FourQubitDetection.
-
-(* 1. Define Generators as <XXXX, ZZZZ> *)
-(* 2. Prove number of detectable errors by showing distance=2 *)
-(* 3. Prove Syndrome Detection *)
-
-Definition zzzz := [p1 Z, Z, Z, Z]: PauliElement 4.
-Definition xxxx := [p1 X, X, X, X]: PauliElement 4.
-Definition iiii := [p1 I, I, I, I]: PauliElement 4.
-Definition yyyy := [p1 Y, Y, Y, Y]: PauliElement 4.
-
-(* We can use the stabilizer generator to generate the stabilizer group. *)
-
-Import Commutativity.
-
-Definition g422 := [set zzzz] :|: [set xxxx].
-Definition s422 := g422 :|: [set (mulg zzzz xxxx)] :|: [set iiii].
-
-(* We can use the stabilizer generator to generate the stabilizer group. *)
-
-Definition ψ := ∣ 0, 0, 0, 0 ⟩ .+ ∣ 1, 1, 1, 1 ⟩.
-
-Check generated.
-
-Set Bullet Behavior "Strict Subproofs".
-
-Lemma g422_full_group:
-  <<g422>> = s422.
-Proof.
-  (* First we show that s44 forms a group *)
-  have: group_set s422.
-  {
-     apply /group_setP.
-     rewrite /=.
-     split.
-     -  have: (oneg (PauliElement 4) = id_png 4) by apply /eqP.
-        move => ->. 
-        by rewrite !inE.
-      - move => x y.
-        rewrite !inE.
-        rewrite -!orb_assoc => Hx Hy.
-        case/or4P: Hx => Hx;
-        case/or4P: Hy => Hy;
-        move/eqP: Hx => Hx; 
-        move/eqP: Hy => Hy; 
-        by subst.
-  }
-  move => H.
-  apply /eqP.
-  rewrite eqEsubset.
-  apply /andP.
-  split.
-  (* <<g422>> \subset s422 *)
-  - apply gen_set_id in H.
-    rewrite <- H.
-    apply genS.
-    rewrite /s422.
-    rewrite -setUA.
-    apply subsetUl.
-  - (* s422 \subst <<g422>> *)
-//Admitted. (* TODO: How to do case analysis for each element in s422? *)
-
-Lemma is_stb_set_g422:
-  is_stb_set g422.
-Proof.
-  rewrite /is_stb_set //= => x y.
-  rewrite g422_full_group /s422.
-  split.
-  apply (stabilizer_must_commute _ _ ψ).
-  {
-    move: H.
-    rewrite !inE.
-    rewrite -!orb_assoc => orH.
-    case/or4P: orH => Hx;
-    move/eqP: Hx => Hx; rewrite Hx.
-    (* it's tedious but definately doable. *)
-  (* but actually this is not needed. *)
-  (* We present a much easier proof below *)
-    all: admit.
-  }
-  admit. (* same as x *)
-  (* have H: (stb_group_no_m1 x y ψ).
-//Admitted. TODO *)
-Abort.
-
-
-Lemma is_stb_set_g422:
-  is_stb_set g422.
-Proof. 
-  rewrite /is_stb_set //= => x y.
-  rewrite g422_full_group => Hx Hy.
-  split.
-  {
-    move: Hx Hy.
-    rewrite !inE -!orb_assoc => Hx Hy.
-    case/or4P: Hx => /eqP Hx;
-    case/or4P: Hy => /eqP Hy;
-    subst; by apply /eqP.
-  }
-  {
-    move {Hx Hy}.
-    apply /idP.
-    by rewrite !inE.
-  }
-Qed.
-
-Definition L00 := ∣ 0, 0, 0, 0 ⟩ .+ ∣ 1, 1, 1, 1 ⟩.
-Definition L01 := ∣ 0, 0, 1, 1 ⟩ .+ ∣ 1, 1, 0, 0 ⟩.
-Definition L10 := ∣ 0, 1, 0, 1 ⟩ .+ ∣ 1, 0, 1, 0 ⟩.
-Definition L11 := ∣ 0, 1, 1, 0 ⟩ .+ ∣ 1, 0, 0, 1 ⟩.
-
-Lemma zzzz_stb:
-  zzzz ∝1 (L00).
-Proof.
-  rewrite /zzzz.
-  apply stb_addition.
-  - replace ∣ 0, 0, 0, 0⟩ with (∣ 0, 0⟩ ⊗ ∣ 0, 0 ⟩) by normalize_kron_notation. 
-    apply (stb_compose_alt' ([p1 Z, Z]) ([p1 Z, Z])). by_compose_pstring. 
-    simpl_stbn. simpl_stbn.
-  - replace ∣ 1, 1, 1, 1⟩ with (∣ 1, 1⟩ ⊗ ∣ 1, 1 ⟩) by normalize_kron_notation. 
-    apply (stb_compose_alt' ([p1 Z, Z]) ([p1 Z, Z])). by_compose_pstring. 
-    simpl_stbn. simpl_stbn.
-Qed.
-
-
-Lemma xxxx_stb:
-  xxxx ∝1 (L00).
-Proof.
-  rewrite /xxxx.
-apply stb_symm_perm.
-  - rewrite /act_n /applyP /=. Qsimpl.  
-    repeat rewrite kron_assoc;  auto with wf_db.
-    rewrite kron_mixed_product; Qsimpl.
-    by rewrite !MmultX0.
-  - rewrite /act_n /applyP /=. Qsimpl.  
-    repeat rewrite kron_assoc;  auto with wf_db.
-    rewrite kron_mixed_product; Qsimpl.
-    by rewrite !MmultX1.
-Qed.
-
-Theorem is_stb_set_g422':
-  is_stb_set_spec g422 L00.
-Proof.
-  rewrite /is_stb_set_spec /is_stb_set /= => x Hx.
-  move: (stb_generator g422 (∣ 0, 0, 0, 0 ⟩ .+ ∣ 1, 1, 1, 1 ⟩)) => H.
-  apply (H); auto.
-  rewrite /= => a.
-  rewrite inE => Ha.
-  case/orP: Ha; rewrite inE => Ha;
-  move/eqP: Ha => Ha; subst;
-  rewrite /zzzz /xxxx.
-  - by apply zzzz_stb. 
-  - by apply xxxx_stb.
-Qed.
-
-Theorem g422_distance:
-  distance_s _ g422 2.
-Proof.
-  rewrite /distance_s .
-  exists ([p Z, Z, I, I]).
-  split.
-  - apply not_detactable.
-    exists zzzz.
-    split.
-    {
-      rewrite inE.
-      apply/orP; left.
-      by rewrite inE.
-    }
-    rewrite /zzzz /with_1 /=.
-    by apply /eqP. (* this is benefit from mathcomp *)
-  - by rewrite /weight /=. 
-Qed.
-
-Theorem g422_dimension_2: 
-  dimension _ g422 = 2%nat.
-Proof.
-  by rewrite /dimension cards2 /=.
-Qed.
-
-Definition Error_X1 := [p1 X, I, I, I].
-
-Definition E00X1 := applyP L00 Error_X1.
-
-(* 
-  An X1 error (single bit-flip on first qubit)
-  can be detected by measurment ZZZZ
-*)
-Theorem error_x1_syndrome:
-  'Meas (snd zzzz) on E00X1 --> -C1.
-Proof.
-(* This proof is still ugly *)
-(* I am thinking speed up the computation of pauli operator application 
-  on basis state.
-  It might be very lovely in thesis  
-*)
-  rewrite /meas_p_to /zzzz /=.
-  Qsimpl.
-  rewrite /E00X1 /L00 /Error_X1 /applyP /=.
-  Qsimpl.
-  rewrite -!kron_assoc; auto with wf_db.
-  repeat rewrite kron_mixed_product. Qsimpl.
-  restore_dims.
-  autorewrite with ket_db.
-  replace (-C1) with (RtoC (-1)) by lca.
-  replace (((-1) * (-1)) * (-1)) with (RtoC (-1)) by lca.
-  by [].
-Qed.
-
-End FourQubitDetection. *)
