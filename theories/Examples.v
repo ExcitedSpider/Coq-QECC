@@ -80,6 +80,32 @@ Qed.
 (* After verifing the encoding circuit, we can 
   work sorely on abstract codespace and pauli operator
 *)
+(* If two basic states are identical, inner producr is 1 *)
+(* Else 0 *)
+Ltac simplify_inner_product :=
+  repeat match goal with
+  | |- context[⟨ ?v, ?v ⟩] =>
+      let H := fresh in
+      assert (H: ⟨ v, v ⟩ = 1)   by lca; rewrite H; clear H
+  | |- context[⟨ ?v1, ?v2 ⟩] =>
+      let H := fresh in
+      assert (H: ⟨ v1, v2 ⟩ = 0) by lca; rewrite H; clear H
+  end.
+
+Lemma psi_nonzero:
+  psi <> Zero.
+Proof.
+  move => F.
+  apply inner_product_zero_iff_zero in F.
+  contradict F.
+  rewrite !inner_product_plus_l !inner_product_plus_r.
+  rewrite !inner_product_scale_l !inner_product_scale_r.
+  simplify_inner_product.
+  Csimpl.
+  rewrite norm_obligation.
+  by nonzero.
+  by rewrite/psi; auto with wf_db.
+Qed.
 
 Require Import PauliGroup.
 
@@ -153,7 +179,7 @@ Fact flip0_recover_by_x0:
   (recover_by X1 X1).
 Proof. by rewrite /recover_by; apply /eqP. Qed.
 
-Definition BitFlipCode := MkDCC 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
 
@@ -173,17 +199,6 @@ Proof.
   - SimplApplyPauli. lma.
 Qed.
 
-(* If two basic states are identical, inner producr is 1 *)
-(* Else 0 *)
-Ltac simplify_inner_product :=
-  repeat match goal with
-  | |- context[⟨ ?v, ?v ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v, v ⟩ = 1)   by lca; rewrite H; clear H
-  | |- context[⟨ ?v1, ?v2 ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v1, v2 ⟩ = 0) by lca; rewrite H; clear H
-  end.
 
 
 Definition X23 : PauliOperator 3 := mulg X2 X3.
@@ -258,6 +273,61 @@ Proof.
     + apply state_nonzero.
 Qed.
 
+Ltac prove_undetectable E M:=
+  apply (meas_p_to_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply stabiliser_undetectable_error;
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by rewrite /M /M //=; apply /eqP ]
+  | apply applyP_nonzero; apply psi_nonzero ].
+
+Ltac prove_detectable E M :=
+  apply (meas_p_to_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply (stabiliser_detect_error_c M psi E);
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by apply negate_phase_simpl; apply /eqP ]
+  | by apply applyP_nonzero; apply psi_nonzero ].
+
+(* every error in bitflip code has unique syndrome. *)
+(* that is, they can be recovered *)
+Theorem bit_flip_code_unique_syndrome:
+  error_identified_uniquely BitFlipCode.
+Proof.
+  rewrite /error_identified_uniquely //= => E1 E2.
+  rewrite !inE -!orb_assoc => memE1 memE2.
+  case/or3P: memE1 => /eqP ->;
+  case/or3P: memE2 => /eqP ->;
+  move => H; try by contradict H.
+  clear H.
+  all: rewrite /distinguishable_by //=.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (C1) by prove_undetectable X1 Z23. 
+    replace q with (-C1) by prove_detectable X2 Z23. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X1 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X3 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace q with (-C1) by prove_detectable X2 Z12. 
+    replace r with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+Qed.
+
+Definition BitFlipCorrectionCode := BuildCorrectionCode BitFlipCode bit_flip_code_unique_syndrome.
 
 End VarScope.
 
@@ -406,7 +476,7 @@ Proof.
   simpl; Qsimpl; lma.
 Qed.
 
-Definition PhaseFlipCode := MkDCC 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition PhaseFlipCode := BuildDetectionCode 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 

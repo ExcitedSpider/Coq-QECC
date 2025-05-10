@@ -432,4 +432,16 @@ Proof.
 Qed.
 
 
+(* This can be proved by the fact that *)
+(* Fact 1: all pauli oprators are unitary *)
+(* > This can be proved using induction and kron_unitary  *)
+(* Fact 2: unitary operators preserve norms *)
+(* > Could be an axiom *)
+(* Fact 3: zero vector alwasy has norm = 1 *)
+(* Lemma: norm_nonzero_iff_nonzero *)
+Theorem applyP_nonzero n:
+  forall (op: PauliTuple n) (v: Vector (2^n)),
+  v <> Zero -> (applyP v op) <> Zero.
+Admitted.
+
 #[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.

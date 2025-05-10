@@ -111,7 +111,7 @@ Section DetectionCode.
 
 (* EDC represents a code structure in which the code space is `code`
  EDC  can detect errors \in err using stabiliser observables \in obs *)
-Record ErrorDetectionCode := MkDCC {
+Record ErrorDetectionCode := BuildDetectionCode {
   dim: nat
 (* Codespace *)
 ; code: Vector (2^dim)
@@ -156,6 +156,17 @@ Definition indistinguishable (edc: ErrorDetectionCode) E1 E2 :=
 (* But we provide a theorem, see get_recover_correct *)
 Definition get_recover {n}: (ErrorOperator n) -> (PauliOperator n) := Datatypes.id.
 
+(* we say two errors E1 E2 are distinguishable by M *)
+(* if they produce different measurement result *)
+Definition distinguishable_by (edc: ErrorDetectionCode) E1 E2 M :=
+forall r q,
+  let psi_e1 := 'Apply E1 on edc.(code) in
+  let psi_e2 := 'Apply E2 on edc.(code) in
+    M \in edc.(obs) -> 
+    ('Meas M on psi_e1 --> r) -> 
+    ('Meas M on psi_e2 --> q) -> 
+    r <> q.
+
 (* 
 An error correction code ECC is a detection code that satisfies:
 - error_identified_uniquely: every error E in the error set can be detect
@@ -164,9 +175,10 @@ An error correction code ECC is a detection code that satisfies:
 Definition error_identified_uniquely (edc: ErrorDetectionCode): Prop := 
   forall (E1 E2: PauliOperator (dim edc)), 
     E1 \in edc.(err) -> E2 \in edc.(err) -> 
-  E1 <> E2 -> not (indistinguishable edc E1 E2) . 
+    E1 <> E2 -> 
+    ( exists M, distinguishable_by edc E1 E2 M ).
 
-Record ErrorCorrectionCode := MkECC {
+Record ErrorCorrectionCode := BuildCorrectionCode {
   edc :> ErrorDetectionCode;
   correction_obligation: error_identified_uniquely edc
 }.
@@ -271,6 +283,18 @@ Proof.
   rewrite -png_int_Mmult Mmult_assoc Hob. 
   by Qsimpl.
   lca.
+Qed.
+
+(* this one explicitly use complex numbers to make it more usable *)
+Corollary stabiliser_detect_error_c {n}:
+  forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
+  Ob ∝1 psi -> 
+  png_int (mult_png Ob Er) = -C1 .* png_int (mult_png Er Ob) ->
+  ('Meas Ob on ('Apply Er on psi) --> -C1).
+Proof.
+  assert (RtoCrw: -C1 = (RtoC (-1))) by lca. 
+  rewrite {2}RtoCrw.
+  apply stabiliser_detect_error. 
 Qed.
 
 (* On the opposite of error detection condition *)
