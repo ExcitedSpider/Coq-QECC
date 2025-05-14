@@ -1,5 +1,6 @@
 From mathcomp Require Import ssreflect fingroup.
-Require Import Assumption.
+Require Import Coq.Logic.Classical.
+Require Import QuantumLib.Quantum.
 
 Section commutative.
 
@@ -196,6 +197,88 @@ Lemma Maccess_scale:
   (c .* A) i j = c * (A i j).
 Proof. by intros; lca. Qed.
 
+Section NonzeroSepcs.
+
+Lemma paired_exists:
+forall (U: Type) (P: U -> U -> Prop),
+  (exists x : prod U U, P (fst x) (snd x)) <-> exists x y, P x y.
+Proof.
+  move => U P.
+  split => H.
+  - case H as [x H].
+    destruct x as [x0 y0].
+    exists x0. exists y0. auto.
+  - destruct H as [x [y H0]].
+    exists (pair x y).
+    rewrite //=. 
+Qed.
+
+Lemma paried_not_all:
+forall (U: Type) (P: U -> U -> Prop),
+  ~(forall x : prod U U, P (fst x) (snd x)) <-> ~(forall x y : U, P x y).
+Proof.
+  move => U P.
+  split => H.
+  - unfold not in * => H2.
+    apply H.
+    move => [x y] /=. apply H2.
+  - unfold not in * => H2.
+    apply H.
+    move => x y. 
+    move: (H2 (x, y)) => //=.
+Qed.
+
+Lemma not_all_ex_not_2:
+  forall (U: Type) (P: U -> U -> Prop),
+  ~ (forall x y: U, P x y) -> exists x y, ~ P x y.
+Proof.
+  move => U P H.
+  rewrite -paired_exists.
+  rewrite -paried_not_all in H.
+  apply not_all_ex_not. auto.
+Qed.
+
+Lemma inequal_f_2: forall {n m : nat} (A B: Matrix n m),
+  A <> B -> exists x y, A x y <> B x y.
+Proof.
+  move => n m A B Hneq.
+  apply not_all_ex_not_2.
+  move => F.
+  apply Hneq.
+  apply functional_extensionality.
+  intros x.
+  apply functional_extensionality.
+  intros y.
+  apply F.
+Qed.
+(* For any nonzero matrix, there exists i j that A[i,j] is not 0 *)
+Lemma Mnonzero_spec:
+  forall {n m : nat} (A: Matrix n m),
+  WF_Matrix A ->
+  A <> Zero -> 
+  exists i j , (i < n)%nat /\ (j < m)%nat /\ A i j <> 0.
+Proof.
+  intros n m A WF Hneq.
+  move: (inequal_f_2 _ _ Hneq) => H.
+  destruct H as [x [y H]].
+  exists x; exists y.
+  destruct (le_lt_dec n x).
+  {
+    exfalso.
+    unfold Zero in H. unfold WF_Matrix in WF.
+    apply H. apply WF. left. apply l.
+  }
+  destruct (le_lt_dec m y).
+  {
+    exfalso.
+    unfold Zero in H. unfold WF_Matrix in WF.
+    apply H. apply WF. right. apply l0.
+  }
+  auto.
+Qed.
+
+End NonzeroSepcs.
+
 Lemma Mscale_cancel:
   forall {n m : nat} (c1 c2 : C) (A: Matrix n m),
   WF_Matrix A ->
@@ -222,6 +305,7 @@ Proof.
   apply Hwf.
 Qed.  
 
+
 Lemma Mscale_cancel_0 {n m}:
   forall (A: Matrix n m) (c: C),
   WF_Matrix A -> A <> Zero -> c .* A = Zero -> c = 0.
@@ -230,6 +314,30 @@ Proof.
   replace Zero with (0 .* A).
   by apply Mscale_cancel.
   by rewrite Mscale_0_l.
+Qed.
+
+Lemma involutary_matrix_spec:
+  forall {n:nat} (A: Square (2^n)),
+  WF_Matrix A ->
+  A × A = I (2^n) -> A = Minverse A.
+Proof.
+  move => n A Hwf H.
+  assert (Hob: Determinant A <> 0).
+  {
+    apply invertible_iff_det_neq_0; auto.
+    unfold invertible.
+    exists A.
+    split; auto.
+    unfold Minv; auto.
+  }
+  unfold Minverse.
+  move: (mult_by_adjugate_l _ Hwf).
+  rewrite -H -Mscale_mult_dist_l => H0.
+  rewrite -Mscale_inv.
+  apply (Mmult_cancel_r A); auto.
+  auto with wf_db.
+  auto with wf_db.
+  apply Hob.
 Qed.
 
 (* If P^2 = I, all eigenvalues λ of P satisfy λ^2 = 1 *)
@@ -244,7 +352,7 @@ Lemma involutive_eigenvalue n:
     lambda = 1 \/ lambda = -1.
 Proof.
   move => A psi lambda Hnz Hwfa HdetA Hwfpsi Hinv Heigen.
-  move: (involutary_matrix_spec A Hinv) => Aspec.
+  move: (involutary_matrix_spec A Hwfa Hinv) => Aspec.
   assert (
     Step1: Minverse A × (A × psi) = Minverse A × (lambda .* psi) 
   ). by rewrite Heigen.
@@ -278,5 +386,7 @@ Proof.
   apply Hwfa.
   apply HdetA.
 Qed.
+
+
 
 End QuantumlibExtra.

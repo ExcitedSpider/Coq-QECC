@@ -8,7 +8,6 @@ From mathcomp Require Import all_ssreflect.
 From mathcomp Require Import fingroup.
 Require Import PauliGroup.
 Require Import Action.
-Require Import Assumption.
 Require Import Stabilizer.
 Require Import WellForm.
 Require Import PauliProps.

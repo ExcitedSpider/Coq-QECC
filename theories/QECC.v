@@ -15,7 +15,6 @@ Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.
 Require Import Observable.
-Require Import Assumption.
 
 (* Simply Goals like (pn_int _ × _) *)
 Ltac SimplApplyPauli := 
