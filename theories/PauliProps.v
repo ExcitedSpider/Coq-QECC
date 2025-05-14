@@ -1,7 +1,7 @@
 Require Export SQIR.UnitaryOps.
 Require Export QuantumLib.Matrix.
 From mathcomp Require Import ssrfun fingroup eqtype fintype.
-Require Import Assumption.
+Require Import ExtraSpecs.
 
 Require Import PauliGroup.
 Import PauliGroup.P1Group.
@@ -82,6 +82,7 @@ simpl.
 reflexivity.
 Qed.
 
+Open Scope C_scope.
 (* 
 Transform 
 (C1 .* Matrix.I 2) 0%nat 0%nat = (C1 .* σx) 0%nat 0%nat

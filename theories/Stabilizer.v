@@ -14,7 +14,6 @@ Import P1GGroup.
 Import PNGroup.
 Import PNGGroup.
 Require Import WellForm.
-Require Import Assumption.
 Require Import ExtraSpecs.
 
 Require Import Operations.
