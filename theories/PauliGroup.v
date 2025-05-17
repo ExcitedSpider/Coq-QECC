@@ -62,7 +62,15 @@ Inductive PauliBase : Type :=
 | Y : PauliBase
 | Z : PauliBase.
 
-(* multiplication on PauliBase *)
+Definition mul_p1b(a b: PauliBase): PauliBase :=
+  match a, b with
+  | X, X => I | X, Y => Z | X, Z => Y 
+  | Y, X => Z | Y, Y => I | Y, Z => X 
+  | Z, X => Y | Z, Y => X | Z, Z => I 
+  | I, p => p | p, I => p 
+end.
+
+(* multiplication on PauliBase
 Definition mul_p1b(a b: PauliBase): PauliBase :=
   match a, b with
   | I, p => p
@@ -80,14 +88,14 @@ Definition mul_p1b(a b: PauliBase): PauliBase :=
 
   | Z, X => Y
   | X, Z => Y 
-end.
+end. *)
 
 (* All pauli op squares to I *)
-Definition inv_p1 (op: PauliBase): PauliBase := op.
+Definition inv_p1b (op: PauliBase): PauliBase := op.
 
 
 (* ID of Pauli_1 group *)
-Definition id_p1 := I.
+Definition id_p1b := I.
 
 (* Already Proved Properties *)
 Definition decode_EE (n: 'I_4) : PauliBase := nth I [:: I;X;Y;Z] (nat_of_ord n).
@@ -115,27 +123,22 @@ Proof.
 Qed. 
 
 
-Lemma mul_p1b_id: left_id id_p1 mul_p1b.
+Lemma mul_p1b_id: left_id id_p1b mul_p1b.
 Proof. 
   rewrite /left_id.
   move => x.
   by case: x.
 Qed. 
 
-Print left_inverse.
-
-Lemma mul_p1b_left_inv: left_inverse id_p1 inv_p1 mul_p1b.
+Lemma mul_p1b_left_inv: left_inverse id_p1b inv_p1b mul_p1b.
 Proof.
   rewrite /left_inverse.
   move => x.
   by case: x.
 Qed.
 
-HB.instance Definition _ := isMulGroup.Build PauliBase
+HB.instance Definition P1BaseGroup := isMulGroup.Build PauliBase
   mul_p1b_assoc mul_p1b_id mul_p1b_left_inv.
-
-
-Check PauliBase: finGroupType.
 
 End P1BaseGroup.
 
@@ -152,7 +155,7 @@ Definition mul_pnb {n: nat} (a b: PauliTupleBase n): PauliTupleBase n :=
 Definition id_pn n := [tuple of nseq n I].
 (* Definition id_pn n := nseq_tuple n I. *)
 
-Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple inv_p1 pt.
+Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple inv_p1b pt.
 
 Example mul_pnb_exp0:
   mul_pnb [tuple X; X] [tuple X; X] == [tuple I; I].
@@ -199,9 +202,9 @@ Check tupleP.
 Print tuple1_spec.
 
 Lemma pn_idP {n: nat}: 
-  id_pn n.+1 = [tuple of id_p1 :: (id_pn n)].
+  id_pn n.+1 = [tuple of id_p1b :: (id_pn n)].
 Proof.
-  rewrite /id_pn /id_p1 /=.
+  rewrite /id_pn /id_p1b /=.
   apply: eq_from_tnth => i;
   by rewrite !(tnth_nth I).
 Qed.
@@ -390,10 +393,10 @@ Definition mul_p1 (a b: PauliOp): PauliOp :=
 
 Definition inv_p1g (a: PauliOp): PauliOp := 
   match a with
-  | pair s p => (inv_phase s, inv_p1 p)
+  | pair s p => (inv_phase s, inv_p1b p)
   end.
 
-Definition id_p1g := (id_phase, id_p1).
+Definition id_p1g := (id_phase, id_p1b).
 
 (* Lemma mul_p1b_phase_assoc: *) 
 (*   associative mul_p1b_phase. *)

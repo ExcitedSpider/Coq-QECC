@@ -219,7 +219,7 @@ simpl;
 auto with wf_db.
 Qed.
 
-Definition inverse_op: PauliBase -> PauliBase := inv_p1.
+Definition inverse_op: PauliBase -> PauliBase := inv_p1b.
 
 Definition inverse_scalar: phase -> phase := inv_phase.
 
