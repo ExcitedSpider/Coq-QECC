@@ -123,6 +123,7 @@ Proof.
 Qed.
 
 
+Open Scope group_scope.
 (* If S∣ψ⟩=∣ψ⟩, then (S^(-1))∣ψ⟩=∣ψ⟩ *)
 Lemma inv_stb:
   forall {n: nat} (pstr: PauliElement n) (ψ:  Vector (2^n)),
@@ -139,6 +140,8 @@ Proof.
   rewrite mulVg /=.
   apply one_stb_everything; easy.
 Qed.
+
+Close Scope group_scope.
 
 Print Vector.
 
@@ -485,6 +488,7 @@ Proof.
     by apply stb_closed.
 Qed.
 
+Open  Scope group_scope.
 (* an n-qubit stabilizer group is any subgroup of P^n that is 
 abelian (commutative) and dos not contain -1  *)
 Definition is_stb_set {n} (S: { set PauliElement n }) :=

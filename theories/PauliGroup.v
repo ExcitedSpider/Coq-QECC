@@ -286,7 +286,7 @@ HB.instance Definition _ :=
 HB.instance Definition _ := Finite.copy phase (can_type code_decode_phase).
 
 
-Definition mult_phase (a b : phase) : phase :=
+Definition mul_phase (a b : phase) : phase :=
   match a, b with
   | One, x => x
   | x, One => x
@@ -314,25 +314,25 @@ end.
 
 Definition id_phase := One.
 
-Lemma mult_phase_assoc: associative mult_phase.
+Lemma mult_phase_assoc: associative mul_phase.
 Proof.
   rewrite /associative => x y z.
   by case x; case y; case z.
 Qed.
   
-Lemma mult_phase_id: left_id id_phase mult_phase.
+Lemma mult_phase_id: left_id id_phase mul_phase.
 Proof.
   rewrite /left_id => x.
   by case x.
 Qed.
 
-Lemma mult_phase_left_inv: left_inverse id_phase inv_phase mult_phase.
+Lemma mult_phase_left_inv: left_inverse id_phase inv_phase mul_phase.
 Proof.
   rewrite /left_inverse => x.
   by case x.
 Qed.
 
-HB.instance Definition _ := isMulGroup.Build phase
+HB.instance Definition PhaseGroup := isMulGroup.Build phase
   mult_phase_assoc mult_phase_id mult_phase_left_inv.
 
 End PhaseGroup.
@@ -340,30 +340,8 @@ End PhaseGroup.
 (* for "Generalized Pauli Operator" *)
 Definition PauliOp := prod phase PauliBase.
 
-(* Mathcomp has provided finType structure for prod *)
-(* which you can find by *) 
-(* Search "fin" "prod". *)
-Check Datatypes_prod__canonical__fintype_Finite.
-
-Check PauliOp: finType.
-
-(* We can also define product set *) 
-Definition PauliOpSet := setX [set: phase] [set: PauliBase].
-
 Definition p1g_of: phase -> PauliBase -> PauliOp := 
   fun p o => pair p o.
-
-Check p1g_of One X.
-
-
-
-Lemma setx_correct: forall (gop: PauliOp),
-  gop \in PauliOpSet.
-Proof.
-  move => gop.
-  case gop => *.
-  by apply /setXP.
-Qed.
 
 Definition get_phase(a b: PauliBase): phase :=
   match a, b with  
@@ -382,14 +360,16 @@ Definition get_phase(a b: PauliBase): phase :=
   | X, Z => NImg
   end.
 
+Open Scope group_scope.
 Definition mul_p1 (a b: PauliOp): PauliOp := 
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
-      mult_phase (get_phase pa pb) (mult_phase sa sb), 
+      mul_phase (get_phase pa pb) (mul_phase sa sb), 
       mul_p1b pa pb
     ) 
   end. 
 
+Close Scope group_scope.
 
 Definition inv_p1g (a: PauliOp): PauliOp := 
   match a with
@@ -447,6 +427,8 @@ Notation "%( x ; y )" := (p1g_of x y) (at level 210).
 
 Notation "% x" := (p1g_of One x)  (at level 210).
 
+Notation "-X" := (NOne, X).
+
 
 (* San Check by Examples *)
 
@@ -474,7 +456,7 @@ Import PNBaseGroup.
 Import P1BaseGroup.
 
 Definition get_phase_pn {n: nat} (a b: PauliTupleBase n): phase := 
-  foldl mult_phase One (
+  foldl mul_phase One (
     map (fun item => get_phase item.1 item.2)  (zip_tuple a b)
   ).  
 
@@ -486,7 +468,7 @@ Definition PauliTuple (n: nat) := prod phase (PauliTupleBase n).
 Definition get_phase_png {n: nat} (a b: PauliTuple n): phase :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
-      mult_phase (get_phase_pn pa pb) (mult_phase sa sb)
+      mul_phase (get_phase_pn pa pb) (mul_phase sa sb)
     )
   end.
 
@@ -509,7 +491,7 @@ Lemma mult_phase_inj:
   forall a b x y,
   a = x ->
   b = y ->
-  mult_phase a b = mult_phase x y.
+  mul_phase a b = mul_phase x y.
 Proof.
   move => *.
   by subst.
@@ -529,7 +511,7 @@ Qed.
 
 
 Lemma mult_phase_comm:
-  commutative mult_phase.
+  commutative mul_phase.
 Proof.
   rewrite /commutative => x y.
   by case x, y.
@@ -538,7 +520,7 @@ Qed.
 Lemma get_phase_pn_cons n:
   forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
   get_phase_pn [tuple of hx :: tx] [tuple of hy :: ty] = 
-  mult_phase (get_phase hx hy) (get_phase_pn tx ty).
+  mul_phase (get_phase hx hy) (get_phase_pn tx ty).
 Proof.
   intros.
   rewrite /get_phase_pn  /=.
@@ -555,7 +537,7 @@ Qed.
 Lemma get_phase_png_cons {n: nat} :
   forall px py hx hy (tx ty: PauliTupleBase n),
     get_phase_png (px, [tuple of (hx :: tx)]) (py, [tuple of (hy :: ty)])
-  = mult_phase (get_phase hx hy) (get_phase_png (px, tx) (py, ty)).
+  = mul_phase (get_phase hx hy) (get_phase_png (px, tx) (py, ty)).
 Proof.
   move => *.
   rewrite /get_phase_png get_phase_pn_cons.
@@ -565,7 +547,7 @@ Qed.
 
 Print get_phase_png.
 
-Notation "A %* B" := (mult_phase A B) (at level 30).
+Notation "A %* B" := (mul_phase A B) (at level 30).
 
 Lemma mult_phase_simplify:
   forall (a b c d: phase),
@@ -830,7 +812,7 @@ Proof.
 Qed.
 
 Lemma int_phase_comp: forall x y,
-int_phase (mult_phase x y) = int_phase x * int_phase y.
+int_phase (mul_phase x y) = int_phase x * int_phase y.
 Proof.
   move => x y.
   case x; case y;
@@ -842,7 +824,7 @@ Print get_phase_pn.
 Lemma get_phase_pn_behead n:
   forall x y (tx ty: PauliTupleBase n),
   (get_phase_pn [tuple of y :: ty] [tuple of x :: tx]) = 
-    mult_phase (get_phase y x) (get_phase_pn ty tx).
+    mul_phase (get_phase y x) (get_phase_pn ty tx).
 Proof.
   move => x y tx ty.
   by rewrite get_phase_pn_cons.

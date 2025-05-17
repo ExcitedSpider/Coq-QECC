@@ -94,7 +94,7 @@ Definition apply_1 : Vector 2 -> PauliOp -> Vector 2 :=
 Check is_action.
 
 Lemma mult_phase_comp: forall a b, int_phase (a) * int_phase (b) = 
-  int_phase (mult_phase a b).
+  int_phase (mul_phase a b).
 Proof.
   move => a b.
   all: case a; case b; lca.
@@ -282,7 +282,7 @@ Open Scope C_scope.
 
 Lemma neg_phase_correct:
   forall x y, int_phase x = -C1 * int_phase y <-> 
-      x = mult_phase NOne y.
+      x = mul_phase NOne y.
 Proof.
   move => x y.
   split.

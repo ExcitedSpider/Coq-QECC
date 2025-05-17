@@ -234,7 +234,7 @@ Proof.
     assert (H: get_phase h h = One).
       by case h.
     rewrite H; clear H.
-    change mult_phase with (@mulg phase).
+    change mul_phase with (@mulg phase).
     rewrite mul1g.
     assert (H: mul_p1b h h = I).
       by case h.

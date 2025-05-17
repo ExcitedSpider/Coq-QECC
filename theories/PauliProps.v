@@ -373,7 +373,7 @@ Qed.
 
 
 
-Definition s_prod := mult_phase.
+Definition s_prod := mul_phase.
 
 Lemma inverse_scalar_correct:
   forall sc, s_prod sc (inverse_scalar sc) = One
