@@ -442,15 +442,13 @@ Definition rel_phase_pn {n: nat} (a b: PauliString n): phase :=
     map (fun item => rel_phase item.1 item.2)  (zip_tuple a b)
   ).  
 
-(* -1 *)
-Compute rel_phase_pn [tuple X;X;Y;Y] [tuple I;I;X;X].
 
 Definition PauliTuple (n: nat) := prod phase (PauliString n).
 
 Definition rel_phase_png {n: nat} (a b: PauliTuple n): phase :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
-      mul_phase (rel_phase_pn pa pb) (mul_phase sa sb)
+      rel_phase_pn pa pb * sa * sb
     )
   end.
 
@@ -458,16 +456,15 @@ Definition mul_pn {n: nat} (a b: PauliTuple n): PauliTuple n :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
       rel_phase_png a b,
-      mul_pnb pa pb
+      pa * pb
     ) 
 end.
 
 Definition inv_png {n}( a: PauliTuple n): PauliTuple n := 
   match a with
-  | pair s p => (inv_phase s, inv_pn p)
+  | pair s p => (s^-1, p^-1)
   end.
 
-Definition id_p1 := (id_phase, id_pn).
 
 Lemma mult_phase_inj: 
   forall a b x y,
@@ -478,8 +475,6 @@ Proof.
   move => *.
   by subst.
 Qed.
-
-Print mul_pnb.
 
 
 
@@ -531,11 +526,12 @@ Lemma rel_phase_png_assoc n:
   rel_phase_png (rel_phase_png a b, mul_pnb a.2 b.2) c = 
   rel_phase_png a (rel_phase_png b c, mul_pnb b.2 c.2).
 Proof.
-  move => [sx px] [sy py] [sz pz];
+  move => [sx px] [sy py] [sz pz].
   (* Fist do all possible simplification *)
-  rewrite /rel_phase_png /= !mult_phase_assoc.
+  rewrite /rel_phase_png /=; gsimpl.
   apply mult_phase_simplify; try easy.
   apply mult_phase_simplify; try easy.
+  rewrite /mulg //=.
   rewrite -!mult_phase_assoc (mult_phase_comm sx) ?mult_phase_assoc.
   apply mult_phase_simplify; try easy.
   (* Nothing can be done. let's induction *)
@@ -578,7 +574,7 @@ Proof.
   case y => sy py.
   case z => sz pz.
   f_equal.
-  2: by rewrite mul_pnb_assoc.
+  2: by gsimpl.
   by rewrite ?rel_phase_png_assoc.
 Qed.
 
@@ -595,21 +591,19 @@ Proof.
   by rewrite IHn.
 Qed.
 
-Definition id_png (n:nat) := 
-  (One, id_pn n).
+Definition id_png (n:nat): PauliTuple n := 
+  (@oneg phase, @oneg (PauliString n)).
 
 Lemma mul_pn_id n:
   left_id (id_png n) (@mul_pn n).
 Proof.
   rewrite  /mul_pn /left_id /= => x.
-  case x => s v.
-  rewrite mul_pnb_id /id_png /rel_phase_png.
-  rewrite mult_phase_id .
+  case x => s v; gsimpl.
   f_equal.
-  by rewrite rel_phase_pn_id.
+  rewrite /id_png /rel_phase_png //=; gsimpl.
+  rewrite /oneg //= rel_phase_pn_id.
+  by gsimpl.
 Qed.
-
-Check inv_png.
 
 Lemma inv_pn_pres_phase n:
   forall (v: PauliString n),
@@ -628,12 +622,13 @@ Lemma mul_pn_left_inv n:
   left_inverse (id_png n) inv_png mul_pn. 
 Proof.
   rewrite /left_inverse /mul_pn /inv_png /id_png => x.
-  case x => p v.
-  rewrite mul_pnb_left_inv.
+  case x => p v. 
+  rewrite mulVg //=.
   f_equal.
-  rewrite /rel_phase_png mult_phase_left_inv.
-  rewrite mult_phase_comm mult_phase_id.
-  by rewrite inv_pn_pres_phase.
+  rewrite /rel_phase_png.
+  rewrite {1}/invg //= inv_pn_pres_phase.
+  change One with (@oneg phase).
+  gsimpl. by rewrite mulVg.
 Qed.
 
 Section Strcture.
@@ -834,10 +829,9 @@ Proof.
   rewrite /int_pn /= /rel_phase_png.
   rewrite !Mscale_mult_dist_r !Mscale_mult_dist_l Mscale_assoc.
   rewrite !int_phase_comp.
-  rewrite -int_pnb_Mmult !Mscale_assoc.
+  rewrite -int_pnb_Mmult !Mscale_assoc. gsimpl.
   rewrite /mulg //=.
-  rewrite Cmult_assoc Cmult_comm .
-  by rewrite (Cmult_comm (int_phase sy)) Cmult_assoc.
+  apply Mscale_simplify; auto; lca.
 Qed.
 
 End Interpretation.

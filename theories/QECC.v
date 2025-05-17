@@ -229,8 +229,8 @@ Proof.
     case: E/tupleP => h t.
     move: IHn.
     rewrite /recover_by /=.
-    rewrite /PauliOpToElem /=.
-    rewrite /mul_pn !mul_pnb_cons rel_phase_png_cons.
+    rewrite /PauliOpToElem //=.
+    rewrite /mul_pn. rewrite /mulg //= !mul_pnb_cons rel_phase_png_cons.
     assert (H: rel_phase h h = One).
       by case h.
     rewrite H; clear H.
