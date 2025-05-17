@@ -93,8 +93,8 @@ Definition apply_1 : Vector 2 -> PauliOp -> Vector 2 :=
 
 Check is_action.
 
-Lemma mult_phase_comp: forall a b, phase_int (a) * phase_int (b) = 
-  phase_int (mult_phase a b).
+Lemma mult_phase_comp: forall a b, int_phase (a) * int_phase (b) = 
+  int_phase (mult_phase a b).
 Proof.
   move => a b.
   all: case a; case b; lca.
@@ -119,7 +119,7 @@ Proof.
     rewrite !Mscale_mult_dist_l Mscale_mult_dist_r Mscale_assoc.
     rewrite -!mult_phase_comp.
     rewrite Cmult_comm.
-    rewrite -!Mmult_assoc  p1b_int_Mmult .
+    rewrite -!Mmult_assoc  int_p1b_Mmult .
     rewrite Mscale_mult_dist_l.
     by rewrite -!Mscale_assoc.
   }
@@ -281,7 +281,7 @@ Definition neg_phase (p: phase): phase :=
 Open Scope C_scope.
 
 Lemma neg_phase_correct:
-  forall x y, phase_int x = -C1 * phase_int y <-> 
+  forall x y, int_phase x = -C1 * int_phase y <-> 
       x = mult_phase NOne y.
 Proof.
   move => x y.
@@ -308,7 +308,7 @@ Lemma PauliOp_bicommute:
   forall x y,
   get_phase x y = get_phase y x \/
   get_phase x y = neg_phase (get_phase y x).
-  (* phase_int (get_phase x y) = -C1 * phase_int (get_phase y x). *)
+  (* int_phase (get_phase x y) = -C1 * int_phase (get_phase y x). *)
 Proof.
   move => x y.
   case x; case y; rewrite /=.
@@ -323,7 +323,7 @@ End Negation.
 Lemma phase_comm n:
  forall (sx sy:phase) (pt: PauliTupleBase n),
  (* mulg cannot be inferenced here *)
- mult_png (sx, pt) (sy, pt) = mult_png (sy, pt) (sx, pt).
+ mul_pn (sx, pt) (sy, pt) = mul_pn (sy, pt) (sx, pt).
 Proof.
   move => sx sy.
   by case sx; case sy.
@@ -331,26 +331,26 @@ Qed.
 
 Lemma commute_png_implies n:
   forall (px py: phase) (tx ty: PauliTupleBase n),
-  commute_at mult_png (px, tx) (py, ty)-> mult_pn tx ty = mult_pn ty tx /\
+  commute_at mul_pn (px, tx) (py, ty)-> mul_pnb tx ty = mul_pnb ty tx /\
    get_phase_png (px, tx) (py, ty) = get_phase_png (py, ty) (px, tx).
 Proof.
-  rewrite /commute_at /mult_png /= => px py tx ty H.
+  rewrite /commute_at /mul_pn /= => px py tx ty H.
   apply pair_inj in H.
   destruct H as [H1 H2].
   by rewrite H1 H2.
 Qed.
 
-Lemma mult_p1_comm:
-  commutative mult_p1.
+Lemma mul_p1b_comm:
+  commutative mul_p1b.
 Proof.
   rewrite /commuteg => x y.
   by case x; case y.
 Qed.
 
-Lemma phase_mult_p1_comm:
+Lemma phase_mul_p1b_comm:
   forall hx hy,
   get_phase hx hy = get_phase hy hx ->
-  mult_p1 hx hy = mult_p1 hy hx.
+  mul_p1b hx hy = mul_p1b hy hx.
 Proof.
   move => x y.
   by case x; case y.
@@ -360,13 +360,13 @@ End Commutativity.
 
 Theorem negate_phase_simpl {n}:
   forall (a b: PauliTuple n),
-  a = mult_png (NOne, id_pn n) b ->
+  a = mul_pn (NOne, id_pn n) b ->
   int_pn (a) = -C1 .* int_pn b.
 Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
-  rewrite /mult_png /get_phase_png.
-  rewrite get_phase_pn_id //= mult_pn_id; case sb => H;
+  rewrite /mul_pn /get_phase_png.
+  rewrite get_phase_pn_id //= mul_pnb_id; case sb => H;
   inversion H; subst.
   all: lma.
 Qed.

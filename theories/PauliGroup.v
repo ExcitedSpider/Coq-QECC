@@ -63,7 +63,7 @@ Inductive PauliBase : Type :=
 | Z : PauliBase.
 
 (* multiplication on PauliBase *)
-Definition mult_p1(a b: PauliBase): PauliBase :=
+Definition mul_p1b(a b: PauliBase): PauliBase :=
   match a, b with
   | I, p => p
   | p, I => p  
@@ -107,7 +107,7 @@ Qed.
 HB.instance Definition _ := Equality.copy PauliBase (can_type code_decodeEE).
 HB.instance Definition _ := Finite.copy PauliBase (can_type code_decodeEE).
 
-Lemma mult_p1_assoc: associative mult_p1.
+Lemma mul_p1b_assoc: associative mul_p1b.
 Proof. 
   rewrite /associative.
   move => x y z.
@@ -115,7 +115,7 @@ Proof.
 Qed. 
 
 
-Lemma mult_p1_id: left_id id_p1 mult_p1.
+Lemma mul_p1b_id: left_id id_p1 mul_p1b.
 Proof. 
   rewrite /left_id.
   move => x.
@@ -124,7 +124,7 @@ Qed.
 
 Print left_inverse.
 
-Lemma mult_p1_left_inv: left_inverse id_p1 inv_p1 mult_p1.
+Lemma mul_p1b_left_inv: left_inverse id_p1 inv_p1 mul_p1b.
 Proof.
   rewrite /left_inverse.
   move => x.
@@ -132,7 +132,7 @@ Proof.
 Qed.
 
 HB.instance Definition _ := isMulGroup.Build PauliBase
-  mult_p1_assoc mult_p1_id mult_p1_left_inv.
+  mul_p1b_assoc mul_p1b_id mul_p1b_left_inv.
 
 
 Check PauliBase: finGroupType.
@@ -146,20 +146,20 @@ Import P1BaseGroup.
 Definition PauliTupleBase n := {tuple n of PauliBase}.
 
 (* Multiolication on Pauli Group with fixed length n *)
-Definition mult_pn {n: nat} (a b: PauliTupleBase n): PauliTupleBase n := 
-  (map_tuple (fun x => (mult_p1 x.1 x.2))) (zip_tuple a b).
+Definition mul_pnb {n: nat} (a b: PauliTupleBase n): PauliTupleBase n := 
+  (map_tuple (fun x => (mul_p1b x.1 x.2))) (zip_tuple a b).
 
 Definition id_pn n := [tuple of nseq n I].
 (* Definition id_pn n := nseq_tuple n I. *)
 
 Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple inv_p1 pt.
 
-Example mult_pn_exp0:
-  mult_pn [tuple X; X] [tuple X; X] == [tuple I; I].
+Example mul_pnb_exp0:
+  mul_pnb [tuple X; X] [tuple X; X] == [tuple I; I].
 Proof. by []. Qed.
 
-Example mult_pn_exp1:
-  mult_pn [tuple X; X] [tuple X; X] = [tuple I; I].
+Example mul_pnb_exp1:
+  mul_pnb [tuple X; X] [tuple X; X] = [tuple I; I].
 Proof. by apply/eqP. Qed.
 (* In SSR, you need to change view to computable equality to prompt it compute  *)
 
@@ -170,7 +170,7 @@ Proof. by apply/eqP. Qed.
 Lemma trivial_tuples (p q: PauliTupleBase 0) : p = q.
 Proof. by rewrite (tuple0 p) (tuple0 q). Qed.
 
-Lemma mult_pn_assoc n: associative (@mult_pn n). 
+Lemma mul_pnb_assoc n: associative (@mul_pnb n). 
 Proof.
   unfold associative.
   induction n.
@@ -185,11 +185,11 @@ Proof.
     case : x / tupleP => hx tx.
     case : y / tupleP => hy ty.
     case : z / tupleP => hz tz.
-    unfold mult_pn.
+    unfold mul_pnb.
     repeat rewrite zipCons mapCons zipCons mapCons.
     remember (IHn tx ty tz) as IHxyz;
-      unfold mult_pn in IHxyz; rewrite IHxyz; clear HeqIHxyz IHxyz.
-    rewrite mult_p1_assoc /=.
+      unfold mul_pnb in IHxyz; rewrite IHxyz; clear HeqIHxyz IHxyz.
+    rewrite mul_p1b_assoc /=.
     reflexivity.
   }
 Qed.
@@ -206,7 +206,7 @@ Proof.
   by rewrite !(tnth_nth I).
 Qed.
 
-Lemma mult_pn_id n: left_id (@id_pn n) (@mult_pn n).
+Lemma mul_pnb_id n: left_id (@id_pn n) (@mul_pnb n).
 Proof. 
   unfold left_id.
   induction n.
@@ -215,14 +215,14 @@ Proof.
   case : x / tupleP => hx tx.
   rewrite pn_idP.
   move: IHn.
-  rewrite /mult_pn /id_pn zipCons mapCons=> IHx.
+  rewrite /mul_pnb /id_pn zipCons mapCons=> IHx.
   have IHtx := (IHx tx).
   by rewrite IHtx.
 Qed.
 
 
 
-Lemma mult_pn_left_inv n: left_inverse (@id_pn n) (@inv_pn n) (@mult_pn n).
+Lemma mul_pnb_left_inv n: left_inverse (@id_pn n) (@inv_pn n) (@mul_pnb n).
 Proof.
   unfold left_inverse.
   induction n.
@@ -232,8 +232,8 @@ Proof.
   rewrite /inv_pn mapCons.
   have IHtx := (IHn tx).
   move: IHtx.
-  rewrite /mult_pn zipCons mapCons => H.
-  by rewrite H /= mult_p1_left_inv pn_idP.
+  rewrite /mul_pnb zipCons mapCons => H.
+  by rewrite H /= mul_p1b_left_inv pn_idP.
 Qed.
 
 Section Structure.
@@ -243,7 +243,7 @@ Variable n:nat.
 HB.instance Definition _ := Finite.on (@PauliTupleBase n).
 
 HB.instance Definition _ := isMulGroup.Build 
-  (@PauliTupleBase n) (@mult_pn_assoc n) (@mult_pn_id n) (@mult_pn_left_inv n).
+  (@PauliTupleBase n) (@mul_pnb_assoc n) (@mul_pnb_id n) (@mul_pnb_left_inv n).
 
 Check (@PauliTupleBase n): finGroupType.
 
@@ -255,6 +255,8 @@ End PNBaseGroup.
 Module P1Group.
 
 Import P1BaseGroup.
+
+Section PhaseGroup.
 
 Inductive phase : Type :=
 | One : phase   (* 1 *)
@@ -330,17 +332,7 @@ Qed.
 HB.instance Definition _ := isMulGroup.Build phase
   mult_phase_assoc mult_phase_id mult_phase_left_inv.
 
-(* Define Generalized Pauli Operator as *)
-(* Cartisian Product of phase and PauliBase *)
-Check phase: finType.
-Check PauliBase: finType.
-Definition phaseSet := [set: phase].
-
-Goal One \in phaseSet.
-by rewrite in_set. Qed.
-
-Check prod.
-Locate prod.
+End PhaseGroup.
 
 (* for "Generalized Pauli Operator" *)
 Definition PauliOp := prod phase PauliBase.
@@ -387,11 +379,11 @@ Definition get_phase(a b: PauliBase): phase :=
   | X, Z => NImg
   end.
 
-Definition mult_p1g (a b: PauliOp): PauliOp := 
+Definition mul_p1 (a b: PauliOp): PauliOp := 
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
       mult_phase (get_phase pa pb) (mult_phase sa sb), 
-      mult_p1 pa pb
+      mul_p1b pa pb
     ) 
   end. 
 
@@ -403,21 +395,21 @@ Definition inv_p1g (a: PauliOp): PauliOp :=
 
 Definition id_p1g := (id_phase, id_p1).
 
-(* Lemma mult_p1_phase_assoc: *) 
-(*   associative mult_p1_phase. *)
+(* Lemma mul_p1b_phase_assoc: *) 
+(*   associative mul_p1b_phase. *)
 
-(* get_phase px (mult_p1 py pz) = *)
-(* get_phase (mult_p1 px py) pz *)
+(* get_phase px (mul_p1b py pz) = *)
+(* get_phase (mul_p1b px py) pz *)
 
-Lemma mult_p1g_assoc:
-  associative mult_p1g.
+Lemma mul_p1_assoc:
+  associative mul_p1.
 Proof.
   rewrite /associative => x y z.
   case x => sx px.
   case y => sy py.
   case z => sz pz.
-  rewrite /mult_p1g /=.
-  repeat rewrite mult_phase_assoc mult_p1_assoc.
+  rewrite /mul_p1 /=.
+  repeat rewrite mult_phase_assoc mul_p1b_assoc.
   apply injective_projections; rewrite /=.
   2: by []. 
   (* we first handle a few cases that can be solved without fully unfold *)
@@ -426,27 +418,27 @@ Proof.
   all: try by case sx, sy, sz.
 Qed.
 
-Lemma mult_p1g_id:
-  left_id id_p1g mult_p1g.
+Lemma mul_p1_id:
+  left_id id_p1g mul_p1.
 Proof.
   rewrite /left_id => x.
   case x => s p.
-  by rewrite /mult_p1g /=.
+  by rewrite /mul_p1 /=.
 Qed.
 
-Lemma mult_p1g_left_inv:
-  left_inverse id_p1g inv_p1g mult_p1g.
+Lemma mul_p1_left_inv:
+  left_inverse id_p1g inv_p1g mul_p1.
 Proof.
-  rewrite /left_inverse /id_p1g /inv_p1g /mult_p1g => x.
+  rewrite /left_inverse /id_p1g /inv_p1g /mul_p1 => x.
   case x => s p.
-  rewrite mult_phase_left_inv mult_p1_left_inv.
+  rewrite mult_phase_left_inv mul_p1b_left_inv.
   case p;
   by rewrite /=.
 Qed.
 
 HB.instance Definition _ := Finite.on PauliOp.
 HB.instance Definition _ := isMulGroup.Build PauliOp
-  mult_p1g_assoc mult_p1g_id mult_p1g_left_inv.
+  mul_p1_assoc mul_p1_id mul_p1_left_inv.
 
 Notation "%( x ; y )" := (p1g_of x y) (at level 210).
 
@@ -461,13 +453,13 @@ by []. Qed.
 Goal mulg (%(NImg; Y)) (% X) = %(NOne; Z). 
 by []. Qed.
 
-Goal mult_p1g (% X) (% Y) = %(Img; Z). 
+Goal mul_p1 (% X) (% Y) = %(Img; Z). 
 by []. Qed.
 
-Goal mult_p1g (% Z) (% Y) = %(NImg; X). 
+Goal mul_p1 (% Z) (% Y) = %(NImg; X). 
 by []. Qed.
 
-Goal mult_p1g (% X) (% Z) = %(NImg; Y). 
+Goal mul_p1 (% X) (% Z) = %(NImg; Y). 
 by []. Qed.
 
 End P1Group.
@@ -495,11 +487,11 @@ Definition get_phase_png {n: nat} (a b: PauliTuple n): phase :=
     )
   end.
 
-Definition mult_png {n: nat} (a b: PauliTuple n): PauliTuple n :=
+Definition mul_pn {n: nat} (a b: PauliTuple n): PauliTuple n :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
       get_phase_png a b,
-      mult_pn pa pb
+      mul_pnb pa pb
     ) 
 end.
 
@@ -520,15 +512,15 @@ Proof.
   by subst.
 Qed.
 
-Print mult_pn.
+Print mul_pnb.
 
-Lemma mult_pn_cons n:
+Lemma mul_pnb_cons n:
   forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
-    mult_pn [tuple of hx :: tx] [tuple of hy :: ty] = 
-    [tuple of mult_p1 hx hy :: mult_pn tx ty]
+    mul_pnb [tuple of hx :: tx] [tuple of hy :: ty] = 
+    [tuple of mul_p1b hx hy :: mul_pnb tx ty]
     .
 Proof.
-  rewrite /mult_pn => hx hy tx ty.
+  rewrite /mul_pnb => hx hy tx ty.
   by rewrite zipCons mapCons.
 Qed.
 
@@ -580,8 +572,8 @@ Proof. by move => a b c d -> ->. Qed.
 
 Lemma get_phase_png_assoc n:
   forall (a b c: PauliTuple n),
-  get_phase_png (get_phase_png a b, mult_pn a.2 b.2) c = 
-  get_phase_png a (get_phase_png b c, mult_pn b.2 c.2).
+  get_phase_png (get_phase_png a b, mul_pnb a.2 b.2) c = 
+  get_phase_png a (get_phase_png b c, mul_pnb b.2 c.2).
 Proof.
   move => [sx px] [sy py] [sz pz];
   (* Fist do all possible simplification *)
@@ -596,18 +588,18 @@ Proof.
   - case : px / tupleP => hx tx.
     case : py / tupleP => hy ty.
     case : pz / tupleP => hz tz.
-    rewrite !mult_pn_cons !get_phase_pn_cons.
+    rewrite !mul_pnb_cons !get_phase_pn_cons.
     rewrite -!mult_phase_assoc.
     rewrite (mult_phase_comm (get_phase hx hy)).
     rewrite (mult_phase_comm (get_phase hy hz)).
     rewrite !mult_phase_assoc.
-    rewrite -(mult_phase_assoc (get_phase (mult_p1 hx hy) hz)) IHn.
+    rewrite -(mult_phase_assoc (get_phase (mul_p1b hx hy) hz)) IHn.
     rewrite -!mult_phase_assoc.
     rewrite !(mult_phase_comm (get_phase_pn ty _)).
     rewrite !mult_phase_assoc.
     apply mult_phase_simplify; try easy.
     rewrite -!mult_phase_assoc.
-    rewrite !(mult_phase_comm (get_phase_pn tx (mult_pn ty tz))).
+    rewrite !(mult_phase_comm (get_phase_pn tx (mul_pnb ty tz))).
     rewrite !mult_phase_assoc.
     apply mult_phase_simplify; try easy.
     by case hx; case hy; case hz.
@@ -622,15 +614,15 @@ Lemma get_phase_png_comm n:
 Abort.
   
 
-Lemma mult_png_assoc n: 
-  associative (@mult_png n).
+Lemma mul_pn_assoc n: 
+  associative (@mul_pn n).
 Proof.
-  rewrite /associative /mult_png => x y z.
+  rewrite /associative /mul_pn => x y z.
   case x => sx px.
   case y => sy py.
   case z => sz pz.
   f_equal.
-  2: by rewrite mult_pn_assoc.
+  2: by rewrite mul_pnb_assoc.
   by rewrite ?get_phase_png_assoc.
 Qed.
 
@@ -650,12 +642,12 @@ Qed.
 Definition id_png (n:nat) := 
   (One, id_pn n).
 
-Lemma mult_png_id n:
-  left_id (id_png n) (@mult_png n).
+Lemma mul_pn_id n:
+  left_id (id_png n) (@mul_pn n).
 Proof.
-  rewrite  /mult_png /left_id /= => x.
+  rewrite  /mul_pn /left_id /= => x.
   case x => s v.
-  rewrite mult_pn_id /id_png /get_phase_png.
+  rewrite mul_pnb_id /id_png /get_phase_png.
   rewrite mult_phase_id .
   f_equal.
   by rewrite get_phase_pn_id.
@@ -676,12 +668,12 @@ Proof.
 Qed.
   
 
-Lemma mult_png_left_inv n:
-  left_inverse (id_png n) inv_png mult_png. 
+Lemma mul_pn_left_inv n:
+  left_inverse (id_png n) inv_png mul_pn. 
 Proof.
-  rewrite /left_inverse /mult_png /inv_png /id_png => x.
+  rewrite /left_inverse /mul_pn /inv_png /id_png => x.
   case x => p v.
-  rewrite mult_pn_left_inv.
+  rewrite mul_pnb_left_inv.
   f_equal.
   rewrite /get_phase_png mult_phase_left_inv.
   rewrite mult_phase_comm mult_phase_id.
@@ -694,7 +686,7 @@ Variable n: nat.
 
 HB.instance Definition _ := Finite.on (@PauliTuple n).
 HB.instance Definition _ := isMulGroup.Build
-  (@PauliTuple n) (@mult_png_assoc n) (@mult_png_id n) (@mult_png_left_inv n).
+  (@PauliTuple n) (@mul_pn_assoc n) (@mul_pn_id n) (@mul_pn_left_inv n).
 
 
 
@@ -717,7 +709,7 @@ Import P1BaseGroup.
 interpretation of group p1 
 ==========================
 *)
-Definition p1b_int (p : PauliBase) : Square 2 :=
+Definition int_p1b (p : PauliBase) : Square 2 :=
 match p with
 | I => Matrix.I 2 
 | X => Quantum.σx
@@ -743,7 +735,7 @@ interpretation of group p1g
 
 Import P1Group.
 
-Definition phase_int (s: phase): C := 
+Definition int_phase (s: phase): C := 
   match s with
   | One => C1
   | NOne => -C1
@@ -753,7 +745,7 @@ Definition phase_int (s: phase): C :=
 
 Definition int_p1(p: PauliOp): Square 2 :=
   match p with
-  | pair s p => (phase_int s) .* (p1b_int p)
+  | pair s p => (int_phase s) .* (int_p1b p)
   end.
 
 
@@ -768,7 +760,7 @@ Import PNBaseGroup.
 
 Fixpoint int_pnb {n: nat} : (n.-tuple PauliBase) -> Square (2^n) :=
   if n is n'.+1 return (n.-tuple PauliBase) ->  Square (2^n)
-  then fun xs => (p1b_int (thead xs)) ⊗ (int_pnb (behead xs))
+  then fun xs => (int_p1b (thead xs)) ⊗ (int_pnb (behead xs))
   else fun _ => Matrix.I 1.
 
 Goal int_pnb [tuple X; Y; Z] = σx ⊗ σy ⊗ σz.
@@ -779,22 +771,22 @@ Proof.
 Qed.
 
 Definition id1_pn: PauliTupleBase 1 := [tuple I].
-Lemma mult_pn_thead n:
+Lemma mul_pnb_thead n:
 forall (hy hx: PauliBase) (ty tx: PauliTupleBase n), 
-  thead (mult_pn [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg hy hx) .
+  thead (mul_pnb [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg hy hx) .
 Proof.
   intros.
-  unfold mult_pn.
+  unfold mul_pnb.
   by rewrite zipCons mapCons theadCons.
 Qed.
 
 
-Lemma mult_pn_behead n:
+Lemma mul_pnb_behead n:
 forall (hy hx: PauliBase) (ty tx: PauliTupleBase n), 
-  behead_tuple (mult_pn [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg ty tx) .
+  behead_tuple (mul_pnb [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg ty tx) .
 Proof.
   intros.
-  unfold mult_pn.
+  unfold mul_pnb.
   by rewrite zipCons mapCons beheadCons.
 Qed.
 
@@ -823,7 +815,7 @@ Import PNGroup.
 
 Definition int_pn {n:nat} (p: PauliTuple n): Square (2^n) :=
   match p with
-  | (phase, tuple) => (phase_int phase) .* (int_pnb tuple)
+  | (phase, tuple) => (int_phase phase) .* (int_pnb tuple)
   end.
 
 Lemma int_pn_one n:
@@ -834,8 +826,8 @@ Proof.
   by rewrite /int_pn /= Mscale_1_l.
 Qed.
 
-Lemma phase_int_comp: forall x y,
-phase_int (mult_phase x y) = phase_int x * phase_int y.
+Lemma int_phase_comp: forall x y,
+int_phase (mult_phase x y) = int_phase x * int_phase y.
 Proof.
   move => x y.
   case x; case y;
@@ -853,8 +845,8 @@ Proof.
   by rewrite get_phase_pn_cons.
 Qed.
 
-Lemma p1b_int_Mmult: forall x y,
-  p1b_int y ×  p1b_int x = phase_int (get_phase y x) .* p1b_int (mulg y x).
+Lemma int_p1b_Mmult: forall x y,
+  int_p1b y ×  int_p1b x = int_phase (get_phase y x) .* int_p1b (mulg y x).
 Proof.
   move => x y.
   case x; case y; simpl; lma'.
@@ -862,7 +854,7 @@ Qed.
 
 
 Lemma int_pnb_Mmult n: forall (x y: PauliTupleBase n),
-phase_int (get_phase_pn x y) .* int_pnb (mult_pn x y) =
+int_phase (get_phase_pn x y) .* int_pnb (mul_pnb x y) =
 (int_pnb x × int_pnb y).
 Proof.
   move => x y.
@@ -871,8 +863,8 @@ Proof.
   - case: x / tupleP; case : y / tupleP => x tx y ty.
     rewrite /= !theadCons !beheadCons /= .
     rewrite kron_mixed_product'; try easy.
-    rewrite mult_pn_behead mult_pn_thead get_phase_pn_behead.
-    rewrite phase_int_comp p1b_int_Mmult -IHn.
+    rewrite mul_pnb_behead mul_pnb_thead get_phase_pn_behead.
+    rewrite int_phase_comp int_p1b_Mmult -IHn.
     rewrite !Mscale_kron_dist_l !Mscale_kron_dist_r.
     by rewrite Mscale_assoc.
 Qed.
@@ -880,15 +872,15 @@ Qed.
 
 Lemma int_pn_Mmult n:
   forall (x y: PauliTuple n),
-  int_pn x × int_pn y = int_pn (mult_png x y).
+  int_pn x × int_pn y = int_pn (mul_pn x y).
 Proof.
   move  => [sx x] [sy y].
   rewrite /int_pn /= /get_phase_png.
   rewrite !Mscale_mult_dist_r !Mscale_mult_dist_l Mscale_assoc.
-  rewrite !phase_int_comp.
+  rewrite !int_phase_comp.
   rewrite -int_pnb_Mmult !Mscale_assoc.
   rewrite Cmult_assoc Cmult_comm .
-  by rewrite (Cmult_comm (phase_int sy)) Cmult_assoc.
+  by rewrite (Cmult_comm (int_phase sy)) Cmult_assoc.
 Qed.
 
 End Interpretation.

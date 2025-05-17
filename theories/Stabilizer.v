@@ -135,7 +135,7 @@ Proof.
   rewrite <- Mmult_assoc.
   (* Search int_pn "×". *)
   rewrite int_pn_Mmult.
-  change mult_png with (@mulg (PauliElement n)).
+  change mul_pn with (@mulg (PauliElement n)).
   rewrite mulVg /=.
   apply one_stb_everything; easy.
 Qed.
@@ -555,7 +555,7 @@ Lemma int_pnb_apply_cons:
     (head: Vector 2) (tail: Vector (2^(n))),
   (* A ⊗ B *)
   int_pnb ([tuple of p::operator]) × (head ⊗ tail) = 
-  ((p1b_int p) × head) ⊗ ((int_pnb operator) × tail).
+  ((int_p1b p) × head) ⊗ ((int_pnb operator) × tail).
 Proof.
   move => n p pt vh vt.
   rewrite PauliProps.int_pnb_cons.

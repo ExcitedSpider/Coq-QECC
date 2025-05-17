@@ -36,10 +36,10 @@ subst.
 reflexivity.
 Qed.
 
-Definition scalar_to_complex: phase -> C := phase_int.
+Definition scalar_to_complex: phase -> C := int_phase.
 
 (* use the interpretation function in group definition *)
-Definition op_to_matrix: PauliBase -> Square 2 := p1b_int.
+Definition op_to_matrix: PauliBase -> Square 2 := int_p1b.
 
 Definition pauli_to_matrix: PauliOp -> Square 2 := int_p1.
 
@@ -304,14 +304,14 @@ apply PauliMultRel; simpl.
 repeat rewrite Mscale_mult_dist_r.
 (* Search (_ .* (_ × _)). *)
 rewrite Mscale_mult_dist_l.
-replace op_to_matrix  with p1b_int in Hpc by easy. 
+replace op_to_matrix  with int_p1b in Hpc by easy. 
 rewrite Hpc.
 rewrite Mscale_assoc.
-replace scalar_to_complex with phase_int  in Hsc' by easy. 
+replace scalar_to_complex with int_phase  in Hsc' by easy. 
 rewrite <- Hsc'.
 (* Search ((_ * _) = (_ * _)). *)
 rewrite Cmult_comm.
-replace scalar_to_complex  with phase_int in Hsc by easy.
+replace scalar_to_complex  with int_phase in Hsc by easy.
 rewrite Hsc.
 rewrite Mscale_assoc.
 reflexivity.
@@ -351,14 +351,14 @@ it will be much easier now.
 =======================================================
 *)
 
-Definition op_prod_op := mult_p1.
+Definition op_prod_op := mul_p1b.
 
 
 Definition op_prod_s := get_phase.
 
 
 Definition op_prod (a b: PauliBase): (phase * PauliBase) := 
-  (get_phase a b, mult_p1 a b).
+  (get_phase a b, mul_p1b a b).
 
 Definition op_prod_alt(a b: PauliBase): (phase * PauliBase) := 
     ( op_prod_s a b, op_prod_op a b).
@@ -490,8 +490,8 @@ Proof.
   unfold pmul.
   rewrite Heq.
   unfold pauli_to_matrix .
-  replace op_to_matrix with p1b_int in H by easy. 
-  replace scalar_to_complex with phase_int in H by easy.
+  replace op_to_matrix with int_p1b in H by easy. 
+  replace scalar_to_complex with int_phase in H by easy.
   unfold int_p1.
   distribute_scale. 
   rewrite H.
@@ -796,7 +796,7 @@ From mathcomp Require Import seq tuple.
 
 Lemma int_pnb_cons:
   forall {n: nat} (pt: PauliTupleBase n) (p: PauliBase),
-  int_pnb [tuple of p::pt] = (p1b_int p) ⊗ int_pnb pt.
+  int_pnb [tuple of p::pt] = (int_p1b p) ⊗ int_pnb pt.
 Proof.
   rewrite /=  => n pt p.
   rewrite theadCons.

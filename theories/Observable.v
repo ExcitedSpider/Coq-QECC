@@ -34,7 +34,7 @@ Notation ErrorOperator := PauliOperator.
 
 Lemma pauli_base_hermitian:
   forall (p: PauliBase),
-  @hermitian 1%nat (p1b_int p).
+  @hermitian 1%nat (int_p1b p).
 Proof.
   move => p.
   rewrite /hermitian.
@@ -148,10 +148,10 @@ Proof.
   rewrite tuple0 /id_pn /=. 
   by apply /eqP.
   case: op / tupleP => h t.
-  rewrite /mulg /= mult_pn_cons.
+  rewrite /mulg /= mul_pnb_cons.
   rewrite /mulg /= in IHn.
   rewrite IHn.
-  change mult_p1 with (@mulg PauliBase). 
+  change mul_p1b with (@mulg PauliBase). 
   rewrite pn_idP.
   by rewrite p1_involutive.
 Qed.
@@ -182,7 +182,7 @@ Proof.
   split.
   auto with wf_db.
   rewrite /Minv !int_pn_Mmult.
-  change mult_png with (@mulg (PauliElement n)).
+  change mul_pn with (@mulg (PauliElement n)).
   rewrite mulgV mulVg /=.
   rewrite id_int_pnb. 
   by Qsimpl.
@@ -250,7 +250,7 @@ Proof.
     rewrite !tupleE !catCons.
     rewrite int_pnb_cons /= theadCons beheadCons IHn /=.
     rewrite /pow_add. 
-    rewrite (kron_assoc (p1b_int hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
+    rewrite (kron_assoc (int_p1b hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
 Qed. 
 
 Lemma applyP_kron {n m}:

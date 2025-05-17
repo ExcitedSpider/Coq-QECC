@@ -42,7 +42,7 @@ Proof.
     rewrite !tupleE !catCons.
     rewrite int_pnb_cons /= theadCons beheadCons IHn /=.
     rewrite /pow_add. 
-    rewrite (kron_assoc (p1b_int hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
+    rewrite (kron_assoc (int_p1b hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
 Qed. 
 
 Theorem compose_pstring_correct:
@@ -54,7 +54,7 @@ Proof.
   rewrite /compose_pstring /int_pn /=.
   rewrite Mscale_kron_dist_l Mscale_kron_dist_r.
   rewrite int_pnb_concat.
-  by rewrite Mscale_assoc phase_int_comp.
+  by rewrite Mscale_assoc int_phase_comp.
 Qed.
 
 Definition pstr_negate_phase (n: nat) := (NOne, id_pn n).

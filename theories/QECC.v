@@ -81,7 +81,7 @@ Qed.
 
 (* error E can be recovered by R *)
 Definition recover_by {n} (E: ErrorOperator n) (R: PauliOperator n) :=
-  mult_png R E = (@oneg (PauliElement n)).
+  mul_pn R E = (@oneg (PauliElement n)).
 
 (* Apply the error then the recover, the original state is restored *)
 Theorem recover_by_correct {n} :
@@ -230,13 +230,13 @@ Proof.
     move: IHn.
     rewrite /recover_by /=.
     rewrite /PauliOpToElem /=.
-    rewrite /mult_png !mult_pn_cons get_phase_png_cons.
+    rewrite /mul_pn !mul_pnb_cons get_phase_png_cons.
     assert (H: get_phase h h = One).
       by case h.
     rewrite H; clear H.
     change mult_phase with (@mulg phase).
     rewrite mul1g.
-    assert (H: mult_p1 h h = I).
+    assert (H: mul_p1b h h = I).
       by case h.
     rewrite H; clear H.
     move => H.
@@ -271,7 +271,7 @@ Qed.
 Theorem stabiliser_detect_error {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
   Ob ∝1 psi -> 
-  int_pn (mult_png Ob Er) = -C1 .* int_pn (mult_png Er Ob) ->
+  int_pn (mul_pn Ob Er) = -C1 .* int_pn (mul_pn Er Ob) ->
   ('Meas Ob on ('Apply Er on psi) --> -1).
 Proof.
   move => Ob psi Er Hob Hac.
@@ -288,7 +288,7 @@ Qed.
 Corollary stabiliser_detect_error_c {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
   Ob ∝1 psi -> 
-  int_pn (mult_png Ob Er) = -C1 .* int_pn (mult_png Er Ob) ->
+  int_pn (mul_pn Ob Er) = -C1 .* int_pn (mul_pn Er Ob) ->
   ('Meas Ob on ('Apply Er on psi) --> -C1).
 Proof.
   assert (RtoCrw: -C1 = (RtoC (-1))) by lca. 
@@ -302,7 +302,7 @@ Qed.
 Theorem stabiliser_undetectable_error {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
   Ob ∝1 psi -> 
-  mult_png Ob Er = mult_png Er Ob ->
+  mul_pn Ob Er = mul_pn Er Ob ->
   ('Meas Ob on ('Apply Er on psi) --> 1).
 Proof.
   move => Ob psi Er Hob Hac.
@@ -333,7 +333,7 @@ then the error is not detectable *)
 Corollary undetectable_sufficient 
   (edc: ErrorDetectionCode) (Er: PauliOperator edc.(dim)):
   (forall (s: PauliObservable edc.(dim)), 
-    s \in edc.(obs) -> mult_png s Er = mult_png Er s
+    s \in edc.(obs) -> mul_pn s Er = mul_pn Er s
   ) ->
   undetectable edc Er.
 Proof.
