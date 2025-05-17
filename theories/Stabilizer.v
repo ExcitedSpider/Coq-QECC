@@ -9,10 +9,10 @@ Require Import SQIR.UnitaryOps.
 From QuantumLib Require Import Complex.
 Require Import Action.
 Require Import PauliGroup.
+Import P1BaseGroup.
 Import P1Group.
-Import P1GGroup.
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 Require Import WellForm.
 Require Import ExtraSpecs.
 

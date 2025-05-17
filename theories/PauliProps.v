@@ -4,8 +4,8 @@ From mathcomp Require Import ssrfun fingroup eqtype fintype.
 Require Import ExtraSpecs.
 
 Require Import PauliGroup.
+Import PauliGroup.P1BaseGroup.
 Import PauliGroup.P1Group.
-Import PauliGroup.P1GGroup.
 
 Module Pauli.
 
@@ -766,8 +766,8 @@ Qed.
 
 End Pauli.
 
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 
 From mathcomp Require Import ssreflect.
 

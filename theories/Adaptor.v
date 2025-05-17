@@ -10,10 +10,10 @@ Import Pauli.
 From mathcomp Require Import ssrfun fingroup eqtype tuple seq fintype.
 
 Require Import PauliGroup.
+Import P1BaseGroup.
 Import P1Group.
-Import P1GGroup.
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 
 Require Import Coq.Vectors.Vector.
 Import VectorNotations.

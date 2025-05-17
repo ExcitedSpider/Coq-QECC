@@ -54,7 +54,7 @@ Proof. exact: val_inj. Qed.
   
 End TupleExtras. 
 
-Module P1Group.
+Module P1BaseGroup.
 
 Inductive PauliBase : Type :=
 | I : PauliBase
@@ -137,10 +137,10 @@ HB.instance Definition _ := isMulGroup.Build PauliBase
 
 Check PauliBase: finGroupType.
 
-End P1Group.
+End P1BaseGroup.
 
-Module PNGroup.
-Import P1Group.
+Module PNBaseGroup.
+Import P1BaseGroup.
 
 (* Pauli Group with fixed length n *)
 Definition PauliTupleBase n := {tuple n of PauliBase}.
@@ -249,12 +249,12 @@ Check (@PauliTupleBase n): finGroupType.
 
 End Structure.
 
-End PNGroup.
+End PNBaseGroup.
 
 (* P1 Group with phase  *)
-Module P1GGroup.
+Module P1Group.
 
-Import P1Group.
+Import P1BaseGroup.
 
 Inductive phase : Type :=
 | One : phase   (* 1 *)
@@ -470,13 +470,13 @@ by []. Qed.
 Goal mult_p1g (% X) (% Z) = %(NImg; Y). 
 by []. Qed.
 
-End P1GGroup.
+End P1Group.
 
-Module PNGGroup.
+Module PNGroup.
 
-Import P1GGroup.
-Import PNGroup.
 Import P1Group.
+Import PNBaseGroup.
+Import P1BaseGroup.
 
 Definition get_phase_pn {n: nat} (a b: PauliTupleBase n): phase := 
   foldl mult_phase One (
@@ -700,7 +700,7 @@ HB.instance Definition _ := isMulGroup.Build
 
 End Strcture.
 
-End PNGGroup.
+End PNGroup.
 
 Require Import QuantumLib.Quantum.
 (* Make sure it is loaded *)
@@ -710,7 +710,7 @@ Interprete Pauli Groups (1-qubit and n-qubit) by Robert's QuantumLib
 *)
 Section Interpretation.
 
-Import P1Group.
+Import P1BaseGroup.
 
 (* 
 ==========================
@@ -741,7 +741,7 @@ interpretation of group p1g
 ==========================
 *)
 
-Import P1GGroup.
+Import P1Group.
 
 Definition phase_int (s: phase): C := 
   match s with
@@ -763,7 +763,7 @@ interpretation of group pn
 ==========================
 *)
 
-Import PNGroup.
+Import PNBaseGroup.
 
 
 Fixpoint pn_int {n: nat} : (n.-tuple PauliBase) -> Square (2^n) :=
@@ -819,7 +819,7 @@ interpretation of group png
 ==========================
 *)
 
-Import PNGGroup.
+Import PNGroup.
 
 Definition png_int {n:nat} (p: PauliTuple n): Square (2^n) :=
   match p with
@@ -895,8 +895,8 @@ End Interpretation.
 
 
 Module Export all_pauligroup.
+  Export P1BaseGroup.
   Export P1Group.
-  Export P1GGroup.
+  Export PNBaseGroup.
   Export PNGroup.
-  Export PNGGroup.
 End all_pauligroup.

@@ -4,10 +4,10 @@ From mathcomp Require Import tuple ssreflect.
 Require Import SQIR.UnitaryOps.
 
 Section WellFormness. 
+Import P1BaseGroup.
 Import P1Group.
-Import P1GGroup.
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 
 
 Lemma p1_int_wf:
