@@ -717,7 +717,7 @@ Import P1BaseGroup.
 interpretation of group p1 
 ==========================
 *)
-Definition p1_int (p : PauliBase) : Square 2 :=
+Definition p1b_int (p : PauliBase) : Square 2 :=
 match p with
 | I => Matrix.I 2 
 | X => Quantum.σx
@@ -751,9 +751,9 @@ Definition phase_int (s: phase): C :=
   | NImg => - Ci
   end.
 
-Definition p1g_int(p: PauliOp): Square 2 :=
+Definition int_p1(p: PauliOp): Square 2 :=
   match p with
-  | pair s p => (phase_int s) .* (p1_int p)
+  | pair s p => (phase_int s) .* (p1b_int p)
   end.
 
 
@@ -766,12 +766,12 @@ interpretation of group pn
 Import PNBaseGroup.
 
 
-Fixpoint pn_int {n: nat} : (n.-tuple PauliBase) -> Square (2^n) :=
+Fixpoint int_pnb {n: nat} : (n.-tuple PauliBase) -> Square (2^n) :=
   if n is n'.+1 return (n.-tuple PauliBase) ->  Square (2^n)
-  then fun xs => (p1_int (thead xs)) ⊗ (pn_int (behead xs))
+  then fun xs => (p1b_int (thead xs)) ⊗ (int_pnb (behead xs))
   else fun _ => Matrix.I 1.
 
-Goal pn_int [tuple X; Y; Z] = σx ⊗ σy ⊗ σz.
+Goal int_pnb [tuple X; Y; Z] = σx ⊗ σy ⊗ σz.
 Proof.
   rewrite /=.
   Qsimpl.
@@ -801,16 +801,16 @@ Qed.
 
 Check kron_assoc.
 
-Ltac pn_int_simpl :=
+Ltac int_pnb_simpl :=
   Qsimpl;
   repeat rewrite kron_assoc;
   auto with wf_db.
 
-Example pn_interpret:
-pn_int [X;Z;Y;I] = σx ⊗ σz ⊗ σy ⊗ Matrix.I 2.
+Example int_pnberpret:
+int_pnb [X;Z;Y;I] = σx ⊗ σz ⊗ σy ⊗ Matrix.I 2.
 Proof.
-  rewrite /pn_int /=.
-  by pn_int_simpl.
+  rewrite /int_pnb /=.
+  by int_pnb_simpl.
 Qed.
 
 (* 
@@ -821,17 +821,17 @@ interpretation of group png
 
 Import PNGroup.
 
-Definition png_int {n:nat} (p: PauliTuple n): Square (2^n) :=
+Definition int_pn {n:nat} (p: PauliTuple n): Square (2^n) :=
   match p with
-  | (phase, tuple) => (phase_int phase) .* (pn_int tuple)
+  | (phase, tuple) => (phase_int phase) .* (int_pnb tuple)
   end.
 
-Lemma png_int_one n:
+Lemma int_pn_one n:
   forall (pt: PauliTupleBase n),
-  pn_int pt = png_int (One, pt).
+  int_pnb pt = int_pn (One, pt).
 Proof.
   move => pt.
-  by rewrite /png_int /= Mscale_1_l.
+  by rewrite /int_pn /= Mscale_1_l.
 Qed.
 
 Lemma phase_int_comp: forall x y,
@@ -853,17 +853,17 @@ Proof.
   by rewrite get_phase_pn_cons.
 Qed.
 
-Lemma p1_int_Mmult: forall x y,
-  p1_int y ×  p1_int x = phase_int (get_phase y x) .* p1_int (mulg y x).
+Lemma p1b_int_Mmult: forall x y,
+  p1b_int y ×  p1b_int x = phase_int (get_phase y x) .* p1b_int (mulg y x).
 Proof.
   move => x y.
   case x; case y; simpl; lma'.
 Qed.
 
 
-Lemma pn_int_Mmult n: forall (x y: PauliTupleBase n),
-phase_int (get_phase_pn x y) .* pn_int (mult_pn x y) =
-(pn_int x × pn_int y).
+Lemma int_pnb_Mmult n: forall (x y: PauliTupleBase n),
+phase_int (get_phase_pn x y) .* int_pnb (mult_pn x y) =
+(int_pnb x × int_pnb y).
 Proof.
   move => x y.
   induction n.
@@ -872,21 +872,21 @@ Proof.
     rewrite /= !theadCons !beheadCons /= .
     rewrite kron_mixed_product'; try easy.
     rewrite mult_pn_behead mult_pn_thead get_phase_pn_behead.
-    rewrite phase_int_comp p1_int_Mmult -IHn.
+    rewrite phase_int_comp p1b_int_Mmult -IHn.
     rewrite !Mscale_kron_dist_l !Mscale_kron_dist_r.
     by rewrite Mscale_assoc.
 Qed.
     
 
-Lemma png_int_Mmult n:
+Lemma int_pn_Mmult n:
   forall (x y: PauliTuple n),
-  png_int x × png_int y = png_int (mult_png x y).
+  int_pn x × int_pn y = int_pn (mult_png x y).
 Proof.
   move  => [sx x] [sy y].
-  rewrite /png_int /= /get_phase_png.
+  rewrite /int_pn /= /get_phase_png.
   rewrite !Mscale_mult_dist_r !Mscale_mult_dist_l Mscale_assoc.
   rewrite !phase_int_comp.
-  rewrite -pn_int_Mmult !Mscale_assoc.
+  rewrite -int_pnb_Mmult !Mscale_assoc.
   rewrite Cmult_assoc Cmult_comm .
   by rewrite (Cmult_comm (phase_int sy)) Cmult_assoc.
 Qed.

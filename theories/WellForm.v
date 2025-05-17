@@ -10,51 +10,51 @@ Import PNBaseGroup.
 Import PNGroup.
 
 
-Lemma p1_int_wf:
+Lemma p1b_int_wf:
   forall p: PauliBase,
-  WF_Matrix (p1_int p).
+  WF_Matrix (p1b_int p).
 Proof.
   case;
   rewrite /=;
   by auto with wf_db.
 Qed.
 
-Lemma p1g_int_wf:
+Lemma int_p1_wf:
   forall p: PauliOp,
-  WF_Matrix (p1g_int p).
+  WF_Matrix (int_p1 p).
 Proof.
   move => p.
   case p => ph op.
-  rewrite /p1g_int.
+  rewrite /int_p1.
   apply WF_scale.
-  apply p1_int_wf.
+  apply p1b_int_wf.
 Qed.
 
-Theorem pn_int_wf n:
+Theorem int_pnb_wf n:
   forall (op: PauliTupleBase n),
-  WF_Matrix (pn_int op).
+  WF_Matrix (int_pnb op).
 Proof.
   intros.
   induction n.
   - rewrite tuple0.
-    unfold pn_int.
+    unfold int_pnb.
     simpl.
     auto with wf_db.
   - case: op / tupleP => x t.
     apply WF_kron; try easy.
-    by apply p1_int_wf.
+    by apply p1b_int_wf.
 Qed.
 
-Theorem png_int_wf n:
+Theorem int_pn_wf n:
   forall (op: PauliTuple n),
-  WF_Matrix (png_int op).
+  WF_Matrix (int_pn op).
 Proof.
   move => [p t].
-  rewrite /png_int.
+  rewrite /int_pn.
   apply: WF_scale. 
-  by apply: pn_int_wf.
+  by apply: int_pnb_wf.
 Qed.
 
 End WellFormness.
 
-#[export] Hint Resolve p1_int_wf p1g_int_wf pn_int_wf png_int_wf : wf_db.
+#[export] Hint Resolve p1b_int_wf int_p1_wf int_pnb_wf int_pn_wf : wf_db.

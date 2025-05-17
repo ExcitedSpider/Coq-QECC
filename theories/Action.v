@@ -89,7 +89,7 @@ Section QuantumActions.
 
 (* Apply a single-qubit pauli operator *)
 Definition apply_1 : Vector 2 -> PauliOp -> Vector 2 :=
-  fun psi op => (p1g_int op) × psi.
+  fun psi op => (int_p1 op) × psi.
 
 Check is_action.
 
@@ -115,11 +115,11 @@ Proof.
     move => x.
     rewrite /act_comp /apply_1 => a b Ha Hb.
     case a; case b => sa pa sb pb.
-    rewrite /p1g_int /=.
+    rewrite /int_p1 /=.
     rewrite !Mscale_mult_dist_l Mscale_mult_dist_r Mscale_assoc.
     rewrite -!mult_phase_comp.
     rewrite Cmult_comm.
-    rewrite -!Mmult_assoc  p1_int_Mmult .
+    rewrite -!Mmult_assoc  p1b_int_Mmult .
     rewrite Mscale_mult_dist_l.
     by rewrite -!Mscale_assoc.
   }
@@ -144,7 +144,7 @@ Qed.
 Variable (n: nat).
 
 Definition applyP : Vector (2^n) -> PauliTuple n -> Vector (2^n) :=
-  fun psi op => (png_int op) × psi.
+  fun psi op => (int_pn op) × psi.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -158,14 +158,14 @@ Proof.
   split.
   {
     intros x Hwf.
-    rewrite /act_id /applyP id_png_int.
+    rewrite /act_id /applyP id_int_pn.
     by rewrite Mmult_1_l.
   }
   {
     move => x.
     rewrite /act_comp /= /applyP.
     move => *.
-    by rewrite -png_int_Mmult Mmult_assoc.
+    by rewrite -int_pn_Mmult Mmult_assoc.
   }
 Qed.
 
@@ -361,7 +361,7 @@ End Commutativity.
 Theorem negate_phase_simpl {n}:
   forall (a b: PauliTuple n),
   a = mult_png (NOne, id_pn n) b ->
-  png_int (a) = -C1 .* png_int b.
+  int_pn (a) = -C1 .* int_pn b.
 Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
@@ -418,7 +418,7 @@ Proof.
   move => op v.
   rewrite /apply_1.
   apply WF_mult.
-  apply p1g_int_wf.
+  apply int_p1_wf.
 Qed.
 
 Lemma apply_n_wf n:
@@ -428,20 +428,20 @@ Proof.
   move => op v.
   rewrite /applyP.
   apply WF_mult.
-  apply png_int_wf.
+  apply int_pn_wf.
 Qed.
 
 #[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
 
 Lemma pauli_unitary n:
   forall (op: PauliTupleBase n),
-  WF_Unitary (png_int op).
+  WF_Unitary (int_pn op).
 Proof.
   move => t //=; Qsimpl.
   induction n.
     by rewrite tuple0 //=; apply id_unitary.
   case /tupleP: t => h t.
-  rewrite pn_int_cons.
+  rewrite int_pnb_cons.
   apply kron_unitary.
   - case h; simpl.
     apply id_unitary. 

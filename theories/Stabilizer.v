@@ -43,9 +43,9 @@ Section HermitianOperator.
 
 Lemma PauliOperator_stb {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
-  p ∝1 psi -> (pn_int p) × psi = psi. 
+  p ∝1 psi -> (int_pnb p) × psi = psi. 
 Proof.
-  rewrite /stb /= /Action.applyP /png_int /= => p psi.
+  rewrite /stb /= /Action.applyP /int_pn /= => p psi.
   move => H.
   rewrite Mscale_1_l in H.
   by exact H.
@@ -102,7 +102,7 @@ Lemma stb_id:
 Proof.
   move => psi H.
   rewrite /stb /act_n /= /applyP.
-  rewrite /png_int /pn_int /=.
+  rewrite /int_pn /int_pnb /=.
   Qsimpl; auto.
 Qed.
 
@@ -133,8 +133,8 @@ Proof.
   rewrite <- Hstb at 1.
   rewrite /act_n /applyP /=.
   rewrite <- Mmult_assoc.
-  (* Search png_int "×". *)
-  rewrite png_int_Mmult.
+  (* Search int_pn "×". *)
+  rewrite int_pn_Mmult.
   change mult_png with (@mulg (PauliElement n)).
   rewrite mulVg /=.
   apply one_stb_everything; easy.
@@ -203,7 +203,7 @@ Theorem stb_closed:
 .
 Proof.
   unfold_stb => n pstr1 pstr2 psi H0 H1.
-  rewrite -png_int_Mmult.
+  rewrite -int_pn_Mmult.
   by rewrite Mmult_assoc H1 H0.
 Qed.
 
@@ -550,14 +550,14 @@ Definition distance_s (d: nat):=
 (* Prove that detectable is correct *)
 End Syndrome.
 
-Lemma pn_int_apply_cons:
+Lemma int_pnb_apply_cons:
   forall {n} (p: PauliBase) (operator: PauliOperator n)  
     (head: Vector 2) (tail: Vector (2^(n))),
   (* A ⊗ B *)
-  pn_int ([tuple of p::operator]) × (head ⊗ tail) = 
-  ((p1_int p) × head) ⊗ ((pn_int operator) × tail).
+  int_pnb ([tuple of p::operator]) × (head ⊗ tail) = 
+  ((p1b_int p) × head) ⊗ ((int_pnb operator) × tail).
 Proof.
   move => n p pt vh vt.
-  rewrite PauliProps.pn_int_cons.
+  rewrite PauliProps.int_pnb_cons.
   by rewrite kron_mixed_product.
 Qed.
