@@ -148,14 +148,15 @@ Import P1BaseGroup.
 (* Pauli Group with fixed length n *)
 Definition PauliTupleBase n := {tuple n of PauliBase}.
 
+Open Scope group_scope.
 (* Multiolication on Pauli Group with fixed length n *)
 Definition mul_pnb {n: nat} (a b: PauliTupleBase n): PauliTupleBase n := 
-  (map_tuple (fun x => (mul_p1b x.1 x.2))) (zip_tuple a b).
+  (map_tuple (fun x => (x.1 * x.2))) (zip_tuple a b).
 
-Definition id_pn n := [tuple of nseq n I].
+Definition id_pn n: PauliTupleBase n := [tuple of nseq n 1].
 (* Definition id_pn n := nseq_tuple n I. *)
 
-Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple inv_p1b pt.
+Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple invg pt.
 
 Example mul_pnb_exp0:
   mul_pnb [tuple X; X] [tuple X; X] == [tuple I; I].
@@ -173,6 +174,16 @@ Proof. by apply/eqP. Qed.
 Lemma trivial_tuples (p q: PauliTupleBase 0) : p = q.
 Proof. by rewrite (tuple0 p) (tuple0 q). Qed.
 
+Lemma mul_pnb_cons n:
+  forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
+    mul_pnb [tuple of hx :: tx] [tuple of hy :: ty] = 
+    [tuple of mul_p1b hx hy :: mul_pnb tx ty]
+    .
+Proof.
+  rewrite /mul_pnb => hx hy tx ty.
+  by rewrite zipCons mapCons.
+Qed.
+
 Lemma mul_pnb_assoc n: associative (@mul_pnb n). 
 Proof.
   unfold associative.
@@ -188,18 +199,12 @@ Proof.
     case : x / tupleP => hx tx.
     case : y / tupleP => hy ty.
     case : z / tupleP => hz tz.
-    unfold mul_pnb.
-    repeat rewrite zipCons mapCons zipCons mapCons.
-    remember (IHn tx ty tz) as IHxyz;
-      unfold mul_pnb in IHxyz; rewrite IHxyz; clear HeqIHxyz IHxyz.
-    rewrite mul_p1b_assoc /=.
-    reflexivity.
+    rewrite !mul_pnb_cons. move: (IHn tx ty tz) => ->.
+    change mul_p1b with (@mulg PauliBase).
+    by gsimpl.
   }
 Qed.
 
-
-Check tupleP.
-Print tuple1_spec.
 
 Lemma pn_idP {n: nat}: 
   id_pn n.+1 = [tuple of id_p1b :: (id_pn n)].
@@ -229,14 +234,17 @@ Lemma mul_pnb_left_inv n: left_inverse (@id_pn n) (@inv_pn n) (@mul_pnb n).
 Proof.
   unfold left_inverse.
   induction n.
-  1: by intros; apply trivial_tuples.
+    by intros; apply trivial_tuples.
   move => x.
   case : x / tupleP => hx tx.
+  move: IHn.
   rewrite /inv_pn mapCons.
-  have IHtx := (IHn tx).
-  move: IHtx.
-  rewrite /mul_pnb zipCons mapCons => H.
-  by rewrite H /= mul_p1b_left_inv pn_idP.
+  rewrite !mul_pnb_cons.
+  change mul_p1b with (@mulg PauliBase); rewrite mulVg.
+  move => ->.
+  rewrite /id_pn /oneg //= .
+  apply eq_from_tnth => i.
+  by rewrite !(tnth_nth id_p1b).
 Qed.
 
 Section Structure.
@@ -473,15 +481,6 @@ Qed.
 
 Print mul_pnb.
 
-Lemma mul_pnb_cons n:
-  forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
-    mul_pnb [tuple of hx :: tx] [tuple of hy :: ty] = 
-    [tuple of mul_p1b hx hy :: mul_pnb tx ty]
-    .
-Proof.
-  rewrite /mul_pnb => hx hy tx ty.
-  by rewrite zipCons mapCons.
-Qed.
 
 
 Lemma mult_phase_comm:
