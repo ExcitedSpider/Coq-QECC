@@ -1,10 +1,3 @@
-(*
-TODO: use PauliGroup.v to refactor PauliString
-- [x] imports PauliTupleBase
-- [x] make a convert function for PauliTupleBase <-> PauliString ?
-- [ ] completly wipe out Coq.Vector stuff
-*)
-
 Require Import PauliProps.
 Import Pauli.
 From mathcomp Require Import ssrfun fingroup eqtype tuple seq fintype.
@@ -395,6 +388,7 @@ Ltac unalias :=
   unfold op_to_matrix, pauli_to_matrix, scalar_to_complex in *.
 
 End PauliString.
+From Coq Require Import ssreflect.
 
 (* We show that the two sets of definiton can be transformed from one to 
 the another, thus they are of equivalent power *)
@@ -402,7 +396,8 @@ Module Adaptor.
 
 Import PauliString.
 
-From Coq Require Import ssreflect.
+
+Notation PauliTupleBase := PNBaseGroup.PauliString.
 
 (* This one does work but the type is inconvinient*)
 Definition TtoV_l {n:nat} (l: PauliTupleBase n): PauliVector (size l) :=

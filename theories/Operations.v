@@ -28,7 +28,7 @@ Proof.
 Qed.
 
 Lemma int_pnb_concat {n m}:
-  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  forall (op0: PauliString n) (op1: PauliString m) ,
   (int_pnb [tuple of op0 ++ op1]) = 
   (int_pnb op0) ⊗ (int_pnb op1).
 Proof.

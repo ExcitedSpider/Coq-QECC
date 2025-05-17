@@ -31,7 +31,7 @@ Proof.
 Qed.
 
 Theorem int_pnb_wf n:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   WF_Matrix (int_pnb op).
 Proof.
   intros.

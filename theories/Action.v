@@ -70,7 +70,7 @@ n-qubit Pauli group P_n *)
 (* One detail to notice is that we only consider phase +1.
 Technically, phase -1 also makes an element of P_n hermitian
 But they are not very useful *)
-Notation PauliOperator := PauliTupleBase.
+Notation PauliOperator := PauliString.
 
 (* We use PauliElement to refer to all elements in pauli groups
   note that not all elements are pauli operator
@@ -323,7 +323,7 @@ End Negation.
 
 
 Lemma phase_comm n:
- forall (sx sy:phase) (pt: PauliTupleBase n),
+ forall (sx sy:phase) (pt: PauliString n),
  (* mulg cannot be inferenced here *)
  mul_pn (sx, pt) (sy, pt) = mul_pn (sy, pt) (sx, pt).
 Proof.
@@ -332,7 +332,7 @@ Proof.
 Qed.
 
 Lemma commute_png_implies n:
-  forall (px py: phase) (tx ty: PauliTupleBase n),
+  forall (px py: phase) (tx ty: PauliString n),
   commute_at mul_pn (px, tx) (py, ty)-> mul_pnb tx ty = mul_pnb ty tx /\
    rel_phase_png (px, tx) (py, ty) = rel_phase_png (py, ty) (px, tx).
 Proof.
@@ -436,7 +436,7 @@ Qed.
 #[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
 
 Lemma pauli_unitary n:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   WF_Unitary (int_pn op).
 Proof.
   move => t //=; Qsimpl.
@@ -465,7 +465,7 @@ Proof.
 Qed.  
 
 Theorem applyP_nonzero n:
-  forall (op: PauliTupleBase n) (v: Vector (2^n)),
+  forall (op: PauliString n) (v: Vector (2^n)),
   WF_Matrix v -> v <> Zero -> (applyP v op) <> Zero.
 Proof.
   move => op v Hwf Hnz.

@@ -28,7 +28,7 @@ Definition meas_to {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
 
 (* because every pauli operator is hermitian, 
   they can all be viewed as observable *)
-Notation PauliObservable := PauliTupleBase.
+Notation PauliObservable := PauliString.
 (* Notation Just for readability *)
 Notation ErrorOperator := PauliOperator.
 
@@ -46,7 +46,7 @@ Proof.
 Qed.
 
 Fact pauli_hermitian {n} :
-  forall (operator: PauliTupleBase n), hermitian (int_pnb operator).
+  forall (operator: PauliString n), hermitian (int_pnb operator).
 Proof.
   rewrite /hermitian /int_pn /PauliObservable //= => pt.
   induction n.
@@ -140,7 +140,7 @@ Proof. by move => p; case p. Qed.
   and I don't know why.
 *)
 Lemma pauli_involutive {n}:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   (mulg op op) = (id_pn n).
 Proof.
   move => op.
@@ -157,7 +157,7 @@ Proof.
 Qed.
 
 Lemma rel_phase_pn_involutive n:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   rel_phase_pn op op = One.
 Proof.
   move => op.
@@ -236,7 +236,7 @@ Proof.
 Qed.
 
 Lemma int_pnb_concat {n m}:
-  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  forall (op0: PauliString n) (op1: PauliString m) ,
   (int_pnb [tuple of op0 ++ op1]) = 
   (int_pnb op0) ⊗ (int_pnb op1).
 Proof.

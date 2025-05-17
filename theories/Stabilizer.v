@@ -288,7 +288,7 @@ Proof.
 Qed.
 
 Lemma stb_cons:
-  forall {n: nat} (pstr: PauliTupleBase n) (hp: PauliBase) (hv: Vector 2) (tv:  Vector (2^n)),
+  forall {n: nat} (pstr: PauliString n) (hp: PauliBase) (hv: Vector 2) (tv:  Vector (2^n)),
   pstr ∝1 tv ->
   stb_1 hp hv ->
   (One, [tuple of hp::pstr]) ∝1 (hv ⊗ tv).
@@ -500,7 +500,7 @@ Definition is_stb_set_spec {n} (S: {set PauliElement n}) (v: Vector (2^n)):=
 
 (* The weight of a stabilizer group is the number of qubits that are not I *)
 (* in the stabilizer group *)
-Definition weight {n} (pt: PauliTupleBase n): nat := 
+Definition weight {n} (pt: PauliString n): nat := 
   count (fun x => x != I) pt.
 
 Goal weight ([p Z, Z, I]) = 2%nat.
@@ -517,12 +517,12 @@ Variable n: nat.
 Variable g: {set PauliElement n}.
 Hypothesis H: is_stb_set g.
 
-Definition with_1 (pt: PauliTupleBase n): PauliElement n := (One, pt).
+Definition with_1 (pt: PauliString n): PauliElement n := (One, pt).
 
 (* an detectable error is an error that  *)
 (* note that we usually require the phase of error operator to be 1 *)
 (* Otherwise, it will be Z (negate phase) *)
-Definition detectable (E: PauliTupleBase n) := 
+Definition detectable (E: PauliString n) := 
   exists (pstr: PauliElement n), pstr \in g /\ 
   (mulg pstr (with_1 E) != mulg (with_1 E) pstr).
 
@@ -534,19 +534,19 @@ Definition dimension := subn n #|g|.
 
 (* the distance of a generator = weight(E)  *)
 (* where E is an error and E cannot be detected *)
-Definition distance_spec (E: PauliTupleBase n) (d: nat) :=
+Definition distance_spec (E: PauliString n) (d: nat) :=
   not (detectable E) /\ weight E = d.
 
 (* The distance of a code is the minimal weight of an undetectable error *)
 Definition distance (d: nat):= 
-  exists (E: PauliTupleBase n), distance_spec E d /\
-    forall (E': PauliTupleBase n) d', distance_spec E' d' -> leq d d'.
+  exists (E: PauliString n), distance_spec E d /\
+    forall (E': PauliString n) d', distance_spec E' d' -> leq d d'.
 
 (* A sound difinition of distance, which does not require to show 
   the error is the minimum in the whole world  
 *)
 Definition distance_s (d: nat):= 
-  exists (E: PauliTupleBase n), distance_spec E d.
+  exists (E: PauliString n), distance_spec E d.
   
 
 (* These definitions are very axiomatic and not verified from principle *)

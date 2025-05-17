@@ -5,7 +5,7 @@ Key Definitions:
 - PauliBase: The 1-qubit Pauli quotient group
 - phase: The phase {-1, i, -1, -i} and they forms a group
 - PauliElem1: The 1-qubit Pauli group
-- PauliTupleBase: The n-qubit Pauli quotient group
+- PauliString: The n-qubit Pauli quotient group
 - PauliTuple: The n-qubit Pauli group
 
 You can use all canonical definitions in mathcomp: oneg, mulg, invg, idg
@@ -146,17 +146,17 @@ Module PNBaseGroup.
 Import P1BaseGroup.
 
 (* Pauli Group with fixed length n *)
-Definition PauliTupleBase n := {tuple n of PauliBase}.
+Definition PauliString n := {tuple n of PauliBase}.
 
 Open Scope group_scope.
 (* Multiolication on Pauli Group with fixed length n *)
-Definition mul_pnb {n: nat} (a b: PauliTupleBase n): PauliTupleBase n := 
+Definition mul_pnb {n: nat} (a b: PauliString n): PauliString n := 
   (map_tuple (fun x => (x.1 * x.2))) (zip_tuple a b).
 
-Definition id_pn n: PauliTupleBase n := [tuple of nseq n 1].
+Definition id_pn n: PauliString n := [tuple of nseq n 1].
 (* Definition id_pn n := nseq_tuple n I. *)
 
-Definition inv_pn {n: nat} (pt: PauliTupleBase n): PauliTupleBase n := map_tuple invg pt.
+Definition inv_pn {n: nat} (pt: PauliString n): PauliString n := map_tuple invg pt.
 
 Example mul_pnb_exp0:
   mul_pnb [tuple X; X] [tuple X; X] == [tuple I; I].
@@ -171,11 +171,11 @@ Example inv_pn_exp0:
   inv_pn [tuple X; Y; Z] = [tuple X; Y; Z].
 Proof. by apply/eqP. Qed.
 
-Lemma trivial_tuples (p q: PauliTupleBase 0) : p = q.
+Lemma trivial_tuples (p q: PauliString 0) : p = q.
 Proof. by rewrite (tuple0 p) (tuple0 q). Qed.
 
 Lemma mul_pnb_cons n:
-  forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
+  forall (hx hy: PauliBase) (tx ty: PauliString n),
     mul_pnb [tuple of hx :: tx] [tuple of hy :: ty] = 
     [tuple of mul_p1b hx hy :: mul_pnb tx ty]
     .
@@ -251,12 +251,12 @@ Section Structure.
 
 Variable n:nat.
 
-HB.instance Definition _ := Finite.on (@PauliTupleBase n).
+HB.instance Definition _ := Finite.on (@PauliString n).
 
 HB.instance Definition _ := isMulGroup.Build 
-  (@PauliTupleBase n) (@mul_pnb_assoc n) (@mul_pnb_id n) (@mul_pnb_left_inv n).
+  (@PauliString n) (@mul_pnb_assoc n) (@mul_pnb_id n) (@mul_pnb_left_inv n).
 
-Check (@PauliTupleBase n): finGroupType.
+Check (@PauliString n): finGroupType.
 
 End Structure.
 
@@ -437,7 +437,7 @@ Import P1Group.
 Import PNBaseGroup.
 Import P1BaseGroup.
 
-Definition rel_phase_pn {n: nat} (a b: PauliTupleBase n): phase := 
+Definition rel_phase_pn {n: nat} (a b: PauliString n): phase := 
   foldl mul_phase One (
     map (fun item => rel_phase item.1 item.2)  (zip_tuple a b)
   ).  
@@ -445,7 +445,7 @@ Definition rel_phase_pn {n: nat} (a b: PauliTupleBase n): phase :=
 (* -1 *)
 Compute rel_phase_pn [tuple X;X;Y;Y] [tuple I;I;X;X].
 
-Definition PauliTuple (n: nat) := prod phase (PauliTupleBase n).
+Definition PauliTuple (n: nat) := prod phase (PauliString n).
 
 Definition rel_phase_png {n: nat} (a b: PauliTuple n): phase :=
   match (a, b) with
@@ -491,7 +491,7 @@ Proof.
 Qed.
 
 Lemma rel_phase_pn_cons n:
-  forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
+  forall (hx hy: PauliBase) (tx ty: PauliString n),
   rel_phase_pn [tuple of hx :: tx] [tuple of hy :: ty] = 
   mul_phase (rel_phase hx hy) (rel_phase_pn tx ty).
 Proof.
@@ -508,7 +508,7 @@ Qed.
 
 
 Lemma rel_phase_png_cons {n: nat} :
-  forall px py hx hy (tx ty: PauliTupleBase n),
+  forall px py hx hy (tx ty: PauliString n),
     rel_phase_png (px, [tuple of (hx :: tx)]) (py, [tuple of (hy :: ty)])
   = mul_phase (rel_phase hx hy) (rel_phase_png (px, tx) (py, ty)).
 Proof.
@@ -612,7 +612,7 @@ Qed.
 Check inv_png.
 
 Lemma inv_pn_pres_phase n:
-  forall (v: PauliTupleBase n),
+  forall (v: PauliString n),
   rel_phase_pn (inv_pn v) v = One.
 Proof.
   move => v.
@@ -726,9 +726,9 @@ Proof.
   rewrite kron_assoc; auto with wf_db.
 Qed.
 
-Definition id1_pn: PauliTupleBase 1 := [tuple I].
+Definition id1_pn: PauliString 1 := [tuple I].
 Lemma mul_pnb_thead n:
-forall (hy hx: PauliBase) (ty tx: PauliTupleBase n), 
+forall (hy hx: PauliBase) (ty tx: PauliString n), 
   thead (mul_pnb [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg hy hx) .
 Proof.
   intros.
@@ -738,7 +738,7 @@ Qed.
 
 
 Lemma mul_pnb_behead n:
-forall (hy hx: PauliBase) (ty tx: PauliTupleBase n), 
+forall (hy hx: PauliBase) (ty tx: PauliString n), 
   behead_tuple (mul_pnb [tuple of hy :: ty] [tuple of hx :: tx]) = (mulg ty tx) .
 Proof.
   intros.
@@ -775,7 +775,7 @@ Definition int_pn {n:nat} (p: PauliTuple n): Square (2^n) :=
   end.
 
 Lemma int_pn_one n:
-  forall (pt: PauliTupleBase n),
+  forall (pt: PauliString n),
   int_pnb pt = int_pn (One, pt).
 Proof.
   move => pt.
@@ -793,7 +793,7 @@ Qed.
 Print rel_phase_pn.
 
 Lemma rel_phase_pn_behead n:
-  forall x y (tx ty: PauliTupleBase n),
+  forall x y (tx ty: PauliString n),
   (rel_phase_pn [tuple of y :: ty] [tuple of x :: tx]) = 
     mul_phase (rel_phase y x) (rel_phase_pn ty tx).
 Proof.
@@ -809,7 +809,7 @@ Proof.
 Qed.
 
 
-Lemma int_pnb_Mmult n: forall (x y: PauliTupleBase n),
+Lemma int_pnb_Mmult n: forall (x y: PauliString n),
 int_phase (rel_phase_pn x y) .* int_pnb (mul_pnb x y) =
 (int_pnb x × int_pnb y).
 Proof.

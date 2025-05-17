@@ -797,7 +797,7 @@ Qed.
 From mathcomp Require Import seq tuple.
 
 Lemma int_pnb_cons:
-  forall {n: nat} (pt: PauliTupleBase n) (p: PauliBase),
+  forall {n: nat} (pt: PauliString n) (p: PauliBase),
   int_pnb [tuple of p::pt] = (int_p1b p) ⊗ int_pnb pt.
 Proof.
   rewrite /=  => n pt p.
