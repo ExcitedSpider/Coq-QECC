@@ -74,6 +74,8 @@ subst.
 repeat (split).
 Qed.
 
+Close Scope group_scope.
+
 Example one_semantics:
 Matrix.I 2 0%nat 0%nat = 1.
 Proof.
@@ -354,11 +356,11 @@ it will be much easier now.
 Definition op_prod_op := mul_p1b.
 
 
-Definition op_prod_s := get_phase.
+Definition op_prod_s := prod_phase.
 
 
 Definition op_prod (a b: PauliBase): (phase * PauliBase) := 
-  (get_phase a b, mul_p1b a b).
+  (prod_phase a b, mul_p1b a b).
 
 Definition op_prod_alt(a b: PauliBase): (phase * PauliBase) := 
     ( op_prod_s a b, op_prod_op a b).

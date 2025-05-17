@@ -259,6 +259,7 @@ Proof.
   ).
 Qed.
 
+Close Scope group_scope.
 
 (* Move these four to Pauli.v *)
 Lemma s_prod_correct_eq: forall (a b c: phase),

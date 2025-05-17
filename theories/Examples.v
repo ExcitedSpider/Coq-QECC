@@ -127,6 +127,7 @@ Definition SyndromeMeas: {set PauliObservable 3} :=
   [set Z12, Z23].
 
 
+Close Scope group_scope.
 (* Syndrome Measurement Does not change the correct code *)
 Theorem SyndromeMeas_stab :
   forall (M: PauliObservable dim),
@@ -421,6 +422,8 @@ Definition SyndromeMeas: {set PauliObservable 3} :=
 (* move them to somewhere suits *)
 Lemma MmultXPl: σx × ∣+⟩ =       ∣+⟩. Proof. by solve_matrix. Qed.
 Lemma MmultXMi: σx × ∣-⟩ = -1 .* ∣-⟩. Proof. by solve_matrix. Qed.
+
+Close Scope group_scope.
 
 Theorem meas_codespace_1 :
   forall (M: PauliObservable dim),

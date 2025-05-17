@@ -186,11 +186,11 @@ End ErrorCorrectionCode.
 
 Section Theories.
 
-Lemma get_phase_png_involutive:
-forall {n} (t: PauliOperator n), get_phase_png (One, t) (One, t) = One.
+Lemma prod_phase_png_involutive:
+forall {n} (t: PauliOperator n), prod_phase_png (One, t) (One, t) = One.
 Proof.
   move => n t.
-  by rewrite /get_phase_png get_phase_pn_involutive /=.
+  by rewrite /prod_phase_png prod_phase_pn_involutive /=.
 Qed.
 
 Lemma png_id_simpl:
@@ -230,8 +230,8 @@ Proof.
     move: IHn.
     rewrite /recover_by /=.
     rewrite /PauliOpToElem /=.
-    rewrite /mul_pn !mul_pnb_cons get_phase_png_cons.
-    assert (H: get_phase h h = One).
+    rewrite /mul_pn !mul_pnb_cons prod_phase_png_cons.
+    assert (H: prod_phase h h = One).
       by case h.
     rewrite H; clear H.
     change mul_phase with (@mulg phase).
@@ -242,7 +242,7 @@ Proof.
     move => H.
     move: (H t).
     clear H.
-    rewrite !get_phase_png_involutive.
+    rewrite !prod_phase_png_involutive.
     rewrite -!png_id_simpl => H.
     apply (png_idP n).
     by rewrite H.
@@ -284,6 +284,7 @@ Proof.
   lca.
 Qed.
 
+Close Scope group_scope.
 (* this one explicitly use complex numbers to make it more usable *)
 Corollary stabiliser_detect_error_c {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
