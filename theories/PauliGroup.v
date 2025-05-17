@@ -343,7 +343,7 @@ Definition PauliOp := prod phase PauliBase.
 Definition p1g_of: phase -> PauliBase -> PauliOp := 
   fun p o => pair p o.
 
-Definition prod_phase(a b: PauliBase): phase :=
+Definition rel_phase(a b: PauliBase): phase :=
   match a, b with  
   | I, _ => One
   | _, I => One
@@ -364,24 +364,22 @@ Open Scope group_scope.
 Definition mul_p1 (a b: PauliOp): PauliOp := 
   match (a, b) with
   | ((sa, pa), (sb, pb)) => (
-      (prod_phase pa pb) * (sa * sb), 
+      (rel_phase pa pb) * (sa * sb), 
       pa * pb
     ) 
   end. 
 
 
 Definition inv_p1g (a: PauliOp): PauliOp := 
-  match a with
-  | (s, p) => (s^-1, p^-1)
-  end.
+  match a with (s, p) => (s^-1, p^-1) end.
 
-Definition id_p1g := (id_phase, id_p1b).
+Definition id_p1g: PauliOp := (1, 1).
 
 (* Lemma mul_p1b_phase_assoc: *) 
 (*   associative mul_p1b_phase. *)
 
-(* prod_phase px (mul_p1b py pz) = *)
-(* prod_phase (mul_p1b px py) pz *)
+(* rel_phase px (mul_p1b py pz) = *)
+(* rel_phase (mul_p1b px py) pz *)
 
 Lemma mul_p1_assoc:
   associative mul_p1.
@@ -454,27 +452,27 @@ Import P1Group.
 Import PNBaseGroup.
 Import P1BaseGroup.
 
-Definition prod_phase_pn {n: nat} (a b: PauliTupleBase n): phase := 
+Definition rel_phase_pn {n: nat} (a b: PauliTupleBase n): phase := 
   foldl mul_phase One (
-    map (fun item => prod_phase item.1 item.2)  (zip_tuple a b)
+    map (fun item => rel_phase item.1 item.2)  (zip_tuple a b)
   ).  
 
 (* -1 *)
-Compute prod_phase_pn [tuple X;X;Y;Y] [tuple I;I;X;X].
+Compute rel_phase_pn [tuple X;X;Y;Y] [tuple I;I;X;X].
 
 Definition PauliTuple (n: nat) := prod phase (PauliTupleBase n).
 
-Definition prod_phase_png {n: nat} (a b: PauliTuple n): phase :=
+Definition rel_phase_png {n: nat} (a b: PauliTuple n): phase :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
-      mul_phase (prod_phase_pn pa pb) (mul_phase sa sb)
+      mul_phase (rel_phase_pn pa pb) (mul_phase sa sb)
     )
   end.
 
 Definition mul_pn {n: nat} (a b: PauliTuple n): PauliTuple n :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
-      prod_phase_png a b,
+      rel_phase_png a b,
       mul_pnb pa pb
     ) 
 end.
@@ -516,13 +514,13 @@ Proof.
   by case x, y.
 Qed.
 
-Lemma prod_phase_pn_cons n:
+Lemma rel_phase_pn_cons n:
   forall (hx hy: PauliBase) (tx ty: PauliTupleBase n),
-  prod_phase_pn [tuple of hx :: tx] [tuple of hy :: ty] = 
-  mul_phase (prod_phase hx hy) (prod_phase_pn tx ty).
+  rel_phase_pn [tuple of hx :: tx] [tuple of hy :: ty] = 
+  mul_phase (rel_phase hx hy) (rel_phase_pn tx ty).
 Proof.
   intros.
-  rewrite /prod_phase_pn  /=.
+  rewrite /rel_phase_pn  /=.
   rewrite mult_phase_comm.
   rewrite -foldl_rcons /=.
   symmetry.
@@ -533,13 +531,13 @@ Proof.
 Qed.  
 
 
-Lemma prod_phase_png_cons {n: nat} :
+Lemma rel_phase_png_cons {n: nat} :
   forall px py hx hy (tx ty: PauliTupleBase n),
-    prod_phase_png (px, [tuple of (hx :: tx)]) (py, [tuple of (hy :: ty)])
-  = mul_phase (prod_phase hx hy) (prod_phase_png (px, tx) (py, ty)).
+    rel_phase_png (px, [tuple of (hx :: tx)]) (py, [tuple of (hy :: ty)])
+  = mul_phase (rel_phase hx hy) (rel_phase_png (px, tx) (py, ty)).
 Proof.
   move => *.
-  rewrite /prod_phase_png prod_phase_pn_cons.
+  rewrite /rel_phase_png rel_phase_pn_cons.
   by rewrite !mult_phase_assoc.
 Qed.
 
@@ -552,14 +550,14 @@ Lemma mult_phase_simplify:
   a %* b = c %* d.
 Proof. by move => a b c d -> ->. Qed.
 
-Lemma prod_phase_png_assoc n:
+Lemma rel_phase_png_assoc n:
   forall (a b c: PauliTuple n),
-  prod_phase_png (prod_phase_png a b, mul_pnb a.2 b.2) c = 
-  prod_phase_png a (prod_phase_png b c, mul_pnb b.2 c.2).
+  rel_phase_png (rel_phase_png a b, mul_pnb a.2 b.2) c = 
+  rel_phase_png a (rel_phase_png b c, mul_pnb b.2 c.2).
 Proof.
   move => [sx px] [sy py] [sz pz];
   (* Fist do all possible simplification *)
-  rewrite /prod_phase_png /= !mult_phase_assoc.
+  rewrite /rel_phase_png /= !mult_phase_assoc.
   apply mult_phase_simplify; try easy.
   apply mult_phase_simplify; try easy.
   rewrite -!mult_phase_assoc (mult_phase_comm sx) ?mult_phase_assoc.
@@ -570,18 +568,18 @@ Proof.
   - case : px / tupleP => hx tx.
     case : py / tupleP => hy ty.
     case : pz / tupleP => hz tz.
-    rewrite !mul_pnb_cons !prod_phase_pn_cons.
+    rewrite !mul_pnb_cons !rel_phase_pn_cons.
     rewrite -!mult_phase_assoc.
-    rewrite (mult_phase_comm (prod_phase hx hy)).
-    rewrite (mult_phase_comm (prod_phase hy hz)).
+    rewrite (mult_phase_comm (rel_phase hx hy)).
+    rewrite (mult_phase_comm (rel_phase hy hz)).
     rewrite !mult_phase_assoc.
-    rewrite -(mult_phase_assoc (prod_phase (mul_p1b hx hy) hz)) IHn.
+    rewrite -(mult_phase_assoc (rel_phase (mul_p1b hx hy) hz)) IHn.
     rewrite -!mult_phase_assoc.
-    rewrite !(mult_phase_comm (prod_phase_pn ty _)).
+    rewrite !(mult_phase_comm (rel_phase_pn ty _)).
     rewrite !mult_phase_assoc.
     apply mult_phase_simplify; try easy.
     rewrite -!mult_phase_assoc.
-    rewrite !(mult_phase_comm (prod_phase_pn tx (mul_pnb ty tz))).
+    rewrite !(mult_phase_comm (rel_phase_pn tx (mul_pnb ty tz))).
     rewrite !mult_phase_assoc.
     apply mult_phase_simplify; try easy.
     by case hx; case hy; case hz.
@@ -589,10 +587,10 @@ Qed.
 
 (* Do not try to attempt this! *)
 (* This is not valid *)
-Lemma prod_phase_png_comm n:
+Lemma rel_phase_png_comm n:
   forall (a b: PauliTuple n),
-  prod_phase_png a b <>
-  prod_phase_png b a.
+  rel_phase_png a b <>
+  rel_phase_png b a.
 Abort.
   
 
@@ -605,19 +603,19 @@ Proof.
   case z => sz pz.
   f_equal.
   2: by rewrite mul_pnb_assoc.
-  by rewrite ?prod_phase_png_assoc.
+  by rewrite ?rel_phase_png_assoc.
 Qed.
 
-Lemma prod_phase_pn_id n:
+Lemma rel_phase_pn_id n:
   forall v,
-  prod_phase_pn (id_pn n) v = One.
+  rel_phase_pn (id_pn n) v = One.
 Proof.
   move => v.
   induction n.
   by rewrite tuple0 (tuple0 v).
   case : v / tupleP => hv tv.
-  rewrite pn_idP /prod_phase_pn /=.
-  rewrite /id_pn /prod_phase_pn in IHn.
+  rewrite pn_idP /rel_phase_pn /=.
+  rewrite /id_pn /rel_phase_pn in IHn.
   by rewrite IHn.
 Qed.
 
@@ -629,20 +627,20 @@ Lemma mul_pn_id n:
 Proof.
   rewrite  /mul_pn /left_id /= => x.
   case x => s v.
-  rewrite mul_pnb_id /id_png /prod_phase_png.
+  rewrite mul_pnb_id /id_png /rel_phase_png.
   rewrite mult_phase_id .
   f_equal.
-  by rewrite prod_phase_pn_id.
+  by rewrite rel_phase_pn_id.
 Qed.
 
 Check inv_png.
 
 Lemma inv_pn_pres_phase n:
   forall (v: PauliTupleBase n),
-  prod_phase_pn (inv_pn v) v = One.
+  rel_phase_pn (inv_pn v) v = One.
 Proof.
   move => v.
-  rewrite /prod_phase_pn.
+  rewrite /rel_phase_pn.
   induction n.
     by rewrite (tuple0) /=.
   case : v / tupleP => hv tv.
@@ -657,7 +655,7 @@ Proof.
   case x => p v.
   rewrite mul_pnb_left_inv.
   f_equal.
-  rewrite /prod_phase_png mult_phase_left_inv.
+  rewrite /rel_phase_png mult_phase_left_inv.
   rewrite mult_phase_comm mult_phase_id.
   by rewrite inv_pn_pres_phase.
 Qed.
@@ -816,19 +814,19 @@ Proof.
   simpl; lca.
 Qed.
 
-Print prod_phase_pn.
+Print rel_phase_pn.
 
-Lemma prod_phase_pn_behead n:
+Lemma rel_phase_pn_behead n:
   forall x y (tx ty: PauliTupleBase n),
-  (prod_phase_pn [tuple of y :: ty] [tuple of x :: tx]) = 
-    mul_phase (prod_phase y x) (prod_phase_pn ty tx).
+  (rel_phase_pn [tuple of y :: ty] [tuple of x :: tx]) = 
+    mul_phase (rel_phase y x) (rel_phase_pn ty tx).
 Proof.
   move => x y tx ty.
-  by rewrite prod_phase_pn_cons.
+  by rewrite rel_phase_pn_cons.
 Qed.
 
 Lemma int_p1b_Mmult: forall x y,
-  int_p1b y ×  int_p1b x = int_phase (prod_phase y x) .* int_p1b (mulg y x).
+  int_p1b y ×  int_p1b x = int_phase (rel_phase y x) .* int_p1b (mulg y x).
 Proof.
   move => x y.
   case x; case y; simpl; lma'.
@@ -836,7 +834,7 @@ Qed.
 
 
 Lemma int_pnb_Mmult n: forall (x y: PauliTupleBase n),
-int_phase (prod_phase_pn x y) .* int_pnb (mul_pnb x y) =
+int_phase (rel_phase_pn x y) .* int_pnb (mul_pnb x y) =
 (int_pnb x × int_pnb y).
 Proof.
   move => x y.
@@ -845,7 +843,7 @@ Proof.
   - case: x / tupleP; case : y / tupleP => x tx y ty.
     rewrite /= !theadCons !beheadCons /= .
     rewrite kron_mixed_product'; try easy.
-    rewrite mul_pnb_behead mul_pnb_thead prod_phase_pn_behead.
+    rewrite mul_pnb_behead mul_pnb_thead rel_phase_pn_behead.
     rewrite int_phase_comp int_p1b_Mmult -IHn.
     rewrite !Mscale_kron_dist_l !Mscale_kron_dist_r.
     by rewrite Mscale_assoc.
@@ -857,7 +855,7 @@ Lemma int_pn_Mmult n:
   int_pn x × int_pn y = int_pn (mul_pn x y).
 Proof.
   move  => [sx x] [sy y].
-  rewrite /int_pn /= /prod_phase_png.
+  rewrite /int_pn /= /rel_phase_png.
   rewrite !Mscale_mult_dist_r !Mscale_mult_dist_l Mscale_assoc.
   rewrite !int_phase_comp.
   rewrite -int_pnb_Mmult !Mscale_assoc.

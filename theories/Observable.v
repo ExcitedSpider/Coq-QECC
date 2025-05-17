@@ -156,15 +156,15 @@ Proof.
   by rewrite p1_involutive.
 Qed.
 
-Lemma prod_phase_pn_involutive n:
+Lemma rel_phase_pn_involutive n:
   forall (op: PauliTupleBase n),
-  prod_phase_pn op op = One.
+  rel_phase_pn op op = One.
 Proof.
   move => op.
   induction n.
     by rewrite tuple0; apply /eqP.
    case: op / tupleP => h t.
-   rewrite prod_phase_pn_cons IHn.
+   rewrite rel_phase_pn_cons IHn.
    by case h.
 Qed.
 
@@ -206,7 +206,7 @@ Proof.
   move: (pauli_involutive op).
   rewrite /mulg /= => H.
   Qsimpl.
-  rewrite -int_pnb_Mmult H prod_phase_pn_involutive PauliProps.id_int_pnb //=. 
+  rewrite -int_pnb_Mmult H rel_phase_pn_involutive PauliProps.id_int_pnb //=. 
   by Qsimpl. subst. by [].
 Qed.
 

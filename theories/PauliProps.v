@@ -356,11 +356,11 @@ it will be much easier now.
 Definition op_prod_op := mul_p1b.
 
 
-Definition op_prod_s := prod_phase.
+Definition op_prod_s := rel_phase.
 
 
 Definition op_prod (a b: PauliBase): (phase * PauliBase) := 
-  (prod_phase a b, mul_p1b a b).
+  (rel_phase a b, mul_p1b a b).
 
 Definition op_prod_alt(a b: PauliBase): (phase * PauliBase) := 
     ( op_prod_s a b, op_prod_op a b).

@@ -308,9 +308,9 @@ Qed.
 
 Lemma PauliOp_bicommute:
   forall x y,
-  prod_phase x y = prod_phase y x \/
-  prod_phase x y = neg_phase (prod_phase y x).
-  (* int_phase (prod_phase x y) = -C1 * int_phase (prod_phase y x). *)
+  rel_phase x y = rel_phase y x \/
+  rel_phase x y = neg_phase (rel_phase y x).
+  (* int_phase (rel_phase x y) = -C1 * int_phase (rel_phase y x). *)
 Proof.
   move => x y.
   case x; case y; rewrite /=.
@@ -334,7 +334,7 @@ Qed.
 Lemma commute_png_implies n:
   forall (px py: phase) (tx ty: PauliTupleBase n),
   commute_at mul_pn (px, tx) (py, ty)-> mul_pnb tx ty = mul_pnb ty tx /\
-   prod_phase_png (px, tx) (py, ty) = prod_phase_png (py, ty) (px, tx).
+   rel_phase_png (px, tx) (py, ty) = rel_phase_png (py, ty) (px, tx).
 Proof.
   rewrite /commute_at /mul_pn /= => px py tx ty H.
   apply pair_inj in H.
@@ -351,7 +351,7 @@ Qed.
 
 Lemma phase_mul_p1b_comm:
   forall hx hy,
-  prod_phase hx hy = prod_phase hy hx ->
+  rel_phase hx hy = rel_phase hy hx ->
   mul_p1b hx hy = mul_p1b hy hx.
 Proof.
   move => x y.
@@ -367,8 +367,8 @@ Theorem negate_phase_simpl {n}:
 Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
-  rewrite /mul_pn /prod_phase_png.
-  rewrite prod_phase_pn_id //= mul_pnb_id; case sb => H;
+  rewrite /mul_pn /rel_phase_png.
+  rewrite rel_phase_pn_id //= mul_pnb_id; case sb => H;
   inversion H; subst.
   all: lma.
 Qed.
