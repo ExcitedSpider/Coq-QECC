@@ -364,22 +364,16 @@ Open Scope group_scope.
 Definition mul_p1 (a b: PauliElem1): PauliElem1 := 
   match (a, b) with
   | ((sa, pa), (sb, pb)) => (
-      (rel_phase pa pb) * (sa * sb), 
+      rel_phase pa pb * sa * sb, 
       pa * pb
     ) 
   end. 
 
 
-Definition inv_p1g (a: PauliElem1): PauliElem1 := 
+Definition inv_p1 (a: PauliElem1): PauliElem1 := 
   match a with (s, p) => (s^-1, p^-1) end.
 
-Definition id_p1g: PauliElem1 := (1, 1).
-
-(* Lemma mul_p1b_phase_assoc: *) 
-(*   associative mul_p1b_phase. *)
-
-(* rel_phase px (mul_p1b py pz) = *)
-(* rel_phase (mul_p1b px py) pz *)
+Definition id_p1: PauliElem1 := (1, 1).
 
 Lemma mul_p1_assoc:
   associative mul_p1.
@@ -398,7 +392,7 @@ Proof.
 Qed.
 
 Lemma mul_p1_id:
-  left_id id_p1g mul_p1.
+  left_id id_p1 mul_p1.
 Proof.
   rewrite /left_id => x.
   case x => s p.
@@ -406,18 +400,18 @@ Proof.
 Qed.
 
 Lemma mul_p1_left_inv:
-  left_inverse id_p1g inv_p1g mul_p1.
+  left_inverse id_p1 inv_p1 mul_p1.
 Proof.
-  rewrite /left_inverse /id_p1g /inv_p1g /mul_p1 => x.
+  rewrite /left_inverse /id_p1 /inv_p1 /mul_p1 => x.
   case x => s p.
   apply injective_projections; rewrite /=; rewrite ?mulVg.
   gsimpl.
-  case p; by rewrite //=.
+  case p; gsimpl; by rewrite mulVg.
   by rewrite /=.
 Qed.
 
 HB.instance Definition _ := Finite.on PauliElem1.
-HB.instance Definition _ := isMulGroup.Build PauliElem1
+HB.instance Definition P1Group := isMulGroup.Build PauliElem1
   mul_p1_assoc mul_p1_id mul_p1_left_inv.
 
 Notation "%( x ; y )" := (p1g_of x y) (at level 210).
@@ -426,23 +420,6 @@ Notation "% x" := (p1g_of One x)  (at level 210).
 
 Notation "-X" := (NOne, X).
 
-
-(* San Check by Examples *)
-
-Goal mulg (% Y) (% X) = %(NImg; Z). 
-by []. Qed.
-
-Goal mulg (%(NImg; Y)) (% X) = %(NOne; Z). 
-by []. Qed.
-
-Goal mul_p1 (% X) (% Y) = %(Img; Z). 
-by []. Qed.
-
-Goal mul_p1 (% Z) (% Y) = %(NImg; X). 
-by []. Qed.
-
-Goal mul_p1 (% X) (% Z) = %(NImg; Y). 
-by []. Qed.
 
 End P1Group.
 
@@ -482,7 +459,7 @@ Definition inv_png {n}( a: PauliTuple n): PauliTuple n :=
   | pair s p => (inv_phase s, inv_pn p)
   end.
 
-Definition id_p1g := (id_phase, id_pn).
+Definition id_p1 := (id_phase, id_pn).
 
 Lemma mult_phase_inj: 
   forall a b x y,

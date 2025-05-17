@@ -208,8 +208,8 @@ simpl.
 solve_matrix.
 Qed.
 
-(* Definition id_p1g := (One · I). *)
-Definition id := id_p1g.
+(* Definition id_p1 := (One · I). *)
+Definition id := id_p1.
 
 Lemma pauli_op_wf: 
 forall (a: PauliElem1), WF_Matrix (pauli_to_matrix a).
@@ -226,11 +226,11 @@ Definition inverse_op: PauliBase -> PauliBase := inv_p1b.
 Definition inverse_scalar: phase -> phase := inv_phase.
 
 
-Definition pinv := inv_p1g.
+Definition pinv := inv_p1.
 
 Lemma pinv_correct:
 forall (a: PauliElem1), exists (a': PauliElem1),
-  pmultrel a a' id_p1g.
+  pmultrel a a' id_p1.
 Proof.
 intros.
 exists (pinv a). 
@@ -587,7 +587,7 @@ apply CommuteRel. reflexivity.
 Qed.
 
 Lemma commute_identity:
-forall (p: PauliElem1), commute p id_p1g.
+forall (p: PauliElem1), commute p id_p1.
 Proof.
 intros.
 apply CommuteRel.
