@@ -16,10 +16,10 @@ Import all_pauligroup.
 Require Import WellForm.
 Require Import Observable.
 
-(* Simply Goals like (pn_int _ × _) *)
+(* Simply Goals like (int_pnb _ × _) *)
 Ltac SimplApplyPauli := 
     rewrite ?applyP_plus ?applyP_mscale;
-    rewrite ?/meas_p_to ?/applyP ?/png_int ?/pn_int /=;
+    rewrite ?/meas_p_to ?/applyP ?/int_pn ?/int_pnb /=;
     Qsimpl;
     repeat (
       distribute_plus;
@@ -271,15 +271,15 @@ Qed.
 Theorem stabiliser_detect_error {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
   Ob ∝1 psi -> 
-  png_int (mult_png Ob Er) = -C1 .* png_int (mult_png Er Ob) ->
+  int_pn (mult_png Ob Er) = -C1 .* int_pn (mult_png Er Ob) ->
   ('Meas Ob on ('Apply Er on psi) --> -1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc png_int_one.
-  rewrite png_int_Mmult Hac Mscale_mult_dist_l.
+  rewrite /applyP /meas_p_to -Mmult_assoc int_pn_one.
+  rewrite int_pn_Mmult Hac Mscale_mult_dist_l.
   apply Mscale_simplify.
   rewrite /stb /act_n /= /applyP in Hob.
-  rewrite -png_int_Mmult Mmult_assoc Hob. 
+  rewrite -int_pn_Mmult Mmult_assoc Hob. 
   by Qsimpl.
   lca.
 Qed.
@@ -288,7 +288,7 @@ Qed.
 Corollary stabiliser_detect_error_c {n}:
   forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
   Ob ∝1 psi -> 
-  png_int (mult_png Ob Er) = -C1 .* png_int (mult_png Er Ob) ->
+  int_pn (mult_png Ob Er) = -C1 .* int_pn (mult_png Er Ob) ->
   ('Meas Ob on ('Apply Er on psi) --> -C1).
 Proof.
   assert (RtoCrw: -C1 = (RtoC (-1))) by lca. 
@@ -306,9 +306,9 @@ Theorem stabiliser_undetectable_error {n}:
   ('Meas Ob on ('Apply Er on psi) --> 1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc !png_int_one.
-  rewrite png_int_Mmult Hac; Qsimpl.
-  rewrite -png_int_Mmult.
+  rewrite /applyP /meas_p_to -Mmult_assoc !int_pn_one.
+  rewrite int_pn_Mmult Hac; Qsimpl.
+  rewrite -int_pn_Mmult.
   rewrite /stb /act_n /= /applyP in Hob.
   rewrite -{2}Hob.
   by rewrite Mmult_assoc.

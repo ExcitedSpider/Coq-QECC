@@ -4,8 +4,8 @@ From mathcomp Require Import ssrfun fingroup eqtype fintype.
 Require Import ExtraSpecs.
 
 Require Import PauliGroup.
+Import PauliGroup.P1BaseGroup.
 Import PauliGroup.P1Group.
-Import PauliGroup.P1GGroup.
 
 Module Pauli.
 
@@ -39,9 +39,9 @@ Qed.
 Definition scalar_to_complex: phase -> C := phase_int.
 
 (* use the interpretation function in group definition *)
-Definition op_to_matrix: PauliBase -> Square 2 := p1_int.
+Definition op_to_matrix: PauliBase -> Square 2 := p1b_int.
 
-Definition pauli_to_matrix: PauliOp -> Square 2 := p1g_int.
+Definition pauli_to_matrix: PauliOp -> Square 2 := int_p1.
 
 Example negY: pauli_to_matrix (NOne · Y) = -C1 .* σy.
 Proof. reflexivity. Qed.
@@ -304,7 +304,7 @@ apply PauliMultRel; simpl.
 repeat rewrite Mscale_mult_dist_r.
 (* Search (_ .* (_ × _)). *)
 rewrite Mscale_mult_dist_l.
-replace op_to_matrix  with p1_int in Hpc by easy. 
+replace op_to_matrix  with p1b_int in Hpc by easy. 
 rewrite Hpc.
 rewrite Mscale_assoc.
 replace scalar_to_complex with phase_int  in Hsc' by easy. 
@@ -490,9 +490,9 @@ Proof.
   unfold pmul.
   rewrite Heq.
   unfold pauli_to_matrix .
-  replace op_to_matrix with p1_int in H by easy. 
+  replace op_to_matrix with p1b_int in H by easy. 
   replace scalar_to_complex with phase_int in H by easy.
-  unfold p1g_int.
+  unfold int_p1.
   distribute_scale. 
   rewrite H.
   rewrite Mscale_assoc.
@@ -766,17 +766,17 @@ Qed.
 
 End Pauli.
 
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 
 From mathcomp Require Import ssreflect.
 
-Lemma id_pn_int:
-  forall (n: nat), pn_int (id_pn n) = Matrix.I (2^n).
+Lemma id_int_pnb:
+  forall (n: nat), int_pnb (id_pn n) = Matrix.I (2^n).
 Proof.
   intros.
   induction n.
-    by rewrite /pn_int.
+    by rewrite /int_pnb.
   rewrite pn_idP.
   rewrite /= beheadCons IHn.
   restore_dims.
@@ -784,19 +784,19 @@ Proof.
   lma'.
 Qed.
 
-Lemma id_png_int:
-  forall (n: nat), png_int (id_png n) = Matrix.I (2^n).
+Lemma id_int_pn:
+  forall (n: nat), int_pn (id_png n) = Matrix.I (2^n).
 Proof.
   move => n.
-  rewrite /id_png /png_int /=.
-  by rewrite Mscale_1_l id_pn_int.
+  rewrite /id_png /int_pn /=.
+  by rewrite Mscale_1_l id_int_pnb.
 Qed.
 
 From mathcomp Require Import seq tuple.
 
-Lemma pn_int_cons:
+Lemma int_pnb_cons:
   forall {n: nat} (pt: PauliTupleBase n) (p: PauliBase),
-  pn_int [tuple of p::pt] = (p1_int p) ⊗ pn_int pt.
+  int_pnb [tuple of p::pt] = (p1b_int p) ⊗ int_pnb pt.
 Proof.
   rewrite /=  => n pt p.
   rewrite theadCons.

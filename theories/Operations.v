@@ -27,10 +27,10 @@ Proof.
   - apply /eqP. by [].
 Qed.
 
-Lemma pn_int_concat {n m}:
+Lemma int_pnb_concat {n m}:
   forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
-  (pn_int [tuple of op0 ++ op1]) = 
-  (pn_int op0) ⊗ (pn_int op1).
+  (int_pnb [tuple of op0 ++ op1]) = 
+  (int_pnb op0) ⊗ (int_pnb op1).
 Proof.
   simpl.
   move => p q.
@@ -40,20 +40,20 @@ Proof.
     + by rewrite tupleE catNil; auto with wf_db. 
   - case: p / tupleP => hp tp.
     rewrite !tupleE !catCons.
-    rewrite pn_int_cons /= theadCons beheadCons IHn /=.
+    rewrite int_pnb_cons /= theadCons beheadCons IHn /=.
     rewrite /pow_add. 
-    rewrite (kron_assoc (p1_int hp ) (pn_int tp) (pn_int q)); auto with wf_db.
+    rewrite (kron_assoc (p1b_int hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
 Qed. 
 
 Theorem compose_pstring_correct:
   forall {n m: nat}  (ps1: PauliTuple n) (ps2: PauliTuple m),
-  png_int (compose_pstring ps1 ps2) =
-  png_int ps1 ⊗ png_int ps2.
+  int_pn (compose_pstring ps1 ps2) =
+  int_pn ps1 ⊗ int_pn ps2.
 Proof.
   move => n m [p1 t1] [p2 t2].
-  rewrite /compose_pstring /png_int /=.
+  rewrite /compose_pstring /int_pn /=.
   rewrite Mscale_kron_dist_l Mscale_kron_dist_r.
-  rewrite pn_int_concat.
+  rewrite int_pnb_concat.
   by rewrite Mscale_assoc phase_int_comp.
 Qed.
 
@@ -64,7 +64,7 @@ End Operations.
 
 Section HardamardConjugation.
 
-Notation "[[ p ]]" := (png_int p) (at level 200): form_scope.
+Notation "[[ p ]]" := (int_pn p) (at level 200): form_scope.
 
 Definition h_conj {n:nat} (p: PauliTuple n):=
    (hadamard_k n) × [[ p ]] × (hadamard_k n) .

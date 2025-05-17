@@ -501,10 +501,10 @@ Section VarScope.
 Import all_ssreflect.
 
 (* This is for solving some notation conflicts *)
-Notation I := P1Group.I.
-Notation X := P1Group.X.
-Notation Z := P1Group.Z.
-Notation Y := P1Group.Y.
+Notation I := P1BaseGroup.I.
+Notation X := P1BaseGroup.X.
+Notation Z := P1BaseGroup.Z.
+Notation Y := P1BaseGroup.Y.
 
 Variable (α β: C).
 

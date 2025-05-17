@@ -10,10 +10,10 @@ Import Pauli.
 From mathcomp Require Import ssrfun fingroup eqtype tuple seq fintype.
 
 Require Import PauliGroup.
+Import P1BaseGroup.
 Import P1Group.
-Import P1GGroup.
+Import PNBaseGroup.
 Import PNGroup.
-Import PNGGroup.
 
 Require Import Coq.Vectors.Vector.
 Import VectorNotations.
@@ -452,7 +452,7 @@ Qed.
 
 Theorem tupleToVector_correct n:
   forall tup: PauliTupleBase n,
-  pn_int tup = pvec_to_matrix (tupleToVector tup).
+  int_pnb tup = pvec_to_matrix (tupleToVector tup).
 Proof.
   move => tup.
   induction n.
@@ -495,11 +495,11 @@ Qed.
 
 Theorem pngToPstring_correct n:
   forall tupg: PauliTuple n,
-  png_int tupg = pstr_to_matrix (pngToPString tupg).
+  int_pn tupg = pstr_to_matrix (pngToPString tupg).
 Proof.
   move => tupg.
   case tupg => pha p.
-  rewrite /png_int /pstr_to_matrix /scalar_to_complex /=.
+  rewrite /int_pn /pstr_to_matrix /scalar_to_complex /=.
   by rewrite tupleToVector_correct.
 Qed.
 
