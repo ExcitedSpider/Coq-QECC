@@ -4,7 +4,7 @@ In quantum computing, quotied pauli groups are pauligroups without phase
 Key Definitions:
 - PauliBase: The 1-qubit Pauli quotient group
 - phase: The phase {-1, i, -1, -i} and they forms a group
-- PauliOp: The 1-qubit Pauli group
+- PauliElem1: The 1-qubit Pauli group
 - PauliTupleBase: The n-qubit Pauli quotient group
 - PauliTuple: The n-qubit Pauli group
 
@@ -338,9 +338,9 @@ HB.instance Definition PhaseGroup := isMulGroup.Build phase
 End PhaseGroup.
 
 (* for "Generalized Pauli Operator" *)
-Definition PauliOp := prod phase PauliBase.
+Definition PauliElem1 := prod phase PauliBase.
 
-Definition p1g_of: phase -> PauliBase -> PauliOp := 
+Definition p1g_of: phase -> PauliBase -> PauliElem1 := 
   fun p o => pair p o.
 
 Definition rel_phase(a b: PauliBase): phase :=
@@ -361,7 +361,7 @@ Definition rel_phase(a b: PauliBase): phase :=
   end.
 
 Open Scope group_scope.
-Definition mul_p1 (a b: PauliOp): PauliOp := 
+Definition mul_p1 (a b: PauliElem1): PauliElem1 := 
   match (a, b) with
   | ((sa, pa), (sb, pb)) => (
       (rel_phase pa pb) * (sa * sb), 
@@ -370,10 +370,10 @@ Definition mul_p1 (a b: PauliOp): PauliOp :=
   end. 
 
 
-Definition inv_p1g (a: PauliOp): PauliOp := 
+Definition inv_p1g (a: PauliElem1): PauliElem1 := 
   match a with (s, p) => (s^-1, p^-1) end.
 
-Definition id_p1g: PauliOp := (1, 1).
+Definition id_p1g: PauliElem1 := (1, 1).
 
 (* Lemma mul_p1b_phase_assoc: *) 
 (*   associative mul_p1b_phase. *)
@@ -416,8 +416,8 @@ Proof.
   by rewrite /=.
 Qed.
 
-HB.instance Definition _ := Finite.on PauliOp.
-HB.instance Definition _ := isMulGroup.Build PauliOp
+HB.instance Definition _ := Finite.on PauliElem1.
+HB.instance Definition _ := isMulGroup.Build PauliElem1
   mul_p1_assoc mul_p1_id mul_p1_left_inv.
 
 Notation "%( x ; y )" := (p1g_of x y) (at level 210).
@@ -723,7 +723,7 @@ Definition int_phase (s: phase): C :=
   | NImg => - Ci
   end.
 
-Definition int_p1(p: PauliOp): Square 2 :=
+Definition int_p1(p: PauliElem1): Square 2 :=
   match p with
   | pair s p => (int_phase s) .* (int_p1b p)
   end.

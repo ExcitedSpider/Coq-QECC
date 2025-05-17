@@ -20,7 +20,7 @@ Proof.
 Qed.
 
 Lemma int_p1_wf:
-  forall p: PauliOp,
+  forall p: PauliElem1,
   WF_Matrix (int_p1 p).
 Proof.
   move => p.

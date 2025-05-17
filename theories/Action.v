@@ -81,14 +81,14 @@ Notation PauliElement := PauliTuple.
 Definition PauliOpToElem {n} (x : PauliOperator n) : PauliElement n := (One,x).
 Coercion PauliOpToElem : PauliOperator >-> PauliElement.
 
-Definition PauliBaseToOp (x : PauliBase) : PauliOp := (One, x).
-Coercion PauliBaseToOp : PauliBase >-> PauliOp.
+Definition PauliBaseToOp (x : PauliBase) : PauliElem1 := (One, x).
+Coercion PauliBaseToOp : PauliBase >-> PauliElem1.
 
 Section QuantumActions. 
 
 
 (* Apply a single-qubit pauli operator *)
-Definition apply_1 : Vector 2 -> PauliOp -> Vector 2 :=
+Definition apply_1 : Vector 2 -> PauliElem1 -> Vector 2 :=
   fun psi op => (int_p1 op) × psi.
 
 Check is_action.
@@ -100,7 +100,7 @@ Proof.
   all: case a; case b; lca.
 Qed.
 
-Definition aTs := [set: PauliOp].
+Definition aTs := [set: PauliElem1].
 
 
 Fact act_1_is_action:
@@ -272,7 +272,7 @@ Definition neg_png n (p: PauliTuple n) : PauliTuple n :=
   | (phase, tuple) => (mulg NOne phase, tuple)
   end.
 
-Definition neg_p1g (p: PauliOp): PauliOp :=
+Definition neg_p1g (p: PauliElem1): PauliElem1 :=
   match p with
   | (phase, tuple) => (mulg NOne phase, tuple)
   end.
@@ -414,7 +414,7 @@ Qed.
 Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 
 Lemma apply_1_wf:
-  forall (op: PauliOp) (v: Vector 2),
+  forall (op: PauliElem1) (v: Vector 2),
   WF_Matrix v -> WF_Matrix (apply_1 v op).
 Proof.
   move => op v.

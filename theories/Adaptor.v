@@ -169,7 +169,7 @@ Proof.
     f_equal.
 Qed.
 
-(* Translate a PauliOp vector into a matrix *)
+(* Translate a PauliElem1 vector into a matrix *)
 Fixpoint pvec_to_matrix {n:nat} (p: PauliVector n) : Square (2^n) :=
 match p with
 | [] => Matrix.I 1
@@ -377,7 +377,7 @@ Qed.
 
 Lemma op_prod_clousre_pauli: 
   forall (oa ob: PauliBase),
-  exists (p: PauliOp),
+  exists (p: PauliElem1),
   (op_to_matrix oa) × (op_to_matrix ob) = pauli_to_matrix p.
 Proof.
   intros.
