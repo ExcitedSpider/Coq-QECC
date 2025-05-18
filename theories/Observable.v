@@ -28,13 +28,13 @@ Definition meas_to {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
 
 (* because every pauli operator is hermitian, 
   they can all be viewed as observable *)
-Notation PauliObservable := PauliTupleBase.
+Notation PauliObservable := PauliString.
 (* Notation Just for readability *)
 Notation ErrorOperator := PauliOperator.
 
 Lemma pauli_base_hermitian:
   forall (p: PauliBase),
-  @hermitian 1%nat (p1b_int p).
+  @hermitian 1%nat (int_p1b p).
 Proof.
   move => p.
   rewrite /hermitian.
@@ -46,7 +46,7 @@ Proof.
 Qed.
 
 Fact pauli_hermitian {n} :
-  forall (operator: PauliTupleBase n), hermitian (int_pnb operator).
+  forall (operator: PauliString n), hermitian (int_pnb operator).
 Proof.
   rewrite /hermitian /int_pn /PauliObservable //= => pt.
   induction n.
@@ -140,7 +140,7 @@ Proof. by move => p; case p. Qed.
   and I don't know why.
 *)
 Lemma pauli_involutive {n}:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   (mulg op op) = (id_pn n).
 Proof.
   move => op.
@@ -148,23 +148,23 @@ Proof.
   rewrite tuple0 /id_pn /=. 
   by apply /eqP.
   case: op / tupleP => h t.
-  rewrite /mulg /= mult_pn_cons.
+  rewrite /mulg /= mul_pnb_cons.
   rewrite /mulg /= in IHn.
   rewrite IHn.
-  change mult_p1 with (@mulg PauliBase). 
+  change mul_p1b with (@mulg PauliBase). 
   rewrite pn_idP.
   by rewrite p1_involutive.
 Qed.
 
-Lemma get_phase_pn_involutive n:
-  forall (op: PauliTupleBase n),
-  get_phase_pn op op = One.
+Lemma fold_rel_phase_involutive n:
+  forall (op: PauliString n),
+  fold_rel_phase op op = One.
 Proof.
   move => op.
   induction n.
     by rewrite tuple0; apply /eqP.
    case: op / tupleP => h t.
-   rewrite get_phase_pn_cons IHn.
+   rewrite fold_rel_phase_cons IHn.
    by case h.
 Qed.
 
@@ -182,7 +182,7 @@ Proof.
   split.
   auto with wf_db.
   rewrite /Minv !int_pn_Mmult.
-  change mult_png with (@mulg (PauliElement n)).
+  change mul_pn with (@mulg (PauliElement n)).
   rewrite mulgV mulVg /=.
   rewrite id_int_pnb. 
   by Qsimpl.
@@ -206,7 +206,7 @@ Proof.
   move: (pauli_involutive op).
   rewrite /mulg /= => H.
   Qsimpl.
-  rewrite -int_pnb_Mmult H get_phase_pn_involutive PauliProps.id_int_pnb //=. 
+  rewrite -int_pnb_Mmult H fold_rel_phase_involutive PauliProps.id_int_pnb //=. 
   by Qsimpl. subst. by [].
 Qed.
 
@@ -236,7 +236,7 @@ Proof.
 Qed.
 
 Lemma int_pnb_concat {n m}:
-  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  forall (op0: PauliString n) (op1: PauliString m) ,
   (int_pnb [tuple of op0 ++ op1]) = 
   (int_pnb op0) ⊗ (int_pnb op1).
 Proof.
@@ -250,7 +250,7 @@ Proof.
     rewrite !tupleE !catCons.
     rewrite int_pnb_cons /= theadCons beheadCons IHn /=.
     rewrite /pow_add. 
-    rewrite (kron_assoc (p1b_int hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
+    rewrite (kron_assoc (int_p1b hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
 Qed. 
 
 Lemma applyP_kron {n m}:

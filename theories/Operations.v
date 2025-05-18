@@ -8,7 +8,7 @@ Section Operations.
 Import all_pauligroup.
 
 Definition compose_pstring {n m: nat} 
-  (ps1 : PauliTuple n) (ps2 : PauliTuple m) : PauliTuple (n + m) :=
+  (ps1 : PauliElement n) (ps2 : PauliElement m) : PauliElement (n + m) :=
   let s := mulg ps1.1 ps2.1 in
   let v := [tuple of ps1.2 ++ ps2.2] in
   (s, v).
@@ -28,7 +28,7 @@ Proof.
 Qed.
 
 Lemma int_pnb_concat {n m}:
-  forall (op0: PauliTupleBase n) (op1: PauliTupleBase m) ,
+  forall (op0: PauliString n) (op1: PauliString m) ,
   (int_pnb [tuple of op0 ++ op1]) = 
   (int_pnb op0) ⊗ (int_pnb op1).
 Proof.
@@ -42,11 +42,11 @@ Proof.
     rewrite !tupleE !catCons.
     rewrite int_pnb_cons /= theadCons beheadCons IHn /=.
     rewrite /pow_add. 
-    rewrite (kron_assoc (p1b_int hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
+    rewrite (kron_assoc (int_p1b hp ) (int_pnb tp) (int_pnb q)); auto with wf_db.
 Qed. 
 
 Theorem compose_pstring_correct:
-  forall {n m: nat}  (ps1: PauliTuple n) (ps2: PauliTuple m),
+  forall {n m: nat}  (ps1: PauliElement n) (ps2: PauliElement m),
   int_pn (compose_pstring ps1 ps2) =
   int_pn ps1 ⊗ int_pn ps2.
 Proof.
@@ -54,7 +54,7 @@ Proof.
   rewrite /compose_pstring /int_pn /=.
   rewrite Mscale_kron_dist_l Mscale_kron_dist_r.
   rewrite int_pnb_concat.
-  by rewrite Mscale_assoc phase_int_comp.
+  by rewrite Mscale_assoc int_phase_comp.
 Qed.
 
 Definition pstr_negate_phase (n: nat) := (NOne, id_pn n).
@@ -66,7 +66,7 @@ Section HardamardConjugation.
 
 Notation "[[ p ]]" := (int_pn p) (at level 200): form_scope.
 
-Definition h_conj {n:nat} (p: PauliTuple n):=
+Definition h_conj {n:nat} (p: PauliElement n):=
    (hadamard_k n) × [[ p ]] × (hadamard_k n) .
 
 Lemma MmultHHk {n}:
@@ -83,7 +83,7 @@ Qed.
 
 (* Simplify hadamard transformation  *)
 Theorem simplify_htrans {n} :
-  forall (psi phi: Vector (2^n)) (p: PauliTuple n),
+  forall (psi phi: Vector (2^n)) (p: PauliElement n),
   WF_Matrix psi ->
   [[ p ]] × psi = phi ->
   (h_conj p) × ((hadamard_k n) × psi) = (hadamard_k n) × phi.

@@ -10,7 +10,7 @@ The Formalization of 1-qubit Pauli Group
 Key Definitions:
   - PauliBase: The base of the Pauli group, consisting of the matrices I, X, Y, and Z.
   - Scalar: The phase factor used in the Pauli group.
-  - PauliOp: A scaled Pauli operator, represented as a combination of a phase and a base.
+  - PauliElem1: A scaled Pauli operator, represented as a combination of a phase and a base.
   - pmultrel: The multiplication operation for Pauli operators.
   - pmul: The multiplication operation for Pauli operators, defined as a function.
   - commute: A relation indicating that two Pauli operators commute.
@@ -31,7 +31,7 @@ From mathcomp Require Import ssrfun fingroup eqtype fintype.
 Module Pauli.
 
 (* 
-  Complete PauliOp group (operations with scalars) 
+  Complete PauliElem1 group (operations with scalars) 
   However, we expect it will not be used in the stabilizer formalism
   because for stabilizer, scalars are useless. It only acts as unneccesary
   complexity. 
@@ -53,8 +53,8 @@ Inductive Scalar : Type :=
 | NImg : Scalar. (* -i *)
 
 (* A Pauli Term is a scaled Pauli Operator *)
-Inductive PauliOp : Type :=
-| ScaledOp : Scalar -> PauliBase -> PauliOp.
+Inductive PauliElem1 : Type :=
+| ScaledOp : Scalar -> PauliBase -> PauliElem1.
 
 (* Define a custom notation for elements of the Pauli group *)
 Notation "s · p" := (ScaledOp s p) (at level 40, left associativity).
@@ -87,7 +87,7 @@ match p with
 | Z => σz
 end.
 
-Definition pauli_to_matrix (p: PauliOp): Square 2 := 
+Definition pauli_to_matrix (p: PauliElem1): Square 2 := 
   match p with
     | ScaledOp s op => (scalar_to_complex s) .* (op_to_matrix op)
   end.
@@ -249,10 +249,10 @@ split.
 }
 Qed.
 
-(* The operation on the PauliOp group *)
+(* The operation on the PauliElem1 group *)
 (* Define the operation as relation makes it so hard *)
-Inductive pmultrel: PauliOp -> PauliOp -> PauliOp -> Prop := 
-| PauliMultRel: forall (a b c: PauliOp),
+Inductive pmultrel: PauliElem1 -> PauliElem1 -> PauliElem1 -> Prop := 
+| PauliMultRel: forall (a b c: PauliElem1),
   (pauli_to_matrix a) × (pauli_to_matrix b) = pauli_to_matrix c ->
   pmultrel a b c.
 
@@ -267,7 +267,7 @@ Qed.
 Definition ID := (One · I).
 
 Lemma pauli_op_wf: 
-forall (a: PauliOp), WF_Matrix (pauli_to_matrix a).
+forall (a: PauliElem1), WF_Matrix (pauli_to_matrix a).
 Proof.
 intros.
 destruct a.
@@ -277,7 +277,7 @@ auto with wf_db.
 Qed.
 
 Lemma pauli_identity_correct_left:
-forall (a: PauliOp), pmultrel ID a a.
+forall (a: PauliElem1), pmultrel ID a a.
 Proof.
 intros.
 apply PauliMultRel.
@@ -293,7 +293,7 @@ apply mat_equiv_eq.
 Qed.
 
 Lemma pauli_identity_correct:
-forall (a: PauliOp), pmultrel a ID a.
+forall (a: PauliElem1), pmultrel a ID a.
 Proof.
 intros.
 apply PauliMultRel; simpl.
@@ -324,13 +324,13 @@ match sc with
 | NImg => Img 
 end.
 
-Definition pinv (p : PauliOp) : PauliOp :=
+Definition pinv (p : PauliElem1) : PauliElem1 :=
 match p with
 | ScaledOp s op => ScaledOp (inverse_scalar s) (inverse_op op)
 end.
 
 Lemma pinv_correct:
-forall (a: PauliOp), exists (a': PauliOp),
+forall (a: PauliElem1), exists (a': PauliElem1),
 pmultrel a a' ID.
 Proof.
 intros.
@@ -344,7 +344,7 @@ Qed.
 
 Lemma pauli_closure:
 forall a b,
-exists (c: PauliOp), pmultrel a b c.
+exists (c: PauliElem1), pmultrel a b c.
 Proof.
 intros a b.
 destruct a as [sa pa], b as [sb pb].
@@ -403,7 +403,7 @@ Qed.
 (* This one succeed by using two lemmas *)
 Lemma pauli_closure':
 forall a b,
-exists (c: PauliOp), pmultrel a b c.
+exists (c: PauliElem1), pmultrel a b c.
 Proof.
 intros a b.
 destruct a as [sa pa], b as [sb pb].
@@ -427,7 +427,7 @@ rewrite Mscale_assoc.
 reflexivity.
 Qed.
 
-Lemma pmultrel_assoc : forall a b ab c abc : PauliOp,
+Lemma pmultrel_assoc : forall a b ab c abc : PauliElem1,
 pmultrel a b ab ->
 pmultrel ab c abc ->
 exists bc, pmultrel b c bc /\ pmultrel a bc abc.
@@ -449,7 +449,7 @@ split.
   reflexivity.
 Qed.
 
-(* The PauliOp operator forms a group *)
+(* The PauliElem1 operator forms a group *)
 Theorem PauliGroupProperties:
 (forall a, pmultrel ID a a) /\
 (forall a, exists a', pmultrel a a' ID) /\
@@ -474,7 +474,7 @@ match op with
 | NImg => Img 
 end.
 
-Definition pinv (p : PauliOp) : PauliOp :=
+Definition pinv (p : PauliElem1) : PauliElem1 :=
 match p with
 | ScaledOp s op => ScaledOp (inverse_scalar s) (inverse_op op)
 end. *)
@@ -619,7 +619,7 @@ Proof.
   apply s_prod_total.
 Qed.
 
-Definition pmul (a b: PauliOp): PauliOp := 
+Definition pmul (a b: PauliElem1): PauliElem1 := 
 match a, b with
 | ScaledOp sa pa, ScaledOp sb pb => 
     let (sab, pab) := (op_prod pa pb) in
@@ -709,14 +709,14 @@ Proof.
 Qed.
 
 
-Definition apply_s (s: Scalar) (p: PauliOp): PauliOp :=
+Definition apply_s (s: Scalar) (p: PauliElem1): PauliElem1 :=
 match p with
   | ScaledOp s0 op => ScaledOp (s_prod s s0) op
 end.
 
-Definition pneg (p: PauliOp): PauliOp := apply_s (NOne) p.
+Definition pneg (p: PauliElem1): PauliElem1 := apply_s (NOne) p.
 
-Definition pmul_alt (a b: PauliOp): PauliOp := 
+Definition pmul_alt (a b: PauliElem1): PauliElem1 := 
 match a, b with
 | ScaledOp sa pa, ScaledOp sb pb => 
     let (sab, pab) := (op_prod pa pb) in
@@ -739,7 +739,7 @@ all: reflexivity.
 Qed. 
 
 (* verify our function version of pmultrel is correct *)
-Lemma pmul_correct_r: forall (a b c: PauliOp),
+Lemma pmul_correct_r: forall (a b c: PauliElem1),
 (pmul a b) = c -> pmultrel a b c. 
 Proof.
 intros.
@@ -755,7 +755,7 @@ all: try(rewrite Mmult_1_l).
 all: try(solve_matrix).
 Qed.
 
-Lemma pmul_correct_l: forall (a b c: PauliOp),
+Lemma pmul_correct_l: forall (a b c: PauliElem1),
 pmultrel a b c -> (pmul a b) = c. 
 Proof.
 intros.
@@ -765,7 +765,7 @@ rewrite pauli_to_matrix_injective in H0.
 assumption.
 Qed.
 
-Theorem pmul_prod_eq: forall (a b c: PauliOp),
+Theorem pmul_prod_eq: forall (a b c: PauliElem1),
 pmultrel a b c <-> (pmul a b) = c. 
 Proof.
 split.
@@ -778,19 +778,19 @@ The commute / anticommute are two very important properties in stabilizer formal
 We also hope to inspect how our new defined prod function can simplify the proof.
 *)
 
-Inductive commute: PauliOp -> PauliOp -> Prop :=
-| CommuteRel: forall (pa pb: PauliOp),
+Inductive commute: PauliElem1 -> PauliElem1 -> Prop :=
+| CommuteRel: forall (pa pb: PauliElem1),
   (pmul pa pb) = (pmul pb pa) -> commute pa pb.
 
 Lemma commute_self:
-forall (p: PauliOp), commute p p.
+forall (p: PauliElem1), commute p p.
 Proof.
 intros.
 apply CommuteRel. reflexivity.
 Qed.
 
 Lemma commute_identity:
-forall (p: PauliOp), commute p ID.
+forall (p: PauliElem1), commute p ID.
 Proof.
 intros.
 apply CommuteRel.
@@ -824,8 +824,8 @@ Qed.
 (* 
 the definition has a slight issue: it depends on how `apply_s` is defiend. Although `apply_s` is straightforward, but it is not certified. 
 *)
-Inductive anticommute: PauliOp -> PauliOp -> Prop :=
-| AnticommuteRel: forall (pa pb: PauliOp),
+Inductive anticommute: PauliElem1 -> PauliElem1 -> Prop :=
+| AnticommuteRel: forall (pa pb: PauliElem1),
   (pmul pa pb) = apply_s (NOne) (pmul pb pa) -> anticommute pa pb.
 
 Example anticommute_exp0:
@@ -924,7 +924,7 @@ Proof.
 Qed.
 
 (* Have some troubles proving function inequalities*)
-(* But this is a known simple fact in math that all PauliOp operators are orthogonal*)
+(* But this is a known simple fact in math that all PauliElem1 operators are orthogonal*)
 (* So we skip this proof *)
 Lemma pauli_orthogonal:
   forall sa opa sb opb,
@@ -1103,7 +1103,7 @@ Proof.
   all: destruct s, s0, s1; easy.
 Qed.
 
-Definition e: PauliOp :=  ScaledOp One I.
+Definition e: PauliElem1 :=  ScaledOp One I.
 
 Lemma pmul_left_id: left_id e pmul.
 Proof.

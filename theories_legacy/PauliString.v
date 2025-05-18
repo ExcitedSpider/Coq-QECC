@@ -179,7 +179,7 @@ Proof.
     f_equal.
 Qed.
 
-(* Translate a PauliOp vector into a matrix *)
+(* Translate a PauliElem1 vector into a matrix *)
 Fixpoint pvec_to_matrix {n:nat} (p: BasePauliString n) : Square (2^n) :=
 match p with
 | [] => Matrix.I 1
@@ -396,7 +396,7 @@ Qed.
 
 Lemma op_prod_clousre_pauli: 
   forall (oa ob: PauliBase),
-  exists (p: PauliOp),
+  exists (p: PauliElem1),
   (op_to_matrix oa) × (op_to_matrix ob) = pauli_to_matrix p.
 Proof.
   intros.
@@ -410,7 +410,7 @@ Qed.
 
 (* assert (H3: exists sx opx, pauli_to_matrix x = (scalar_to_complex sx) .* (op_to_matrix opx)). *)
 Lemma pauli_construct:
-  forall (p: PauliOp),
+  forall (p: PauliElem1),
   exists s op,
   pauli_to_matrix p = (scalar_to_complex s) .* (op_to_matrix op).
 Proof.
@@ -518,7 +518,7 @@ Proof.
     + assumption.
 Qed.  
 
-(* multiplication on PauliOp string respects with matrix multiplication *)
+(* multiplication on PauliElem1 string respects with matrix multiplication *)
 Theorem psmul_correct:
   forall (n: nat) (p1 p2: PauliString n), 
   (pstr_to_matrix p1) × (pstr_to_matrix p2) = pstr_to_matrix (psmul p1 p2).

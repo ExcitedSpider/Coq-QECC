@@ -10,9 +10,9 @@ Import PNBaseGroup.
 Import PNGroup.
 
 
-Lemma p1b_int_wf:
+Lemma int_p1b_wf:
   forall p: PauliBase,
-  WF_Matrix (p1b_int p).
+  WF_Matrix (int_p1b p).
 Proof.
   case;
   rewrite /=;
@@ -20,18 +20,18 @@ Proof.
 Qed.
 
 Lemma int_p1_wf:
-  forall p: PauliOp,
+  forall p: PauliElem1,
   WF_Matrix (int_p1 p).
 Proof.
   move => p.
   case p => ph op.
   rewrite /int_p1.
   apply WF_scale.
-  apply p1b_int_wf.
+  apply int_p1b_wf.
 Qed.
 
 Theorem int_pnb_wf n:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   WF_Matrix (int_pnb op).
 Proof.
   intros.
@@ -42,11 +42,11 @@ Proof.
     auto with wf_db.
   - case: op / tupleP => x t.
     apply WF_kron; try easy.
-    by apply p1b_int_wf.
+    by apply int_p1b_wf.
 Qed.
 
 Theorem int_pn_wf n:
-  forall (op: PauliTuple n),
+  forall (op: PauliElement n),
   WF_Matrix (int_pn op).
 Proof.
   move => [p t].
@@ -57,4 +57,4 @@ Qed.
 
 End WellFormness.
 
-#[export] Hint Resolve p1b_int_wf int_p1_wf int_pnb_wf int_pn_wf : wf_db.
+#[export] Hint Resolve int_p1b_wf int_p1_wf int_pnb_wf int_pn_wf : wf_db.

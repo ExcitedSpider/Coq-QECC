@@ -70,37 +70,37 @@ n-qubit Pauli group P_n *)
 (* One detail to notice is that we only consider phase +1.
 Technically, phase -1 also makes an element of P_n hermitian
 But they are not very useful *)
-Notation PauliOperator := PauliTupleBase.
+Notation PauliOperator := PauliString.
 
 (* We use PauliElement to refer to all elements in pauli groups
   note that not all elements are pauli operator
   for phase in {-i, i}, these elements are not hermitian
 *)
-Notation PauliElement := PauliTuple.
+Notation PauliElement := PauliElement.
 
 Definition PauliOpToElem {n} (x : PauliOperator n) : PauliElement n := (One,x).
 Coercion PauliOpToElem : PauliOperator >-> PauliElement.
 
-Definition PauliBaseToOp (x : PauliBase) : PauliOp := (One, x).
-Coercion PauliBaseToOp : PauliBase >-> PauliOp.
+Definition PauliBaseToOp (x : PauliBase) : PauliElem1 := (One, x).
+Coercion PauliBaseToOp : PauliBase >-> PauliElem1.
 
 Section QuantumActions. 
 
 
 (* Apply a single-qubit pauli operator *)
-Definition apply_1 : Vector 2 -> PauliOp -> Vector 2 :=
+Definition apply_1 : Vector 2 -> PauliElem1 -> Vector 2 :=
   fun psi op => (int_p1 op) × psi.
 
 Check is_action.
 
-Lemma mult_phase_comp: forall a b, phase_int (a) * phase_int (b) = 
-  phase_int (mult_phase a b).
+Lemma mult_phase_comp: forall a b, int_phase (a) * int_phase (b) = 
+  int_phase (mul_phase a b).
 Proof.
   move => a b.
   all: case a; case b; lca.
 Qed.
 
-Definition aTs := [set: PauliOp].
+Definition aTs := [set: PauliElem1].
 
 
 Fact act_1_is_action:
@@ -112,16 +112,18 @@ Proof.
     lma'.
   }
   {
-    move => x.
-    rewrite /act_comp /apply_1 => a b Ha Hb.
+    rewrite //= => x a b Ha Hb.
     case a; case b => sa pa sb pb.
-    rewrite /int_p1 /=.
+    rewrite /apply_1 /int_p1 /=.
     rewrite !Mscale_mult_dist_l Mscale_mult_dist_r Mscale_assoc.
     rewrite -!mult_phase_comp.
     rewrite Cmult_comm.
-    rewrite -!Mmult_assoc  p1b_int_Mmult .
+    rewrite -!Mmult_assoc  int_p1b_Mmult .
     rewrite Mscale_mult_dist_l.
-    by rewrite -!Mscale_assoc.
+    rewrite -!Mscale_assoc.
+    rewrite /mulg //=.
+    case pa; case pb;  rewrite ?Mscale_assoc //=; 
+    apply Mscale_simplify; auto; lca.
   }
 Qed.
 
@@ -143,12 +145,12 @@ Qed.
 
 Variable (n: nat).
 
-Definition applyP : Vector (2^n) -> PauliTuple n -> Vector (2^n) :=
+Definition applyP : Vector (2^n) -> PauliElement n -> Vector (2^n) :=
   fun psi op => (int_pn op) × psi.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Definition aTsn := [set: PauliTuple n].
+Definition aTsn := [set: PauliElement n].
 
 
 Fact applyP_is_action:
@@ -178,7 +180,7 @@ Arguments applyP {n}.
 
 
 
-Definition xxx: PauliTuple 3 := (One, [tuple of X :: X :: X :: []]).
+Definition xxx: PauliElement 3 := (One, [tuple of X :: X :: X :: []]).
 
 (* sancheck *)
 Goal act_n _ ∣0,0,0⟩ xxx = ∣1,1,1⟩.
@@ -244,6 +246,7 @@ Module Commutativity.
 
 Require Import ExtraSpecs.
 From mathcomp Require Import eqtype ssrbool.
+From mathcomp Require Import fingroup.
 Require Import Classical.
 
 Section Prerequisites.
@@ -261,16 +264,16 @@ End Prerequisites.
 Section Negation.
 
 
-Definition minus_id_png n : (PauliTuple n) := (NOne , id_pn n).
+Definition minus_id_png n : (PauliElement n) := (NOne , id_pn n).
 
 Notation "[-1]" := minus_id_png.
 
-Definition neg_png n (p: PauliTuple n) : PauliTuple n :=
+Definition neg_png n (p: PauliElement n) : PauliElement n :=
   match p with
   | (phase, tuple) => (mulg NOne phase, tuple)
   end.
 
-Definition neg_p1g (p: PauliOp): PauliOp :=
+Definition neg_p1g (p: PauliElem1): PauliElem1 :=
   match p with
   | (phase, tuple) => (mulg NOne phase, tuple)
   end.
@@ -281,8 +284,8 @@ Definition neg_phase (p: phase): phase :=
 Open Scope C_scope.
 
 Lemma neg_phase_correct:
-  forall x y, phase_int x = -C1 * phase_int y <-> 
-      x = mult_phase NOne y.
+  forall x y, int_phase x = -C1 * int_phase y <-> 
+      x = mul_phase NOne y.
 Proof.
   move => x y.
   split.
@@ -306,9 +309,9 @@ Qed.
 
 Lemma PauliOp_bicommute:
   forall x y,
-  get_phase x y = get_phase y x \/
-  get_phase x y = neg_phase (get_phase y x).
-  (* phase_int (get_phase x y) = -C1 * phase_int (get_phase y x). *)
+  rel_phase x y = rel_phase y x \/
+  rel_phase x y = neg_phase (rel_phase y x).
+  (* int_phase (rel_phase x y) = -C1 * int_phase (rel_phase y x). *)
 Proof.
   move => x y.
   case x; case y; rewrite /=.
@@ -318,39 +321,44 @@ Qed.
 
 
 End Negation.
-
+Open Scope group_scope.
 
 Lemma phase_comm n:
- forall (sx sy:phase) (pt: PauliTupleBase n),
+ forall (sx sy:phase) (pt: PauliString n),
  (* mulg cannot be inferenced here *)
- mult_png (sx, pt) (sy, pt) = mult_png (sy, pt) (sx, pt).
+ mul_pn (sx, pt) (sy, pt) = mul_pn (sy, pt) (sx, pt).
 Proof.
-  move => sx sy.
-  by case sx; case sy.
+  move => sx sy pt.
+  rewrite /mul_pn //= /rel_phase_n //=; gsimpl; f_equal. 
+  rewrite /mulg //=.
+  rewrite -mult_phase_assoc.
+  rewrite (mult_phase_comm _ sy).
+  by rewrite !mult_phase_assoc.
 Qed.
 
 Lemma commute_png_implies n:
-  forall (px py: phase) (tx ty: PauliTupleBase n),
-  commute_at mult_png (px, tx) (py, ty)-> mult_pn tx ty = mult_pn ty tx /\
-   get_phase_png (px, tx) (py, ty) = get_phase_png (py, ty) (px, tx).
+  forall (px py: phase) (tx ty: PauliString n),
+  commute_at mul_pn (px, tx) (py, ty)-> mul_pnb tx ty = mul_pnb ty tx /\
+   rel_phase_n (px, tx) (py, ty) = rel_phase_n (py, ty) (px, tx).
 Proof.
-  rewrite /commute_at /mult_png /= => px py tx ty H.
+  rewrite /commute_at /mul_pn /= => px py tx ty H.
   apply pair_inj in H.
   destruct H as [H1 H2].
+  change mul_pnb with (@mulg (PauliString n)).
   by rewrite H1 H2.
 Qed.
 
-Lemma mult_p1_comm:
-  commutative mult_p1.
+Lemma mul_p1b_comm:
+  commutative mul_p1b.
 Proof.
   rewrite /commuteg => x y.
   by case x; case y.
 Qed.
 
-Lemma phase_mult_p1_comm:
+Lemma phase_mul_p1b_comm:
   forall hx hy,
-  get_phase hx hy = get_phase hy hx ->
-  mult_p1 hx hy = mult_p1 hy hx.
+  rel_phase hx hy = rel_phase hy hx ->
+  mul_p1b hx hy = mul_p1b hy hx.
 Proof.
   move => x y.
   by case x; case y.
@@ -358,34 +366,36 @@ Qed.
 
 End Commutativity.
 
+Open Scope group_scope.
 Theorem negate_phase_simpl {n}:
-  forall (a b: PauliTuple n),
-  a = mult_png (NOne, id_pn n) b ->
+  forall (a b: PauliElement n),
+  a = mul_pn (NOne, id_pn n) b ->
   int_pn (a) = -C1 .* int_pn b.
 Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
-  rewrite /mult_png /get_phase_png.
-  rewrite get_phase_pn_id //= mult_pn_id; case sb => H;
+  rewrite /mul_pn /rel_phase_n.
+  rewrite fold_rel_phase_id //=; gsimpl.
+  case sb => H;
   inversion H; subst.
   all: lma.
 Qed.
 
 
 Lemma applyP_plus { n: nat }:
-  forall (operator: PauliTuple n) (st1 st2: Vector (2^n)),
+  forall (operator: PauliElement n) (st1 st2: Vector (2^n)),
   (applyP (st1 .+ st2) operator) = 
   (applyP st1 operator) .+ (applyP st2 operator).
 Proof. move => *; by rewrite /applyP Mmult_plus_distr_l. Qed.
 
 Lemma applyP_mscale { n: nat }:
-  forall (operator: PauliTuple n) (st: Vector (2^n)) (a: C),
+  forall (operator: PauliElement n) (st: Vector (2^n)) (a: C),
   (applyP (a .* st) operator) = 
   a.* (applyP st operator) .
 Proof. move => *. by rewrite /applyP Mscale_mult_dist_r. Qed.
 
 Lemma applyP_comb {n : nat }:
-  forall (op1 op2: PauliTuple n) (st: Vector (2^n)),
+  forall (op1 op2: PauliElement n) (st: Vector (2^n)),
   applyP (applyP st op1) op2 = 
   applyP st (mulg op2 op1).
 Proof.
@@ -402,7 +412,7 @@ Qed.
 Lemma applyP_id {n: nat} :
   forall (st: Vector (2^n)),
   WF_Matrix st ->
-  applyP st (@oneg (PauliTuple n)) = st.
+  applyP st (@oneg (PauliElement n)) = st.
 Proof.
   move: (applyP_is_action n) => [H _] st.
   rewrite /act_id /= in H.
@@ -412,7 +422,7 @@ Qed.
 Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 
 Lemma apply_1_wf:
-  forall (op: PauliOp) (v: Vector 2),
+  forall (op: PauliElem1) (v: Vector 2),
   WF_Matrix v -> WF_Matrix (apply_1 v op).
 Proof.
   move => op v.
@@ -422,7 +432,7 @@ Proof.
 Qed.
 
 Lemma apply_n_wf n:
-  forall (op: PauliTuple n) (v: Vector (2^n)),
+  forall (op: PauliElement n) (v: Vector (2^n)),
   WF_Matrix v -> WF_Matrix (applyP v op).
 Proof.
   move => op v.
@@ -434,7 +444,7 @@ Qed.
 #[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
 
 Lemma pauli_unitary n:
-  forall (op: PauliTupleBase n),
+  forall (op: PauliString n),
   WF_Unitary (int_pn op).
 Proof.
   move => t //=; Qsimpl.
@@ -463,7 +473,7 @@ Proof.
 Qed.  
 
 Theorem applyP_nonzero n:
-  forall (op: PauliTupleBase n) (v: Vector (2^n)),
+  forall (op: PauliString n) (v: Vector (2^n)),
   WF_Matrix v -> v <> Zero -> (applyP v op) <> Zero.
 Proof.
   move => op v Hwf Hnz.

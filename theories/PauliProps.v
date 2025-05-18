@@ -15,17 +15,17 @@ Check PauliBase.
 Check phase.
 
 (* PauliBase with phase *)
-Check PauliOp.
+Check PauliElem1.
 
-Definition p1g_of (s: phase) (op: PauliBase): PauliOp:=
+Definition p1g_of (s: phase) (op: PauliBase): PauliElem1:=
   pair s op.
 
 (* Define a custom notation for elements of the Pauli group *)
 Notation "s · p" := (p1g_of s p) 
   (at level 40, left associativity).
 
-Check One · X: PauliOp.
-Check Img · Z: PauliOp.
+Check One · X: PauliElem1.
+Check Img · Z: PauliElem1.
 
 Lemma pauli_eq_comp:
 forall sa pa sb pb,
@@ -36,12 +36,12 @@ subst.
 reflexivity.
 Qed.
 
-Definition scalar_to_complex: phase -> C := phase_int.
+Definition scalar_to_complex: phase -> C := int_phase.
 
 (* use the interpretation function in group definition *)
-Definition op_to_matrix: PauliBase -> Square 2 := p1b_int.
+Definition op_to_matrix: PauliBase -> Square 2 := int_p1b.
 
-Definition pauli_to_matrix: PauliOp -> Square 2 := int_p1.
+Definition pauli_to_matrix: PauliElem1 -> Square 2 := int_p1.
 
 Example negY: pauli_to_matrix (NOne · Y) = -C1 .* σy.
 Proof. reflexivity. Qed.
@@ -73,6 +73,8 @@ intros.
 subst.
 repeat (split).
 Qed.
+
+Close Scope group_scope.
 
 Example one_semantics:
 Matrix.I 2 0%nat 0%nat = 1.
@@ -191,10 +193,10 @@ split.
 }
 Qed.
 
-(* The operation on the PauliOp group *)
+(* The operation on the PauliElem1 group *)
 (* Define the operation as relation makes it so hard *)
-Inductive pmultrel: PauliOp -> PauliOp -> PauliOp -> Prop := 
-| PauliMultRel: forall (a b c: PauliOp),
+Inductive pmultrel: PauliElem1 -> PauliElem1 -> PauliElem1 -> Prop := 
+| PauliMultRel: forall (a b c: PauliElem1),
   (pauli_to_matrix a) × (pauli_to_matrix b) = pauli_to_matrix c ->
   pmultrel a b c.
 
@@ -206,11 +208,11 @@ simpl.
 solve_matrix.
 Qed.
 
-(* Definition id_p1g := (One · I). *)
-Definition id := id_p1g.
+(* Definition id_p1 := (One · I). *)
+Definition id := id_p1.
 
 Lemma pauli_op_wf: 
-forall (a: PauliOp), WF_Matrix (pauli_to_matrix a).
+forall (a: PauliElem1), WF_Matrix (pauli_to_matrix a).
 Proof.
 intros.
 destruct a as [s p].
@@ -219,16 +221,16 @@ simpl;
 auto with wf_db.
 Qed.
 
-Definition inverse_op: PauliBase -> PauliBase := inv_p1.
+Definition inverse_op: PauliBase -> PauliBase := inv_p1b.
 
 Definition inverse_scalar: phase -> phase := inv_phase.
 
 
-Definition pinv := inv_p1g.
+Definition pinv := inv_p1.
 
 Lemma pinv_correct:
-forall (a: PauliOp), exists (a': PauliOp),
-  pmultrel a a' id_p1g.
+forall (a: PauliElem1), exists (a': PauliElem1),
+  pmultrel a a' id_p1.
 Proof.
 intros.
 exists (pinv a). 
@@ -290,7 +292,7 @@ Qed.
 (* This one succeed by using two lemmas *)
 Lemma pauli_closure':
 forall a b,
-exists (c: PauliOp), pmultrel a b c.
+exists (c: PauliElem1), pmultrel a b c.
 Proof.
 intros a b.
 destruct a as [sa pa], b as [sb pb].
@@ -304,20 +306,20 @@ apply PauliMultRel; simpl.
 repeat rewrite Mscale_mult_dist_r.
 (* Search (_ .* (_ × _)). *)
 rewrite Mscale_mult_dist_l.
-replace op_to_matrix  with p1b_int in Hpc by easy. 
+replace op_to_matrix  with int_p1b in Hpc by easy. 
 rewrite Hpc.
 rewrite Mscale_assoc.
-replace scalar_to_complex with phase_int  in Hsc' by easy. 
+replace scalar_to_complex with int_phase  in Hsc' by easy. 
 rewrite <- Hsc'.
 (* Search ((_ * _) = (_ * _)). *)
 rewrite Cmult_comm.
-replace scalar_to_complex  with phase_int in Hsc by easy.
+replace scalar_to_complex  with int_phase in Hsc by easy.
 rewrite Hsc.
 rewrite Mscale_assoc.
 reflexivity.
 Qed.
 
-Lemma pmultrel_assoc : forall a b ab c abc : PauliOp,
+Lemma pmultrel_assoc : forall a b ab c abc : PauliElem1,
 pmultrel a b ab ->
 pmultrel ab c abc ->
 exists bc, pmultrel b c bc /\ pmultrel a bc abc.
@@ -351,14 +353,14 @@ it will be much easier now.
 =======================================================
 *)
 
-Definition op_prod_op := mult_p1.
+Definition op_prod_op := mul_p1b.
 
 
-Definition op_prod_s := get_phase.
+Definition op_prod_s := rel_phase.
 
 
 Definition op_prod (a b: PauliBase): (phase * PauliBase) := 
-  (get_phase a b, mult_p1 a b).
+  (rel_phase a b, mul_p1b a b).
 
 Definition op_prod_alt(a b: PauliBase): (phase * PauliBase) := 
     ( op_prod_s a b, op_prod_op a b).
@@ -373,7 +375,7 @@ Qed.
 
 
 
-Definition s_prod := mult_phase.
+Definition s_prod := mul_phase.
 
 Lemma inverse_scalar_correct:
   forall sc, s_prod sc (inverse_scalar sc) = One
@@ -409,7 +411,7 @@ Proof.
   apply s_prod_total.
 Qed.
 
-Definition pmul (a b: PauliOp): PauliOp := 
+Definition pmul (a b: PauliElem1): PauliElem1 := 
 match a, b with
 | pair sa pa, pair sb pb => 
     let (sab, pab) := (op_prod pa pb) in
@@ -490,8 +492,8 @@ Proof.
   unfold pmul.
   rewrite Heq.
   unfold pauli_to_matrix .
-  replace op_to_matrix with p1b_int in H by easy. 
-  replace scalar_to_complex with phase_int in H by easy.
+  replace op_to_matrix with int_p1b in H by easy. 
+  replace scalar_to_complex with int_phase in H by easy.
   unfold int_p1.
   distribute_scale. 
   rewrite H.
@@ -503,14 +505,14 @@ Proof.
 Qed.
 
 
-Definition apply_s (s: phase) (p: PauliOp): PauliOp :=
+Definition apply_s (s: phase) (p: PauliElem1): PauliElem1 :=
 match p with
   | pair s0 op => pair (s_prod s s0) op
 end.
 
-Definition pneg (p: PauliOp): PauliOp := apply_s (NOne) p.
+Definition pneg (p: PauliElem1): PauliElem1 := apply_s (NOne) p.
 
-Definition pmul_alt (a b: PauliOp): PauliOp := 
+Definition pmul_alt (a b: PauliElem1): PauliElem1 := 
 match a, b with
 | pair sa pa, pair sb pb => 
     let (sab, pab) := (op_prod pa pb) in
@@ -533,7 +535,7 @@ all: reflexivity.
 Qed. 
 
 (* verify our function version of pmultrel is correct *)
-Lemma pmul_correct_r: forall (a b c: PauliOp),
+Lemma pmul_correct_r: forall (a b c: PauliElem1),
 (pmul a b) = c -> pmultrel a b c. 
 Proof.
 intros.
@@ -550,7 +552,7 @@ all: try (Qsimpl; autorewrite with Q_db).
 all: try(solve_matrix).
 Qed.
 
-Lemma pmul_correct_l: forall (a b c: PauliOp),
+Lemma pmul_correct_l: forall (a b c: PauliElem1),
 pmultrel a b c -> (pmul a b) = c. 
 Proof.
 intros.
@@ -560,7 +562,7 @@ rewrite pauli_to_matrix_injective in H0.
 assumption.
 Qed.
 
-Theorem pmul_prod_eq: forall (a b c: PauliOp),
+Theorem pmul_prod_eq: forall (a b c: PauliElem1),
 pmultrel a b c <-> (pmul a b) = c. 
 Proof.
 split.
@@ -573,19 +575,19 @@ The commute / anticommute are two very important properties in stabilizer formal
 We also hope to inspect how our new defined prod function can simplify the proof.
 *)
 
-Inductive commute: PauliOp -> PauliOp -> Prop :=
-| CommuteRel: forall (pa pb: PauliOp),
+Inductive commute: PauliElem1 -> PauliElem1 -> Prop :=
+| CommuteRel: forall (pa pb: PauliElem1),
   (pmul pa pb) = (pmul pb pa) -> commute pa pb.
 
 Lemma commute_self:
-forall (p: PauliOp), commute p p.
+forall (p: PauliElem1), commute p p.
 Proof.
 intros.
 apply CommuteRel. reflexivity.
 Qed.
 
 Lemma commute_identity:
-forall (p: PauliOp), commute p id_p1g.
+forall (p: PauliElem1), commute p id_p1.
 Proof.
 intros.
 apply CommuteRel.
@@ -620,8 +622,8 @@ Qed.
 TODO: Replace this with ExtraSpecs
 the definition has a slight issue: it depends on how `apply_s` is defiend. Although `apply_s` is straightforward, but it is not certified. 
 *)
-Inductive anticommute: PauliOp -> PauliOp -> Prop :=
-| AnticommuteRel: forall (pa pb: PauliOp),
+Inductive anticommute: PauliElem1 -> PauliElem1 -> Prop :=
+| AnticommuteRel: forall (pa pb: PauliElem1),
   (pmul pa pb) = apply_s (NOne) (pmul pb pa) -> anticommute pa pb.
 
 Example anticommute_exp0:
@@ -795,8 +797,8 @@ Qed.
 From mathcomp Require Import seq tuple.
 
 Lemma int_pnb_cons:
-  forall {n: nat} (pt: PauliTupleBase n) (p: PauliBase),
-  int_pnb [tuple of p::pt] = (p1b_int p) ⊗ int_pnb pt.
+  forall {n: nat} (pt: PauliString n) (p: PauliBase),
+  int_pnb [tuple of p::pt] = (int_p1b p) ⊗ int_pnb pt.
 Proof.
   rewrite /=  => n pt p.
   rewrite theadCons.
