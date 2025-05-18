@@ -397,27 +397,27 @@ Module Adaptor.
 Import PauliString.
 
 
-Notation PauliTupleBase := PNBaseGroup.PauliString.
+Notation PauliElementBase := PNBaseGroup.PauliString.
 
 (* This one does work but the type is inconvinient*)
-Definition TtoV_l {n:nat} (l: PauliTupleBase n): PauliVector (size l) :=
+Definition TtoV_l {n:nat} (l: PauliElementBase n): PauliVector (size l) :=
   of_list l.
 
 (* I can prove n = (size l) in tupleToVector *)
 Lemma tuple_size:
-  forall (n:nat) (tuple: PauliTupleBase n),
+  forall (n:nat) (tuple: PauliElementBase n),
   size tuple = n.
 Proof.
   by move => *; rewrite size_tuple.
 Qed.
 
 
-Fixpoint tupleToVector {n}: (PauliTupleBase n) -> PauliVector n :=
+Fixpoint tupleToVector {n}: (PauliElementBase n) -> PauliVector n :=
   if n is S n return n.-tuple PauliBase -> PauliVector n 
   then fun xs => (thead xs)::(tupleToVector (behead_tuple xs))
   else fun xs => PVector0.
 
-Fixpoint vectorToTuple {n} (v : PauliVector n) : PauliTupleBase n :=
+Fixpoint vectorToTuple {n} (v : PauliVector n) : PauliElementBase n :=
   match v with
   | nil => List.nil
   | cons h _ t => List.cons h (vectorToTuple t)
@@ -447,7 +447,7 @@ Proof.
 Qed.
 
 Theorem tupleToVector_correct n:
-  forall tup: PauliTupleBase n,
+  forall tup: PauliElementBase n,
   int_pnb tup = pvec_to_matrix (tupleToVector tup).
 Proof.
   move => tup.
@@ -459,12 +459,12 @@ Proof.
 Qed.
 
 
-Definition pngToPString {n} (png: PauliTuple n): PString n :=
+Definition pngToPString {n} (png: PauliElement n): PString n :=
   match png with
   |  (phase, tuple) => (phase, tupleToVector tuple)
   end.
 
-Definition pstringToTupleG {n} (pstr: PString n): PauliTuple n :=
+Definition pstringToTupleG {n} (pstr: PString n): PauliElement n :=
   match pstr with 
   | (phase, vector) => (phase, vectorToTuple vector)
   end.
@@ -490,7 +490,7 @@ Proof.
 Qed.
 
 Theorem pngToPstring_correct n:
-  forall tupg: PauliTuple n,
+  forall tupg: PauliElement n,
   int_pn tupg = pstr_to_matrix (pngToPString tupg).
 Proof.
   move => tupg.

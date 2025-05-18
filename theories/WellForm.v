@@ -46,7 +46,7 @@ Proof.
 Qed.
 
 Theorem int_pn_wf n:
-  forall (op: PauliTuple n),
+  forall (op: PauliElement n),
   WF_Matrix (int_pn op).
 Proof.
   move => [p t].

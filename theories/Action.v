@@ -76,7 +76,7 @@ Notation PauliOperator := PauliString.
   note that not all elements are pauli operator
   for phase in {-i, i}, these elements are not hermitian
 *)
-Notation PauliElement := PauliTuple.
+Notation PauliElement := PauliElement.
 
 Definition PauliOpToElem {n} (x : PauliOperator n) : PauliElement n := (One,x).
 Coercion PauliOpToElem : PauliOperator >-> PauliElement.
@@ -145,12 +145,12 @@ Qed.
 
 Variable (n: nat).
 
-Definition applyP : Vector (2^n) -> PauliTuple n -> Vector (2^n) :=
+Definition applyP : Vector (2^n) -> PauliElement n -> Vector (2^n) :=
   fun psi op => (int_pn op) × psi.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Definition aTsn := [set: PauliTuple n].
+Definition aTsn := [set: PauliElement n].
 
 
 Fact applyP_is_action:
@@ -180,7 +180,7 @@ Arguments applyP {n}.
 
 
 
-Definition xxx: PauliTuple 3 := (One, [tuple of X :: X :: X :: []]).
+Definition xxx: PauliElement 3 := (One, [tuple of X :: X :: X :: []]).
 
 (* sancheck *)
 Goal act_n _ ∣0,0,0⟩ xxx = ∣1,1,1⟩.
@@ -264,11 +264,11 @@ End Prerequisites.
 Section Negation.
 
 
-Definition minus_id_png n : (PauliTuple n) := (NOne , id_pn n).
+Definition minus_id_png n : (PauliElement n) := (NOne , id_pn n).
 
 Notation "[-1]" := minus_id_png.
 
-Definition neg_png n (p: PauliTuple n) : PauliTuple n :=
+Definition neg_png n (p: PauliElement n) : PauliElement n :=
   match p with
   | (phase, tuple) => (mulg NOne phase, tuple)
   end.
@@ -368,7 +368,7 @@ End Commutativity.
 
 Open Scope group_scope.
 Theorem negate_phase_simpl {n}:
-  forall (a b: PauliTuple n),
+  forall (a b: PauliElement n),
   a = mul_pn (NOne, id_pn n) b ->
   int_pn (a) = -C1 .* int_pn b.
 Proof.
@@ -383,19 +383,19 @@ Qed.
 
 
 Lemma applyP_plus { n: nat }:
-  forall (operator: PauliTuple n) (st1 st2: Vector (2^n)),
+  forall (operator: PauliElement n) (st1 st2: Vector (2^n)),
   (applyP (st1 .+ st2) operator) = 
   (applyP st1 operator) .+ (applyP st2 operator).
 Proof. move => *; by rewrite /applyP Mmult_plus_distr_l. Qed.
 
 Lemma applyP_mscale { n: nat }:
-  forall (operator: PauliTuple n) (st: Vector (2^n)) (a: C),
+  forall (operator: PauliElement n) (st: Vector (2^n)) (a: C),
   (applyP (a .* st) operator) = 
   a.* (applyP st operator) .
 Proof. move => *. by rewrite /applyP Mscale_mult_dist_r. Qed.
 
 Lemma applyP_comb {n : nat }:
-  forall (op1 op2: PauliTuple n) (st: Vector (2^n)),
+  forall (op1 op2: PauliElement n) (st: Vector (2^n)),
   applyP (applyP st op1) op2 = 
   applyP st (mulg op2 op1).
 Proof.
@@ -412,7 +412,7 @@ Qed.
 Lemma applyP_id {n: nat} :
   forall (st: Vector (2^n)),
   WF_Matrix st ->
-  applyP st (@oneg (PauliTuple n)) = st.
+  applyP st (@oneg (PauliElement n)) = st.
 Proof.
   move: (applyP_is_action n) => [H _] st.
   rewrite /act_id /= in H.
@@ -432,7 +432,7 @@ Proof.
 Qed.
 
 Lemma apply_n_wf n:
-  forall (op: PauliTuple n) (v: Vector (2^n)),
+  forall (op: PauliElement n) (v: Vector (2^n)),
   WF_Matrix v -> WF_Matrix (applyP v op).
 Proof.
   move => op v.

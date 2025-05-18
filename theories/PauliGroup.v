@@ -6,7 +6,7 @@ Key Definitions:
 - phase: The phase {-1, i, -1, -i} and they forms a group
 - PauliElem1: The 1-qubit Pauli group
 - PauliString: The n-qubit Pauli quotient group
-- PauliTuple: The n-qubit Pauli group
+- PauliElement: The n-qubit Pauli group
 
 You can use all canonical definitions in mathcomp: oneg, mulg, invg, idg
 
@@ -443,16 +443,16 @@ Definition rel_phase_pn {n: nat} (a b: PauliString n): phase :=
   ).  
 
 
-Definition PauliTuple (n: nat) := prod phase (PauliString n).
+Definition PauliElement (n: nat) := prod phase (PauliString n).
 
-Definition rel_phase_png {n: nat} (a b: PauliTuple n): phase :=
+Definition rel_phase_png {n: nat} (a b: PauliElement n): phase :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
       rel_phase_pn pa pb * sa * sb
     )
   end.
 
-Definition mul_pn {n: nat} (a b: PauliTuple n): PauliTuple n :=
+Definition mul_pn {n: nat} (a b: PauliElement n): PauliElement n :=
   match (a, b) with
   | (pair sa pa, pair sb pb) => (
       rel_phase_png a b,
@@ -460,7 +460,7 @@ Definition mul_pn {n: nat} (a b: PauliTuple n): PauliTuple n :=
     ) 
 end.
 
-Definition inv_png {n}( a: PauliTuple n): PauliTuple n := 
+Definition inv_png {n}( a: PauliElement n): PauliElement n := 
   match a with
   | pair s p => (s^-1, p^-1)
   end.
@@ -522,7 +522,7 @@ Lemma mult_phase_simplify:
 Proof. by move => a b c d -> ->. Qed.
 
 Lemma rel_phase_png_assoc n:
-  forall (a b c: PauliTuple n),
+  forall (a b c: PauliElement n),
   rel_phase_png (rel_phase_png a b, mul_pnb a.2 b.2) c = 
   rel_phase_png a (rel_phase_png b c, mul_pnb b.2 c.2).
 Proof.
@@ -560,7 +560,7 @@ Qed.
 (* Do not try to attempt this! *)
 (* This is not valid *)
 Lemma rel_phase_png_comm n:
-  forall (a b: PauliTuple n),
+  forall (a b: PauliElement n),
   rel_phase_png a b <>
   rel_phase_png b a.
 Abort.
@@ -591,7 +591,7 @@ Proof.
   by rewrite IHn.
 Qed.
 
-Definition id_png (n:nat): PauliTuple n := 
+Definition id_png (n:nat): PauliElement n := 
   (@oneg phase, @oneg (PauliString n)).
 
 Lemma mul_pn_id n:
@@ -635,9 +635,9 @@ Section Strcture.
 
 Variable n: nat.
 
-HB.instance Definition _ := Finite.on (@PauliTuple n).
+HB.instance Definition _ := Finite.on (@PauliElement n).
 HB.instance Definition _ := isMulGroup.Build
-  (@PauliTuple n) (@mul_pn_assoc n) (@mul_pn_id n) (@mul_pn_left_inv n).
+  (@PauliElement n) (@mul_pn_assoc n) (@mul_pn_id n) (@mul_pn_left_inv n).
 
 
 
@@ -764,7 +764,7 @@ interpretation of group png
 
 Import PNGroup.
 
-Definition int_pn {n:nat} (p: PauliTuple n): Square (2^n) :=
+Definition int_pn {n:nat} (p: PauliElement n): Square (2^n) :=
   match p with
   | (phase, tuple) => (int_phase phase) .* (int_pnb tuple)
   end.
@@ -822,7 +822,7 @@ Qed.
     
 
 Lemma int_pn_Mmult n:
-  forall (x y: PauliTuple n),
+  forall (x y: PauliElement n),
   int_pn x × int_pn y = int_pn (mul_pn x y).
 Proof.
   move  => [sx x] [sy y].

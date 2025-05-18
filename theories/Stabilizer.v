@@ -442,7 +442,7 @@ Qed.
 
 Import all_pauligroup.
 
-Definition ZZ := ([p1 Z, Z]) : PauliTuple 2.
+Definition ZZ := ([p1 Z, Z]) : PauliElement 2.
 
 Example stb_z11:
   ([ p1 Z, Z]) ∝1 ∣ 1, 1 ⟩.
