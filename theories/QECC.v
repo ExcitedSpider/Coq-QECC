@@ -186,11 +186,11 @@ End ErrorCorrectionCode.
 
 Section Theories.
 
-Lemma rel_phase_png_involutive:
-forall {n} (t: PauliOperator n), rel_phase_png (One, t) (One, t) = One.
+Lemma rel_phase_n_involutive:
+forall {n} (t: PauliOperator n), rel_phase_n (One, t) (One, t) = One.
 Proof.
   move => n t.
-  by rewrite /rel_phase_png rel_phase_pn_involutive /=.
+  by rewrite /rel_phase_n rel_phase_pn_involutive /=.
 Qed.
 
 Lemma png_id_simpl:
@@ -230,7 +230,7 @@ Proof.
     move: IHn.
     rewrite /recover_by /=.
     rewrite /PauliOpToElem //=.
-    rewrite /mul_pn. rewrite /mulg //= !mul_pnb_cons rel_phase_png_cons.
+    rewrite /mul_pn. rewrite /mulg //= !mul_pnb_cons rel_phase_n_cons.
     assert (H: rel_phase h h = One).
       by case h.
     rewrite H; clear H.
@@ -242,7 +242,7 @@ Proof.
     move => H.
     move: (H t).
     clear H.
-    rewrite !rel_phase_png_involutive.
+    rewrite !rel_phase_n_involutive.
     rewrite -!png_id_simpl => H.
     apply (png_idP n).
     by rewrite H.

@@ -329,7 +329,7 @@ Lemma phase_comm n:
  mul_pn (sx, pt) (sy, pt) = mul_pn (sy, pt) (sx, pt).
 Proof.
   move => sx sy pt.
-  rewrite /mul_pn //= /rel_phase_png //=; gsimpl; f_equal. 
+  rewrite /mul_pn //= /rel_phase_n //=; gsimpl; f_equal. 
   rewrite /mulg //=.
   rewrite -mult_phase_assoc.
   rewrite (mult_phase_comm _ sy).
@@ -339,7 +339,7 @@ Qed.
 Lemma commute_png_implies n:
   forall (px py: phase) (tx ty: PauliString n),
   commute_at mul_pn (px, tx) (py, ty)-> mul_pnb tx ty = mul_pnb ty tx /\
-   rel_phase_png (px, tx) (py, ty) = rel_phase_png (py, ty) (px, tx).
+   rel_phase_n (px, tx) (py, ty) = rel_phase_n (py, ty) (px, tx).
 Proof.
   rewrite /commute_at /mul_pn /= => px py tx ty H.
   apply pair_inj in H.
@@ -374,7 +374,7 @@ Theorem negate_phase_simpl {n}:
 Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
-  rewrite /mul_pn /rel_phase_png.
+  rewrite /mul_pn /rel_phase_n.
   rewrite rel_phase_pn_id //=; gsimpl.
   case sb => H;
   inversion H; subst.
