@@ -375,7 +375,7 @@ Proof.
   move => [sa pa] [sb pb]  //=.
   Qsimpl.
   rewrite /mul_pn /rel_phase_n.
-  rewrite rel_phase_pn_id //=; gsimpl.
+  rewrite fold_rel_phase_id //=; gsimpl.
   case sb => H;
   inversion H; subst.
   all: lma.

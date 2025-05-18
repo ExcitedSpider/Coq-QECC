@@ -190,7 +190,7 @@ Lemma rel_phase_n_involutive:
 forall {n} (t: PauliOperator n), rel_phase_n (One, t) (One, t) = One.
 Proof.
   move => n t.
-  by rewrite /rel_phase_n rel_phase_pn_involutive /=.
+  by rewrite /rel_phase_n fold_rel_phase_involutive /=.
 Qed.
 
 Lemma png_id_simpl:
