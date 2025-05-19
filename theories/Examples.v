@@ -260,7 +260,7 @@ Proof.
   - move => _.
     apply stabiliser_detect_error.
     apply (edc_stb_mem_spec BitFlipCode); auto.
-    apply Negation.negate_phase_simpl.
+    apply negate_phase_simpl.
     rewrite H /Z12 /Y1 //=.
     by apply /eqP.
   - rewrite !apply_X1_effect => F.

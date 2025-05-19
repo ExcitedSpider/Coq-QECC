@@ -15,6 +15,7 @@ Import PNBaseGroup.
 Import PNGroup.
 Require Import WellForm.
 Require Import ExtraSpecs.
+Require Import Commutativity.
 
 Require Import Operations.
 
