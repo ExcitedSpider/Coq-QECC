@@ -399,5 +399,12 @@ Proof.
   - apply Hwfv.
 Qed.  
 
+Lemma pair_inj:
+(forall T R (a b: T) (x y: R), (a, x) = (b, y) -> a = b /\ x = y).
+  {
+    intros.
+    by inversion H.
+  }
+Qed.
 
 End QuantumlibExtra.

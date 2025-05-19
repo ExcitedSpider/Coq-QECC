@@ -249,6 +249,8 @@ Qed.
 
 Definition Y1: PauliOperator dim := [p Y, I, I].
 
+Locate negate_phase_simpl.
+
 (* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
 Theorem indistinguishable_X1_Y1:
   indistinguishable BitFlipCode X1 Y1.
@@ -258,7 +260,7 @@ Proof.
   - move => _.
     apply stabiliser_detect_error.
     apply (edc_stb_mem_spec BitFlipCode); auto.
-    apply negate_phase_simpl.
+    apply Negation.negate_phase_simpl.
     rewrite H /Z12 /Y1 //=.
     by apply /eqP.
   - rewrite !apply_X1_effect => F.

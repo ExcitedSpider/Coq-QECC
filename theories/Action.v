@@ -62,9 +62,9 @@ Record action := Action {
 
 End ActionDef.
 
+
 Require Import PauliGroup.
 Require Import PauliProps.
-
 Import all_pauligroup.
 (* An n-qubit Pauli operator is a Hermitian element of the 
 n-qubit Pauli group P_n *)
@@ -91,8 +91,6 @@ Section QuantumActions.
 (* Apply a single-qubit pauli operator *)
 Definition apply1p : Vector 2 -> PauliElem1 -> Vector 2 :=
   fun psi op => (int_p1 op) × psi.
-
-Check is_action.
 
 Lemma mult_phase_comp: forall a b, int_phase (a) * int_phase (b) = 
   int_phase (mul_phase a b).
@@ -149,6 +147,7 @@ Variable (n: nat).
 Definition applyP : Vector (2^n) -> PauliElement n -> Vector (2^n) :=
   fun psi op => (int_pn op) × psi.
 
+
 Set Bullet Behavior "Strict Subproofs".
 
 Definition aTsn := [set: PauliElement n].
@@ -179,6 +178,7 @@ End QuantumActions.
 
 Arguments applyP {n}.
 
+Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 
 
 Definition xxx: PauliElement 3 := (One, [tuple of X :: X :: X :: []]).
@@ -227,26 +227,6 @@ by solve_stab1. Qed.
 
 Lemma Z1_stab: stab act_1 (p1g_of NOne Z) ∣1⟩.
 by solve_stab1. Qed.
-
-(* Theories about -1 * pt%g *)
-Module Commutativity.
-
-Require Import ExtraSpecs.
-From mathcomp Require Import eqtype ssrbool.
-From mathcomp Require Import fingroup.
-Require Import Classical.
-
-Section Prerequisites.
-
-Lemma pair_inj:
-(forall T R (a b: T) (x y: R), (a, x) = (b, y) -> a = b /\ x = y).
-  {
-    intros.
-    by inversion H.
-  }
-Qed.
-
-End Prerequisites.
 
 Section Negation.
 
@@ -306,8 +286,31 @@ Proof.
   all: try(right; lca).
 Qed.
 
+Open Scope group_scope.
+Theorem negate_phase_simpl {n}:
+  forall (a b: PauliElement n),
+  a = mul_pn (NOne, id_pn n) b ->
+  int_pn (a) = -C1 .* int_pn b.
+Proof.
+  move => [sa pa] [sb pb]  //=.
+  Qsimpl.
+  rewrite /mul_pn /rel_phase_n.
+  rewrite fold_rel_phase_id //=; gsimpl.
+  case sb => H;
+  inversion H; subst.
+  all: lma.
+Qed.
 
 End Negation.
+
+
+Require Import ExtraSpecs.
+From mathcomp Require Import eqtype ssrbool.
+From mathcomp Require Import fingroup.
+Require Import Classical.
+
+Module Commutativity.
+
 Open Scope group_scope.
 
 Lemma phase_comm n:
@@ -353,20 +356,7 @@ Qed.
 
 End Commutativity.
 
-Open Scope group_scope.
-Theorem negate_phase_simpl {n}:
-  forall (a b: PauliElement n),
-  a = mul_pn (NOne, id_pn n) b ->
-  int_pn (a) = -C1 .* int_pn b.
-Proof.
-  move => [sa pa] [sb pb]  //=.
-  Qsimpl.
-  rewrite /mul_pn /rel_phase_n.
-  rewrite fold_rel_phase_id //=; gsimpl.
-  case sb => H;
-  inversion H; subst.
-  all: lma.
-Qed.
+
 
 
 Lemma applyP_plus { n: nat }:
@@ -406,7 +396,6 @@ Proof.
   apply H.
 Qed.
 
-Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 
 Lemma apply1p_wf:
   forall (op: PauliElem1) (v: Vector 2),
