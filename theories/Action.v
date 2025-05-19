@@ -88,7 +88,7 @@ Section QuantumActions.
 
 
 (* Apply a single-qubit pauli operator *)
-Definition apply_1 : Vector 2 -> PauliElem1 -> Vector 2 :=
+Definition apply1p : Vector 2 -> PauliElem1 -> Vector 2 :=
   fun psi op => (int_p1 op) × psi.
 
 Check is_action.
@@ -104,17 +104,17 @@ Definition aTs := [set: PauliElem1].
 
 
 Fact act_1_is_action:
-  (is_action _ aTs 1 apply_1).
+  (is_action _ aTs 1 apply1p).
 Proof.
   rewrite /is_action; split.
   {
-    rewrite /act_id /apply_1 /= => x Hwf.
+    rewrite /act_id /apply1p /= => x Hwf.
     lma'.
   }
   {
     rewrite //= => x a b Ha Hb.
     case a; case b => sa pa sb pb.
-    rewrite /apply_1 /int_p1 /=.
+    rewrite /apply1p /int_p1 /=.
     rewrite !Mscale_mult_dist_l Mscale_mult_dist_r Mscale_assoc.
     rewrite -!mult_phase_comp.
     rewrite Cmult_comm.
@@ -138,7 +138,7 @@ Canonical act_1 := (Action act_1_is_action).
 (* Sancheck *)
 Goal act_1 ∣0⟩ (% X) = ∣1⟩.
 Proof.
-  rewrite /= /apply_1 /=.
+  rewrite /= /apply1p /=.
   lma'.
 Qed.
 
@@ -226,7 +226,7 @@ End StabDef.
 Check Z0_spec.
 
 Ltac solve_stab1:=
-  rewrite /stab /= /apply_1 /=;
+  rewrite /stab /= /apply1p /=;
   Qsimpl;
   autorewrite with ket_db;
   try by [];
@@ -421,12 +421,12 @@ Qed.
 
 Notation "''Apply' P 'on' psi" := (applyP psi P) (at level 200).
 
-Lemma apply_1_wf:
+Lemma apply1p_wf:
   forall (op: PauliElem1) (v: Vector 2),
-  WF_Matrix v -> WF_Matrix (apply_1 v op).
+  WF_Matrix v -> WF_Matrix (apply1p v op).
 Proof.
   move => op v.
-  rewrite /apply_1.
+  rewrite /apply1p.
   apply WF_mult.
   apply int_p1_wf.
 Qed.
@@ -441,7 +441,7 @@ Proof.
   apply int_pn_wf.
 Qed.
 
-#[export] Hint Resolve apply_n_wf apply_1_wf : wf_db.
+#[export] Hint Resolve apply_n_wf apply1p_wf : wf_db.
 
 Lemma pauli_unitary n:
   forall (op: PauliString n),

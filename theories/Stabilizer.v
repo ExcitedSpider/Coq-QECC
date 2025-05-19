@@ -298,7 +298,7 @@ Proof.
   Qsimpl.
   rewrite theadCons beheadCons.
   rewrite kron_mixed_product'; try auto.
-  rewrite /stb_1 /act_1 /= /apply_1 /=; Qsimpl.
+  rewrite /stb_1 /act_1 /= /apply1p /=; Qsimpl.
   move => H1 H2.
   rewrite H2.
   apply kron_simplify; auto.
