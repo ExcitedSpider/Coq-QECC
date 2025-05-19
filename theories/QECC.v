@@ -15,6 +15,7 @@ Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.
 Require Import Observable.
+Require Import Operations.
 
 (* Simply Goals like (int_pnb _ × _) *)
 Ltac SimplApplyPauli := 
@@ -296,6 +297,21 @@ Proof.
   rewrite {2}RtoCrw.
   apply stabiliser_detect_error. 
 Qed.
+
+Open Scope group_scope.
+
+Corollary stabiliser_detect_error_by_negate {n}:
+  forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
+  Ob ∝1 psi -> 
+  mul_pn Ob Er = negate_Pn (mul_pn Er Ob) ->
+  ('Meas Ob on ('Apply Er on psi) --> -C1).
+Proof.
+  move => Ob psi Er H1 H2.
+  assert ((int_pn (mul_pn Ob Er)) = int_pn (negate_Pn (mul_pn Er Ob))).
+    by rewrite H2. 
+  apply stabiliser_detect_error_c; auto.
+  by rewrite -negate_phase_Pn_correct.
+Abort.
 
 (* On the opposite of error detection condition *)
 (* If an stabiliser S conmmute with the error E *)
