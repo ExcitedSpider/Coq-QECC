@@ -7,7 +7,7 @@ Require Import PauliProps.
 Section Operations.
 Import all_pauligroup.
 
-Definition compose_pstring {n m: nat} 
+Definition concate_pn {n m: nat} 
   (ps1 : PauliElement n) (ps2 : PauliElement m) : PauliElement (n + m) :=
   let s := mulg ps1.1 ps2.1 in
   let v := [tuple of ps1.2 ++ ps2.2] in
@@ -19,9 +19,9 @@ Notation "[ 'p' x1 , .. , xn ]" := [tuple of x1 :: .. [:: xn] ..] (at level 200)
 Notation "[ 'p1' x1 , .. , xn ]" := (One, [tuple of x1 :: .. [:: xn] ..]) (at level 200): form_scope.
   
 
-Goal compose_pstring ([p1 X, Y]) ([p1 Z, I]) = ([p1 X, Y, Z, I]).
+Goal concate_pn ([p1 X, Y]) ([p1 Z, I]) = ([p1 X, Y, Z, I]).
 Proof.
-  rewrite /compose_pstring /mulg /=.
+  rewrite /concate_pn /mulg /=.
   apply injective_projections.
   - by rewrite /=.
   - apply /eqP. by [].
@@ -47,11 +47,11 @@ Qed.
 
 Theorem compose_pstring_correct:
   forall {n m: nat}  (ps1: PauliElement n) (ps2: PauliElement m),
-  int_pn (compose_pstring ps1 ps2) =
+  int_pn (concate_pn ps1 ps2) =
   int_pn ps1 ⊗ int_pn ps2.
 Proof.
   move => n m [p1 t1] [p2 t2].
-  rewrite /compose_pstring /int_pn /=.
+  rewrite /concate_pn /int_pn /=.
   rewrite Mscale_kron_dist_l Mscale_kron_dist_r.
   rewrite int_pnb_concat.
   by rewrite Mscale_assoc int_phase_comp.
@@ -105,44 +105,27 @@ Notation "[ 'p1' x1 , .. , xn ]" := (One, [tuple of x1 :: .. [:: xn] ..]) (at le
 
 Import all_pauligroup.
 
-Definition z1z2 := [p Z, Z, I].
-
-Lemma h_conj_z:
-  hadamard × σz × hadamard = σx.
-Proof. by solve_matrix. Qed.
-
-(* $ H^3 Z1Z2 H^3$ = X1X2 *)
-Lemma h_conj_z1z2:
-  h_conj ([p1 Z, Z, I]) = [[ [p1 X, X, I] ]].
-Proof.
-  rewrite /h_conj /=.
-  Qsimpl.
-  rewrite MmultHH.
-  by rewrite -!Mmult_assoc h_conj_z.
-Qed.
-
 End HardamardConjugation.
 
 Section Negation.
+
+Definition negate_phase (p: phase):=
+  match p with
+  | One => NOne | NOne => One
+  | Img => NImg | NImg => Img
+  end.
+
+Definition negate_Pn {n} (elem: PauliElement n): PauliElement n :=
+  match elem with
+  | (ph, pstr) => (negate_phase ph, pstr)
+  end.
 
 Definition minus_id_png n : (PauliElement n) := (NOne , id_pn n).
 
 Notation "[-1]" := minus_id_png.
 
-Definition neg_png n (p: PauliElement n) : PauliElement n :=
-  match p with
-  | (phase, tuple) => (mulg NOne phase, tuple)
-  end.
-
-Definition neg_p1g (p: PauliElem1): PauliElem1 :=
-  match p with
-  | (phase, tuple) => (mulg NOne phase, tuple)
-  end.
-
-Definition neg_phase (p: phase): phase :=
-  mulg NOne p.
-
 Open Scope C_scope.
+Set Bullet Behavior "Strict Subproofs".
 
 Lemma neg_phase_correct:
   forall x y, int_phase x = -C1 * int_phase y <-> 
@@ -167,6 +150,15 @@ Proof.
     all: rewrite /=; autorewrite with C_db; try by easy.
   }
 Qed. 
+
+Theorem negate_phase_Pn_correct n:
+  forall (a: PauliElement n),
+  int_pn (negate_Pn a) = -C1 .* int_pn a.
+Proof.
+  move => [sa tup].
+  rewrite /negate_Pn //=.
+  case sa; rewrite //=; lma.
+Qed.
 
 
 Open Scope group_scope.

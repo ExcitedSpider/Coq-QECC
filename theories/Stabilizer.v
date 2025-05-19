@@ -156,7 +156,7 @@ If we take the tensor product of a two states, with stabiliser groups A and B (r
 *)
 Theorem stb_compose:
   forall {n: nat} (pstr1 pstr2: PauliElement n) (ψ1 ψ2:  Vector (2^n)),
-  let cpstring := compose_pstring pstr1 pstr2 in
+  let cpstring := concate_pn pstr1 pstr2 in
   pstr1 ∝1 ψ1 ->
   pstr2 ∝1 ψ2 ->
   cpstring ∝1 (ψ1 ⊗ ψ2).
@@ -247,7 +247,7 @@ Require Import ExtraSpecs.
 (* Try using seq.take and drop  *)
 Theorem stb_compose_alt:
   forall {n m: nat} (pstr1: PauliElement n) (pstr2: PauliElement m) (ψ1:  Vector (2^n)) (ψ2:  Vector (2^m)),
-  let cpstring := compose_pstring pstr1 pstr2 in
+  let cpstring := concate_pn pstr1 pstr2 in
   pstr1 ∝1 ψ1 ->
   pstr2 ∝1 ψ2 ->
   cpstring ∝1 (ψ1 ⊗ ψ2).
@@ -340,14 +340,14 @@ Theorem stb_compose_alt':
   forall {n m: nat} 
     (substr1: PauliElement n) (substr2: PauliElement m) (pstr: PauliElement (n + m))
     (ψ1:  Vector (2^n)) (ψ2:  Vector (2^m)),
-    (pstr = compose_pstring substr1 substr2) ->
+    (pstr = concate_pn substr1 substr2) ->
    substr1 ∝1 ψ1 -> substr2 ∝1 ψ2 -> pstr ∝1 (ψ1 ⊗ ψ2).
 Proof. move => *. by subst; apply stb_compose_alt. Qed.
 
 
-(* Solves goals like [p ... ] = compose_pstring [p ...] [p ...]  *)
+(* Solves goals like [p ... ] = concate_pn [p ...] [p ...]  *)
 Ltac by_compose_pstring :=
-    rewrite /compose_pstring /mulg /=;
+    rewrite /concate_pn /mulg /=;
     apply injective_projections; simpl;
     [by easy | by apply /eqP].
 
@@ -420,7 +420,7 @@ From QuantumLib Require Import Complex.
 (* two anti-stabilizers combine into a stabilizer under the tensor product *)
 Theorem stb_even_slign_flip:
   forall {n m: nat} (pstr1: PauliElement n) (pstr2: PauliElement m) (ψ1:  Vector (2^n)) (ψ2:  Vector (2^m)),
-  let cpstring := compose_pstring pstr1 pstr2 in
+  let cpstring := concate_pn pstr1 pstr2 in
   pstr1 ∝-1 ψ1 ->
   pstr2 ∝-1 ψ2 ->
   cpstring ∝1 (ψ1 ⊗ ψ2).

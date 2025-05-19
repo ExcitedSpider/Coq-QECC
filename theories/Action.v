@@ -58,7 +58,6 @@ End ActionDef.
 
 
 Require Import SQIR.UnitaryOps.
-Require Import Classical.
 Require Import PauliGroup.
 Require Import PauliProps.
 Import all_pauligroup.

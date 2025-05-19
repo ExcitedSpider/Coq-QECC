@@ -49,11 +49,9 @@ Qed.
 Lemma PauliOp_bicommute:
   forall x y,
   rel_phase x y = rel_phase y x \/
-  rel_phase x y = neg_phase (rel_phase y x).
+  rel_phase x y = negate_phase (rel_phase y x).
   (* int_phase (rel_phase x y) = -C1 * int_phase (rel_phase y x). *)
 Proof.
   move => x y.
-  case x; case y; rewrite /=.
-  all: try(by left); rewrite -neg_phase_correct.
-  all: try(right; lca).
+  case x; case y; rewrite /=; auto.
 Qed.
