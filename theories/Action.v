@@ -15,6 +15,7 @@ From mathcomp Require Import ssreflect ssrbool ssrfun eqtype ssrnat div seq tupl
 From mathcomp Require Import fintype bigop finset fingroup morphism perm.
 From QuantumLib Require Import Matrix.
 Require Import WellForm.
+Require Import ExtraSpecs.
 Import GroupScope.
 
 (* Section ok. *)
@@ -131,9 +132,9 @@ Qed.
 Check Action.
 
 (* Coq can infer these that depend on the final one. *)
-Arguments Action {aT D dim act}.
+Arguments Action {aT D dim}.
 
-Canonical act_1 := (Action act_1_is_action).
+Canonical act_1 := (Action apply1p act_1_is_action).
 
 (* Sancheck *)
 Goal act_1 ∣0⟩ (% X) = ∣1⟩.
@@ -153,7 +154,7 @@ Set Bullet Behavior "Strict Subproofs".
 Definition aTsn := [set: PauliElement n].
 
 
-Fact applyP_is_action:
+Lemma applyP_is_action:
   is_action _ aTsn _ applyP.
 Proof.
   rewrite /is_action /act_id /=.
@@ -171,7 +172,7 @@ Proof.
   }
 Qed.
 
-Canonical act_n := (Action applyP_is_action).
+Canonical act_n := (Action applyP applyP_is_action).
 
 (* Had to close here awardly because we don't want n to remain variable *)
 End QuantumActions.
@@ -203,19 +204,6 @@ Import all_pauligroup.
 Definition actionTo {dim: nat} {aT: finGroupType} := 
   ActionType aT dim.
 
-Fail Definition astab {dim: nat} {aT: finGroupType} (to: actionTo) (A: {set aT}) (psi: Vector (2^dim)):= 
-  (* Canot define. because mathcomp needs psi of eqType *) 
-  [set x | x in A & to psi x == psi]. 
-
-(* Let's try can we define Vector to be eqType *)
-From HB Require Import structures.
-
-(* reflect (x = y) (e x y) where e: T -> T -> bool *)
-Print eq_axiom.
-
-(* QuantumLib does not define `==` to be a computable process *)
-(* i.e. A == B -> Prop not bool *) 
-Check ∣0⟩==∣1⟩.
 
 (* Therefore, we use this definition instead. *)
 Definition stab {dim: nat} {aT: finGroupType} (to: actionTo) (x: aT) (psi: Vector(2^dim)):= 
@@ -223,7 +211,6 @@ Definition stab {dim: nat} {aT: finGroupType} (to: actionTo) (x: aT) (psi: Vecto
 
 End StabDef.
 
-Check Z0_spec.
 
 Ltac solve_stab1:=
   rewrite /stab /= /apply1p /=;
@@ -460,17 +447,6 @@ Proof.
     apply σz_unitary.
   - apply IHn.
 Qed. 
-
-Theorem unitary_preseve_norm n:
-  forall (A: Square n) (v: Vector n),
-  WF_Matrix v -> WF_Unitary A -> norm v = norm (A × v).
-Proof.
-  rewrite /WF_Unitary => A v Hwfv [Hwf Hu].
-  rewrite /norm //=.
-  rewrite inner_product_adjoint_l -Mmult_assoc Hu Mmult_1_l.
-  - by [].
-  - apply Hwfv.
-Qed.  
 
 Theorem applyP_nonzero n:
   forall (op: PauliString n) (v: Vector (2^n)),
