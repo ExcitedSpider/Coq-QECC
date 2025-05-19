@@ -8,6 +8,7 @@ Require Import Stabilizer.
 
 Require Import SQIR.UnitaryOps.
 Require Import Action.
+Require Import Operations.
 Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.

@@ -122,3 +122,66 @@ Proof.
 Qed.
 
 End HardamardConjugation.
+
+Section Negation.
+
+Definition minus_id_png n : (PauliElement n) := (NOne , id_pn n).
+
+Notation "[-1]" := minus_id_png.
+
+Definition neg_png n (p: PauliElement n) : PauliElement n :=
+  match p with
+  | (phase, tuple) => (mulg NOne phase, tuple)
+  end.
+
+Definition neg_p1g (p: PauliElem1): PauliElem1 :=
+  match p with
+  | (phase, tuple) => (mulg NOne phase, tuple)
+  end.
+
+Definition neg_phase (p: phase): phase :=
+  mulg NOne p.
+
+Open Scope C_scope.
+
+Lemma neg_phase_correct:
+  forall x y, int_phase x = -C1 * int_phase y <-> 
+      x = mul_phase NOne y.
+Proof.
+  move => x y.
+  split.
+  {
+    case x; case y; rewrite /=.
+    all: try by easy.
+    all: autorewrite with C_db.
+    all: 
+    intros H;
+    inversion H;
+    (* Check https://rocq-prover.org/doc/v8.15/stdlib/Coq.Reals.Reals.html *)
+    (* For proving goals like ?1<>0 *)
+    try (contradict H1; discrR);
+    try (contradict H2; discrR).
+  }
+  {
+    case x; case y.
+    all: rewrite /=; autorewrite with C_db; try by easy.
+  }
+Qed. 
+
+
+Open Scope group_scope.
+Theorem negate_phase_simpl {n}:
+  forall (a b: PauliElement n),
+  a = mul_pn (NOne, id_pn n) b ->
+  int_pn (a) = -C1 .* int_pn b.
+Proof.
+  move => [sa pa] [sb pb]  //=.
+  Qsimpl.
+  rewrite /mul_pn /rel_phase_n.
+  rewrite fold_rel_phase_id //=; gsimpl.
+  case sb => H;
+  inversion H; subst.
+  all: lma.
+Qed.
+
+End Negation.

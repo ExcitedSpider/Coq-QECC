@@ -3,6 +3,7 @@ Require Import ExtraSpecs.
 Require Import PauliGroup.
 Require Import Action.
 Require Import QuantumLib.Quantum.
+Require Import Operations.
  
 Lemma phase_comm n:
  forall (sx sy:phase) (pt: PauliString n),
