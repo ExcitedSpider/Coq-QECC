@@ -2,7 +2,6 @@ Require Export SQIR.UnitaryOps.
 Require Export QuantumLib.Matrix.
 From mathcomp Require Import ssrfun fingroup eqtype fintype.
 From mathcomp Require Import seq tuple.
-Require Import ExtraSpecs.
 
 Require Import PauliGroup.
 Import PauliGroup.P1BaseGroup.

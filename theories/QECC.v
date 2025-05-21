@@ -20,7 +20,7 @@ Require Import Operations.
 (* Simply Goals like (int_pnb _ × _) *)
 Ltac SimplApplyPauli := 
     rewrite ?applyP_plus ?applyP_mscale;
-    rewrite ?/meas_p_to ?/applyP ?/int_pn ?/int_pnb /=;
+    rewrite ?/eigen_measure_p ?/applyP ?/int_pn ?/int_pnb /=;
     Qsimpl;
     repeat (
       distribute_plus;
@@ -276,7 +276,7 @@ Theorem stabiliser_detect_error {n}:
   ('Meas Ob on ('Apply Er on psi) --> -1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc int_pn_one.
+  rewrite /applyP /eigen_measure_p -Mmult_assoc int_pn_one.
   rewrite int_pn_Mmult Hac Mscale_mult_dist_l.
   apply Mscale_simplify.
   rewrite /stb /act_n /= /applyP in Hob.
@@ -323,7 +323,7 @@ Theorem stabiliser_undetectable_error {n}:
   ('Meas Ob on ('Apply Er on psi) --> 1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc !int_pn_one.
+  rewrite /applyP /eigen_measure_p -Mmult_assoc !int_pn_one.
   rewrite int_pn_Mmult Hac; Qsimpl.
   rewrite -int_pn_Mmult.
   rewrite /stb /act_n /= /applyP in Hob.
