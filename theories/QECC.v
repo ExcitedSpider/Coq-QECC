@@ -15,11 +15,12 @@ Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.
 Require Import Observable.
+Require Import Operations.
 
 (* Simply Goals like (int_pnb _ × _) *)
 Ltac SimplApplyPauli := 
     rewrite ?applyP_plus ?applyP_mscale;
-    rewrite ?/meas_p_to ?/applyP ?/int_pn ?/int_pnb /=;
+    rewrite ?/eigen_measure_p ?/applyP ?/int_pn ?/int_pnb /=;
     Qsimpl;
     repeat (
       distribute_plus;
@@ -186,13 +187,6 @@ End ErrorCorrectionCode.
 
 Section Theories.
 
-Lemma rel_phase_n_involutive:
-forall {n} (t: PauliOperator n), rel_phase_n (One, t) (One, t) = One.
-Proof.
-  move => n t.
-  by rewrite /rel_phase_n fold_rel_phase_involutive /=.
-Qed.
-
 Lemma png_id_simpl:
 forall {n} (t: PauliOperator n),
   (t = (oneg (PauliOperator n))) <-> ((One, t) = (oneg (PauliElement n)) ).
@@ -216,6 +210,8 @@ Proof.
   by rewrite !(tnth_nth I) /=.
 Qed.
 
+Require Import PauliProps.
+Import all_pauligroup.
 Theorem get_recover_correct {n}:
   forall (E: ErrorOperator n), 
   recover_by E (get_recover E).
@@ -275,7 +271,7 @@ Theorem stabiliser_detect_error {n}:
   ('Meas Ob on ('Apply Er on psi) --> -1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc int_pn_one.
+  rewrite /applyP /eigen_measure_p -Mmult_assoc int_pn_one.
   rewrite int_pn_Mmult Hac Mscale_mult_dist_l.
   apply Mscale_simplify.
   rewrite /stb /act_n /= /applyP in Hob.
@@ -297,6 +293,21 @@ Proof.
   apply stabiliser_detect_error. 
 Qed.
 
+Open Scope group_scope.
+
+Corollary stabiliser_detect_error_by_negate {n}:
+  forall (Ob: PauliOperator n) (psi: Vector (2^n)) (Er: PauliOperator n) ,
+  Ob ∝1 psi -> 
+  mul_pn Ob Er = negate_Pn (mul_pn Er Ob) ->
+  ('Meas Ob on ('Apply Er on psi) --> -C1).
+Proof.
+  move => Ob psi Er H1 H2.
+  assert ((int_pn (mul_pn Ob Er)) = int_pn (negate_Pn (mul_pn Er Ob))).
+    by rewrite H2. 
+  apply stabiliser_detect_error_c; auto.
+  by rewrite -negate_phase_Pn_correct.
+Abort.
+
 (* On the opposite of error detection condition *)
 (* If an stabiliser S conmmute with the error E *)
 (* then this S is not able to detect the E      *)
@@ -307,7 +318,7 @@ Theorem stabiliser_undetectable_error {n}:
   ('Meas Ob on ('Apply Er on psi) --> 1).
 Proof.
   move => Ob psi Er Hob Hac.
-  rewrite /applyP /meas_p_to -Mmult_assoc !int_pn_one.
+  rewrite /applyP /eigen_measure_p -Mmult_assoc !int_pn_one.
   rewrite int_pn_Mmult Hac; Qsimpl.
   rewrite -int_pn_Mmult.
   rewrite /stb /act_n /= /applyP in Hob.

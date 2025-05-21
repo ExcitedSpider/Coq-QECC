@@ -210,7 +210,7 @@ Lemma pn_idP {n: nat}:
   id_pn n.+1 = [tuple of id_p1b :: (id_pn n)].
 Proof.
   rewrite /id_pn /id_p1b /=.
-  apply: eq_from_tnth => i;
+  apply: eq_from_tnth => i.
   by rewrite !(tnth_nth I).
 Qed.
 

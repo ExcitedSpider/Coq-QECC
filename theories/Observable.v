@@ -20,10 +20,12 @@ Set Bullet Behavior "Strict Subproofs".
 Definition hermitian {n:nat} (H: Square (2^n)): Prop :=
   H† = H.
 
-(* meas_to m M ψ captures the projective measurement postulate:
+Notation is_observable := hermitian.
+
+(* eigen_measure m M ψ captures the projective measurement postulate:
   if ψ is an eigenvector of Hermitian observable M with eigenvalue m, 
   then measuring M on ψ yields m with certainty (probability = 1). *)
-Definition meas_to {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
+Definition eigen_measure {n} (m: C) (M: Square (2^n)) (psi: Vector (2^n)) :=
   WF_Matrix M /\ hermitian M /\ M × psi = m .* psi.
 
 (* because every pauli operator is hermitian, 
@@ -46,7 +48,7 @@ Proof.
 Qed.
 
 Fact pauli_hermitian {n} :
-  forall (operator: PauliString n), hermitian (int_pnb operator).
+  forall (operator: PauliOperator n), hermitian (int_pnb operator).
 Proof.
   rewrite /hermitian /int_pn /PauliObservable //= => pt.
   induction n.
@@ -61,18 +63,18 @@ Qed.
 If a quantum state ψ is stabilized by a Pauli operator p (i.e., p ψ = ψ), 
 then measuring the corresponding observable yields outcome 1 with certainty.
 *)
-Theorem stb_meas_to_1 {n}:
+Theorem stb_eigen_measure_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
-  p ∝1 psi <-> meas_to 1 (int_pnb p) psi.
+  p ∝1 psi <-> eigen_measure 1 (int_pnb p) psi.
 Proof.
   split => H.
-  - rewrite /meas_to.
+  - rewrite /eigen_measure.
     split. apply int_pnb_wf.
     split. apply pauli_hermitian.
     apply PauliOperator_stb in H.
     rewrite H. by Qsimpl.
   - move: H. 
-    rewrite /meas_to => [[_ [_ H]]].
+    rewrite /eigen_measure => [[_ [_ H]]].
     rewrite /stb /act_n /applyP /=. Qsimpl.
     rewrite H. by Qsimpl.
 Qed.
@@ -81,15 +83,15 @@ Qed.
   What we are really interesting is to use pauli operator
   as observables.
  *)
-Definition meas_p_to {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :=
+Definition eigen_measure_p {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :=
   (int_pnb P) × psi = m .* psi.
   
-Theorem meas_p_to_correct {n}:
+Theorem eigen_measure_p_correct {n}:
   forall (m:C) (P: PauliOperator n) (psi: Vector (2^n)),
-  meas_p_to m P psi <-> meas_to m (int_pnb P) psi.
+  eigen_measure_p m P psi <-> eigen_measure m (int_pnb P) psi.
 Proof.
   move => m P psi.
-  rewrite /meas_p_to /meas_to.
+  rewrite /eigen_measure_p /eigen_measure.
   split.
   - move => H.
     split => //. apply int_pnb_wf.
@@ -98,76 +100,34 @@ Proof.
     exact H.
 Qed. 
 
-Lemma meas_p_to_applyP {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :
-  meas_p_to m P psi <->
+Lemma eigen_measure_p_applyP {n} (m: C) (P: PauliOperator n) (psi: Vector (2^n)) :
+  eigen_measure_p m P psi <->
   applyP psi P = m .* psi.
 Proof.
-  rewrite /meas_p_to /applyP.
+  rewrite /eigen_measure_p /applyP.
   by rewrite !/PauliOpToElem !int_pn_one.
 Qed.
 
 
 
-Corollary stb_meas_p_to_1 {n}:
+Corollary stb_eigen_measure_p_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
-  p ∝1 psi <-> meas_p_to 1 p psi.
+  p ∝1 psi <-> eigen_measure_p 1 p psi.
 Proof.
   split => HH.
-  - rewrite meas_p_to_correct.
-    by apply stb_meas_to_1.
-  - rewrite meas_p_to_correct in HH.
-    by rewrite stb_meas_to_1.
+  - rewrite eigen_measure_p_correct.
+    by apply stb_eigen_measure_1.
+  - rewrite eigen_measure_p_correct in HH.
+    by rewrite stb_eigen_measure_1.
 Qed.
 
-Notation "''Meas' P 'on' psi '-->' m " := (meas_p_to m P psi)
+Notation "''Meas' P 'on' psi '-->' m " := (eigen_measure_p m P psi)
  (at level 8) : form_scope.
 
 (* this line is required *)
 Import all_pauligroup. 
 
-(* Example: Measure Z1Z2 on 00 yields 1. *)
-Check 'Meas ([p Z, Z]) on ∣ 0, 0 ⟩ --> 1.
-
 Section Eigenvalue. 
-
-Lemma p1_involutive :
-  forall (p: PauliBase), mulg p p = I.
-Proof. by move => p; case p. Qed.
-
-(* 
-  this one should be moved to PauliProps.v
-  However, the apply/eqP does not work there.
-  and I don't know why.
-*)
-Lemma pauli_involutive {n}:
-  forall (op: PauliString n),
-  (mulg op op) = (id_pn n).
-Proof.
-  move => op.
-  induction n.
-  rewrite tuple0 /id_pn /=. 
-  by apply /eqP.
-  case: op / tupleP => h t.
-  rewrite /mulg /= mul_pnb_cons.
-  rewrite /mulg /= in IHn.
-  rewrite IHn.
-  change mul_p1b with (@mulg PauliBase). 
-  rewrite pn_idP.
-  by rewrite p1_involutive.
-Qed.
-
-Lemma fold_rel_phase_involutive n:
-  forall (op: PauliString n),
-  fold_rel_phase op op = One.
-Proof.
-  move => op.
-  induction n.
-    by rewrite tuple0; apply /eqP.
-   case: op / tupleP => h t.
-   rewrite fold_rel_phase_cons IHn.
-   by case h.
-Qed.
-
 
 Lemma operator_nonzero_det:
   forall (n:nat) (op: PauliOperator n),
@@ -220,7 +180,7 @@ Require Import ExtraSpecs.
 Definition t2o {n}: (n.-tuple PauliBase) -> PauliOperator n := Datatypes.id.
 
 
-Lemma meas_p_to_unique {n}:
+Lemma eigen_measure_p_unique {n}:
   forall (phi: Vector (2^n)) (ob: PauliObservable n)  (r q: C),
   WF_Matrix phi ->
   'Meas ob on phi --> r ->
@@ -229,7 +189,7 @@ Lemma meas_p_to_unique {n}:
   r = q.
 Proof.
   move => phi ob r q Hwf.
-  rewrite /meas_p_to => H1 H2 Hnt.
+  rewrite /eigen_measure_p => H1 H2 Hnt.
   have: (int_pnb ob × phi = int_pnb ob × phi) by auto.
   rewrite {1}H1 H2.
   apply Mscale_cancel; auto.
@@ -266,13 +226,13 @@ Proof.
   by rewrite Nat.pow_add_r.
 Qed.
 (* A p = - p /\ B q = q -> (A ++ B) (q ⊗ p) = - (q ⊗ p) *)
-Lemma meas_p_to_m1_krons {n m}:
+Lemma eigen_measure_p_m1_krons {n m}:
   forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
   ('Meas op0 on phi0 --> (-1)) ->
   ('Meas op1 on phi1 -->  1) ->
   'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
 Proof.
-  rewrite /meas_p_to.
+  rewrite /eigen_measure_p.
   move => op0 op1 phi0 phi1 H0 H1.
   rewrite int_pnb_concat.
   rewrite kron_mixed_product'; try auto.
@@ -281,13 +241,13 @@ Proof.
   - by rewrite Nat.pow_add_r.
 Qed.
 
-Lemma meas_p_to_1m_krons {n m}:
+Lemma eigen_measure_p_1m_krons {n m}:
   forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
   ('Meas op0 on phi0 -->  1) ->
   ('Meas op1 on phi1 --> -1) ->
   'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> (-1).
 Proof.
-  rewrite /meas_p_to.
+  rewrite /eigen_measure_p.
   move => op0 op1 phi0 phi1 H0 H1.
   rewrite int_pnb_concat.
   rewrite kron_mixed_product'; try auto.
@@ -296,13 +256,13 @@ Proof.
   - by rewrite Nat.pow_add_r.
 Qed.
 
-Lemma meas_p_to_11_krons {n m}:
+Lemma eigen_measure_p_11_krons {n m}:
   forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
   ('Meas op0 on phi0 -->  1) ->
   ('Meas op1 on phi1 -->  1) ->
   'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
 Proof.
-  rewrite /meas_p_to.
+  rewrite /eigen_measure_p.
   move => op0 op1 phi0 phi1 H0 H1.
   rewrite int_pnb_concat.
   rewrite kron_mixed_product'; try auto.
@@ -311,13 +271,13 @@ Proof.
   - by rewrite Nat.pow_add_r.
 Qed.
 
-Lemma meas_p_to_mm_krons {n m}:
+Lemma eigen_measure_p_mm_krons {n m}:
   forall (op0: PauliOperator n) (op1: PauliOperator m) (phi0: Vector (2^n)) (phi1: Vector (2^m)),
   ('Meas op0 on phi0 -->  -1) ->
   ('Meas op1 on phi1 -->  -1) ->
   'Meas [tuple of op0 ++ op1] on (phi0 ⊗ phi1) --> 1.
 Proof.
-  rewrite /meas_p_to.
+  rewrite /eigen_measure_p.
   move => op0 op1 phi0 phi1 H0 H1.
   rewrite int_pnb_concat.
   rewrite kron_mixed_product'; try auto.

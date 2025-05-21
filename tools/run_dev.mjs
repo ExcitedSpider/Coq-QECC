@@ -8,4 +8,4 @@ await cd(path.join(__dirname, "../theories"));
 console.log('Start Dune')
 
 process.env.DUNE_BUILD_WARNINGS = 'false'
-await $`dune build --watch`
+await $`dune build --watch --display=quiet`

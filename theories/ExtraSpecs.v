@@ -388,5 +388,23 @@ Proof.
 Qed.
 
 
+Theorem unitary_preseve_norm n:
+  forall (A: Square n) (v: Vector n),
+  WF_Matrix v -> WF_Unitary A -> norm v = norm (A × v).
+Proof.
+  rewrite /WF_Unitary => A v Hwfv [Hwf Hu].
+  rewrite /norm //=.
+  rewrite inner_product_adjoint_l -Mmult_assoc Hu Mmult_1_l.
+  - by [].
+  - apply Hwfv.
+Qed.  
+
+Lemma pair_inj:
+(forall T R (a b: T) (x y: R), (a, x) = (b, y) -> a = b /\ x = y).
+  {
+    intros.
+    by inversion H.
+  }
+Qed.
 
 End QuantumlibExtra.

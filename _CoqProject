@@ -1,2 +1,2 @@
 -R _build/default/theories StabilizerMC
--R _build/default/theories_legacy Stabilizer
+-R _build/default/quantumlib-only Stabilizer

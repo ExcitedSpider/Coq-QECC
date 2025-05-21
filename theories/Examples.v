@@ -8,6 +8,7 @@ Require Import Stabilizer.
 
 Require Import SQIR.UnitaryOps.
 Require Import Action.
+Require Import Operations.
 Require Import PauliGroup.
 Import all_pauligroup.
 Require Import WellForm.
@@ -135,7 +136,7 @@ Theorem SyndromeMeas_stab :
 Proof.
   move => M.
   rewrite !inE => [/orP [/eqP ->| /eqP ->]];
-  rewrite /meas_p_to /psi;
+  rewrite /eigen_measure_p /psi;
   rewrite !Mmult_plus_distr_l !Mscale_mult_dist_r;
   rewrite /psi;
   SimplApplyPauli.
@@ -152,7 +153,7 @@ Theorem obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
   rewrite /obs_be_stabiliser => M Mmem.
-    rewrite stb_meas_p_to_1.
+    rewrite stb_eigen_measure_p_1.
     by apply SyndromeMeas_stab.
 Qed.
 
@@ -239,7 +240,7 @@ Proof.
   - SimplApplyPauli. lma.
   - contradict H => F.
     apply C1_neq_mC1.
-    apply (meas_p_to_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
+    apply (eigen_measure_p_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
     + auto with wf_db.
     + SimplApplyPauli; lma.
     + move: F. replace (RtoC (-1)) with (-C1) by lca. 
@@ -248,6 +249,8 @@ Proof.
 Qed.
 
 Definition Y1: PauliOperator dim := [p Y, I, I].
+
+Locate negate_phase_simpl.
 
 (* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
 Theorem indistinguishable_X1_Y1:
@@ -264,7 +267,7 @@ Proof.
   - rewrite !apply_X1_effect => F.
     exfalso.
     apply C1_neq_mC1.
-    apply (meas_p_to_unique ('Apply X1 on psi) M).
+    apply (eigen_measure_p_unique ('Apply X1 on psi) M).
     all: try rewrite apply_X1_effect.
     + auto with wf_db.
     + rewrite H. SimplApplyPauli; lma.
@@ -274,7 +277,7 @@ Proof.
 Qed.
 
 Ltac prove_undetectable E M:=
-  apply (meas_p_to_unique ('Apply E on psi) M); auto;
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
   [ rewrite /applyP /psi; auto 10 with wf_db
   | apply stabiliser_undetectable_error;
       [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
@@ -282,7 +285,7 @@ Ltac prove_undetectable E M:=
   | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
 
 Ltac prove_detectable E M :=
-  apply (meas_p_to_unique ('Apply E on psi) M); auto;
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
   [ rewrite /applyP /psi; auto 10 with wf_db
   | apply (stabiliser_detect_error_c M psi E);
       [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
@@ -431,7 +434,7 @@ Theorem meas_codespace_1 :
 Proof.
   move => M.
   rewrite !inE => /orP [/eqP -> | /eqP ->];
-  rewrite /meas_p_to /psi;
+  rewrite /eigen_measure_p /psi;
   rewrite !Mmult_plus_distr_l !Mscale_mult_dist_r;
   rewrite /psi;
   SimplApplyPauli;
@@ -445,7 +448,7 @@ Corollary obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
   move => M.
-  rewrite stb_meas_p_to_1.
+  rewrite stb_eigen_measure_p_1.
   apply meas_codespace_1.
 Qed.
 
@@ -592,7 +595,7 @@ Qed.
 Ltac unfold_stb_psi := 
   rewrite /psi;
   apply stb_scale; apply stb_addition; apply stb_scale;
-  rewrite stb_meas_p_to_1 /L0 /L1; Qsimpl.
+  rewrite stb_eigen_measure_p_1 /L0 /L1; Qsimpl.
 
 Lemma obsx12_stb:
   obsX12 ∝1 psi.
@@ -600,20 +603,20 @@ Proof.
   unfold_stb_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-    apply (@meas_p_to_11_krons 3 6).
+    apply (@eigen_measure_p_11_krons 3 6).
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
-      apply (@meas_p_to_11_krons 3 3).
-        by rewrite -stb_meas_p_to_1; apply stb_part.
-        by rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl.
+      apply (@eigen_measure_p_11_krons 3 3).
+        by rewrite -stb_eigen_measure_p_1; apply stb_part.
+        by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl.
   - rewrite kron_assoc; auto with wf_db.
     replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-    apply (@meas_p_to_mm_krons 3 6).
+    apply (@eigen_measure_p_mm_krons 3 6).
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
-      apply (@meas_p_to_m1_krons 3 3).
+      apply (@eigen_measure_p_m1_krons 3 3).
       + SimplApplyPauli; lma.
-      + by rewrite meas_p_to_applyP applyP_id; auto with wf_db; by Qsimpl.
+      + by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; by Qsimpl.
 Qed. 
 
 Lemma obsx12_err_state0:
@@ -621,10 +624,10 @@ Lemma obsx12_err_state0:
     --> -1 .
 Proof.
   replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-  apply (@meas_p_to_m1_krons 3).
+  apply (@eigen_measure_p_m1_krons 3).
   - SimplApplyPauli. lma.
   - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
-    apply (@meas_p_to_11_krons 3).
+    apply (@eigen_measure_p_11_krons 3).
     SimplApplyPauli; lma.
     SimplApplyPauli; lma.
 Qed.
@@ -634,10 +637,10 @@ Lemma obsx12_err_state1:
     --> -1 .
 Proof.
   replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-  apply (@meas_p_to_1m_krons 3).
+  apply (@eigen_measure_p_1m_krons 3).
   - SimplApplyPauli. lma.
   - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
-    apply (@meas_p_to_m1_krons 3).
+    apply (@eigen_measure_p_m1_krons 3).
     SimplApplyPauli; lma.
     SimplApplyPauli; lma.
 Qed.
@@ -645,13 +648,13 @@ Qed.
 Theorem obsx12_detect_phase_flip:
   'Meas obsX12 on ('Apply Z1 on psi) --> -1.
 Proof.
-  rewrite apply_z1_effect meas_p_to_applyP.
+  rewrite apply_z1_effect eigen_measure_p_applyP.
   rewrite !applyP_mscale !applyP_plus !applyP_mscale.
   remember (/ C2 * / √ 2) as norm.
   rewrite !Mscale_assoc (Cmult_comm _ norm) -Mscale_assoc.
   apply Mscale_simplify; auto.
-  move/meas_p_to_applyP : obsx12_err_state0 => ->.
-  move/meas_p_to_applyP : obsx12_err_state1 => ->.
+  move/eigen_measure_p_applyP : obsx12_err_state0 => ->.
+  move/eigen_measure_p_applyP : obsx12_err_state1 => ->.
   rewrite Mscale_plus_distr_r !Mscale_assoc.
   by rewrite !(Cmult_comm (-1)).
 Qed.
@@ -682,14 +685,14 @@ Proof.
   unfold_stb_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
-    apply (@meas_p_to_11_krons 3 6).
+    apply (@eigen_measure_p_11_krons 3 6).
     + SimplApplyPauli; lma.
-    + by rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl.
+    + by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl.
   - rewrite kron_assoc; auto with wf_db.
     replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
-    apply (@meas_p_to_11_krons 3 6).
+    apply (@eigen_measure_p_11_krons 3 6).
     + SimplApplyPauli; lma.
-    + rewrite meas_p_to_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
+    + rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
 Qed.
 
 (* we show that shor's code is able to correct a bit-phase flip *)
