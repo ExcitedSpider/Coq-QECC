@@ -129,32 +129,6 @@ Import all_pauligroup.
 
 Section Eigenvalue. 
 
-Lemma p1_involutive :
-  forall (p: PauliBase), mulg p p = I.
-Proof. by move => p; case p. Qed.
-
-(* 
-  this one should be moved to PauliProps.v
-  However, the apply/eqP does not work there.
-  and I don't know why.
-*)
-Lemma pauli_involutive {n}:
-  forall (op: PauliString n),
-  (mulg op op) = (id_pn n).
-Proof.
-  move => op.
-  induction n.
-  rewrite tuple0 /id_pn /=. 
-  by apply /eqP.
-  case: op / tupleP => h t.
-  rewrite /mulg /= mul_pnb_cons.
-  rewrite /mulg /= in IHn.
-  rewrite IHn.
-  change mul_p1b with (@mulg PauliBase). 
-  rewrite pn_idP.
-  by rewrite p1_involutive.
-Qed.
-
 Lemma fold_rel_phase_involutive n:
   forall (op: PauliString n),
   fold_rel_phase op op = One.
