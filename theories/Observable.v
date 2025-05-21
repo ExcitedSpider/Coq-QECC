@@ -129,19 +129,6 @@ Import all_pauligroup.
 
 Section Eigenvalue. 
 
-Lemma fold_rel_phase_involutive n:
-  forall (op: PauliString n),
-  fold_rel_phase op op = One.
-Proof.
-  move => op.
-  induction n.
-    by rewrite tuple0; apply /eqP.
-   case: op / tupleP => h t.
-   rewrite fold_rel_phase_cons IHn.
-   by case h.
-Qed.
-
-
 Lemma operator_nonzero_det:
   forall (n:nat) (op: PauliOperator n),
   Determinant (int_pn op) <> 0.

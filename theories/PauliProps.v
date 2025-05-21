@@ -88,3 +88,24 @@ Proof.
   rewrite pn_idP.
   by rewrite p1_involutive.
 Qed.
+
+
+Lemma fold_rel_phase_involutive n:
+  forall (op: PauliString n),
+  fold_rel_phase op op = One.
+Proof.
+  move => op.
+  induction n.
+    by rewrite tuple0; apply /eqP.
+   case: op / tupleP => h t.
+   rewrite fold_rel_phase_cons IHn.
+   by case h.
+Qed.
+
+
+Lemma rel_phase_n_involutive:
+forall {n} (t: PauliString n), rel_phase_n (One, t) (One, t) = One.
+Proof.
+  move => n t.
+  by rewrite /rel_phase_n fold_rel_phase_involutive /=.
+Qed.

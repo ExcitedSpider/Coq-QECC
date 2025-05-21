@@ -187,13 +187,6 @@ End ErrorCorrectionCode.
 
 Section Theories.
 
-Lemma rel_phase_n_involutive:
-forall {n} (t: PauliOperator n), rel_phase_n (One, t) (One, t) = One.
-Proof.
-  move => n t.
-  by rewrite /rel_phase_n fold_rel_phase_involutive /=.
-Qed.
-
 Lemma png_id_simpl:
 forall {n} (t: PauliOperator n),
   (t = (oneg (PauliOperator n))) <-> ((One, t) = (oneg (PauliElement n)) ).
@@ -217,6 +210,8 @@ Proof.
   by rewrite !(tnth_nth I) /=.
 Qed.
 
+Require Import PauliProps.
+Import all_pauligroup.
 Theorem get_recover_correct {n}:
   forall (E: ErrorOperator n), 
   recover_by E (get_recover E).
