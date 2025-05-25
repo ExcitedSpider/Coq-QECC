@@ -1,5 +1,7 @@
 (* We present some examples of stabiliser code for case study. *)
 
+Set Bullet Behavior "Strict Subproofs".
+
 From mathcomp Require Import all_ssreflect ssrbool 
 ssrfun eqtype ssrnat div seq tuple finset fingroup.
 Require Export SQIR.UnitaryOps.
@@ -16,23 +18,24 @@ Require Import ExtraSpecs.
 Require Import Observable.
 Require Export SQIR.UnitaryOps.
 Require Import QECC.
+Require Import PauliProps.
+
+Notation I2 := (Matrix.I 2).
+Notation "[ 'set' a1 , a2 , .. , an ]" := (setU .. (a1 |: [set a2]) .. [set an]) (at level 200): form_scope.
+Open Scope ucom.
 
 Module BitFlip311.
 
 Section VarScope.
 
-Open Scope ucom.
-
 Definition dim:nat := 3.
 
 Variable (α β : C).
-
 (* A quantum state (α .* ∣0⟩ .+ β .* ∣1⟩) is required to have norm = 1 *)
 Hypothesis norm_obligation: α^* * α + β^* * β = 1.
 
 Definition encode : base_ucom dim := 
   CNOT 0 1; CNOT 0 2.
-
 
 (* The state before encoding, labeled by 'b' *)
 Notation psi_b := ((α .* ∣0⟩ .+ β .* ∣1⟩)).
@@ -46,6 +49,26 @@ Lemma psi_WF:
   WF_Matrix psi.
 Proof. by rewrite /psi; auto with wf_db. Qed.
 
+Lemma psi_nonzero:
+  psi <> Zero.
+Proof.
+  move => F.
+  apply inner_product_zero_iff_zero in F.
+  contradict F.
+  rewrite !inner_product_plus_l !inner_product_plus_r.
+  rewrite !inner_product_scale_l !inner_product_scale_r.
+  simplify_inner_product.
+  Csimpl.
+  rewrite norm_obligation.
+  by nonzero.
+  by rewrite/psi; auto with wf_db.
+Qed.
+
+Import all_pauligroup.
+
+(* Verification of Code Construction (Stabilisers and Detectable Errors) *)
+Section DetectionCode.
+
 (* This should be make more generic, but i did not find a good one *)
 Lemma encode_by_component: forall (u: Square (2^dim)),
   u × (∣0⟩ ⊗ ∣0,0⟩) = L0 ->
@@ -57,8 +80,6 @@ Proof.
   rewrite !Mscale_kron_dist_l !Mscale_mult_dist_r.
   by rewrite H1 H2.
 Qed.
-
-Set Bullet Behavior "Strict Subproofs".
 
 (* The encoding program is correct *)
 Theorem encode_correct :
@@ -77,42 +98,7 @@ Proof.
   by autorewrite with ket_db.
 Qed.
 
-(* After verifing the encoding circuit, we can 
-  work sorely on abstract codespace and pauli operator
-*)
-(* If two basic states are identical, inner producr is 1 *)
-(* Else 0 *)
-Ltac simplify_inner_product :=
-  repeat match goal with
-  | |- context[⟨ ?v, ?v ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v, v ⟩ = 1)   by lca; rewrite H; clear H
-  | |- context[⟨ ?v1, ?v2 ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v1, v2 ⟩ = 0) by lca; rewrite H; clear H
-  end.
-
-Lemma psi_nonzero:
-  psi <> Zero.
-Proof.
-  move => F.
-  apply inner_product_zero_iff_zero in F.
-  contradict F.
-  rewrite !inner_product_plus_l !inner_product_plus_r.
-  rewrite !inner_product_scale_l !inner_product_scale_r.
-  simplify_inner_product.
-  Csimpl.
-  rewrite norm_obligation.
-  by nonzero.
-  by rewrite/psi; auto with wf_db.
-Qed.
-
-Require Import PauliGroup.
-
-Notation "[ 'set' a1 , a2 , .. , an ]" := (setU .. (a1 |: [set a2]) .. [set an]) (at level 200): form_scope.
-
 Definition setexample := [set true, false, true ].
-
 
 (* Set of single-qubit bit-flip error *)
 Definition X1: PauliOperator 3 := [p X, I, I].
@@ -126,7 +112,6 @@ Definition Z12 := [p Z, Z, I].
 Definition Z23 := [p I, Z, Z].
 Definition SyndromeMeas: {set PauliObservable 3} :=
   [set Z12, Z23].
-
 
 Close Scope group_scope.
 (* Syndrome Measurement Does not change the correct code *)
@@ -143,12 +128,7 @@ Proof.
   - by replace (β * (-1) * (-1)) with (β) by lca.
   - by replace (β * (-1) * (-1)) with (β) by lca.
 Qed.
-
-Notation I2 := (Matrix.I 2).
   
-(* Apply any error in BitFlipError, there is at least one Syndrome Measurement
- can detect it *)
-
 Theorem obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
@@ -182,6 +162,10 @@ Proof. by rewrite /recover_by; apply /eqP. Qed.
 
 Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
 
+End DetectionCode.
+
+Section CodeLimitation.
+
 Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
 
 Fact phase_flip_error_effect:
@@ -199,8 +183,6 @@ Proof.
   - SimplApplyPauli. lma.
   - SimplApplyPauli. lma.
 Qed.
-
-
 
 Definition X23 : PauliOperator 3 := mulg X2 X3.
 
@@ -276,6 +258,8 @@ Proof.
     + apply state_nonzero.
 Qed.
 
+End CodeLimitation.
+
 Ltac prove_undetectable E M:=
   apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
   [ rewrite /applyP /psi; auto 10 with wf_db
@@ -330,7 +314,7 @@ Proof.
     try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
 Qed.
 
-Definition BitFlipCorrectionCode := BuildCorrectionCode BitFlipCode bit_flip_code_unique_syndrome.
+Definition BitFlipCorrectionCode := BuildCorrectingCode BitFlipCode bit_flip_code_unique_syndrome.
 
 End VarScope.
 

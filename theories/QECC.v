@@ -135,7 +135,7 @@ Definition undetectable (edc: ErrorDetectionCode) E :=
 
 End DetectionCode.
 
-Section ErrorCorrectionCode.
+Section ErrorCorrectingCode.
 
 (* 
 Two errors are indistinguishable when all syndrome measurment
@@ -178,12 +178,12 @@ Definition error_identified_uniquely (edc: ErrorDetectionCode): Prop :=
     E1 <> E2 -> 
     ( exists M, distinguishable_by edc E1 E2 M ).
 
-Record ErrorCorrectionCode := BuildCorrectionCode {
+Record ErrorCorrectingCode := BuildCorrectingCode {
   edc :> ErrorDetectionCode;
   correction_obligation: error_identified_uniquely edc
 }.
 
-End ErrorCorrectionCode.
+End ErrorCorrectingCode.
 
 Section Theories.
 
@@ -358,3 +358,19 @@ Proof.
 Qed.
 
 End Theories.
+
+
+(* After verifing the encoding circuit, we can 
+  work sorely on abstract codespace and pauli operator
+*)
+(* If two basic states are identical, inner producr is 1 *)
+(* Else 0 *)
+Ltac simplify_inner_product :=
+  repeat match goal with
+  | |- context[⟨ ?v, ?v ⟩] =>
+      let H := fresh in
+      assert (H: ⟨ v, v ⟩ = 1)   by lca; rewrite H; clear H
+  | |- context[⟨ ?v1, ?v2 ⟩] =>
+      let H := fresh in
+      assert (H: ⟨ v1, v2 ⟩ = 0) by lca; rewrite H; clear H
+  end.
