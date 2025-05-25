@@ -69,7 +69,8 @@ Import all_pauligroup.
 (* Verification of Code Construction (Stabilisers and Detectable Errors) *)
 Section DetectionCode.
 
-(* This should be make more generic, but i did not find a good one *)
+(* This lemma is not necessary in proof,  *)
+(* but it makes the proof faster  *)
 Lemma encode_by_component: forall (u: Square (2^dim)),
   u × (∣0⟩ ⊗ ∣0,0⟩) = L0 ->
   u × (∣1⟩ ⊗ ∣0,0⟩) = L1 ->
@@ -87,7 +88,6 @@ Theorem encode_correct :
   = α .* L0 .+ β .* L1.
 Proof.
   rewrite /= /L0 /L1.
-  apply encode_by_component;
   autorewrite with eval_db; simpl; Qsimpl.
   all: repeat (
     distribute_plus;
@@ -97,8 +97,6 @@ Proof.
   repeat rewrite kron_mixed_product; Qsimpl;
   by autorewrite with ket_db.
 Qed.
-
-Definition setexample := [set true, false, true ].
 
 (* Set of single-qubit bit-flip error *)
 Definition X1: PauliOperator 3 := [p X, I, I].
@@ -156,14 +154,71 @@ Proof.
     split. by rewrite !inE eqxx. lma.
 Qed.
 
-Fact flip0_recover_by_x0:
-  (recover_by X1 X1).
-Proof. by rewrite /recover_by; apply /eqP. Qed.
-
 Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+
+Print BitFlipCode.
+
+Ltac prove_undetectable E M:=
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply stabiliser_undetectable_error;
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by rewrite /M /M //=; apply /eqP ]
+  | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
+
+Ltac prove_detectable E M :=
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply (stabiliser_detect_error_c M psi E);
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by apply negate_phase_simpl; apply /eqP ]
+  | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
+
+(* every error in bitflip code has unique syndrome. *)
+(* that is, they can be recovered *)
+Theorem bit_flip_code_unique_syndrome:
+  error_identified_uniquely BitFlipCode.
+Proof.
+  rewrite /error_identified_uniquely //= => E1 E2.
+  rewrite !inE -!orb_assoc => memE1 memE2.
+  case/or3P: memE1 => /eqP ->;
+  case/or3P: memE2 => /eqP ->;
+  move => H; try by contradict H.
+  clear H.
+  all: rewrite /distinguishable_by //=.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (C1) by prove_undetectable X1 Z23. 
+    replace q with (-C1) by prove_detectable X2 Z23. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X1 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X3 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace q with (-C1) by prove_detectable X2 Z12. 
+    replace r with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+Qed.
+
+Definition BitFlipCorrectionCode := BuildCorrectingCode BitFlipCode bit_flip_code_unique_syndrome.
 
 End DetectionCode.
 
+Fact flip0_recover_by_x0:
+  (recover_by X1 X1).
+Proof. by rewrite /recover_by; apply /eqP. Qed.
 Section CodeLimitation.
 
 Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
@@ -259,62 +314,6 @@ Proof.
 Qed.
 
 End CodeLimitation.
-
-Ltac prove_undetectable E M:=
-  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
-  [ rewrite /applyP /psi; auto 10 with wf_db
-  | apply stabiliser_undetectable_error;
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
-      | by rewrite /M /M //=; apply /eqP ]
-  | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
-
-Ltac prove_detectable E M :=
-  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
-  [ rewrite /applyP /psi; auto 10 with wf_db
-  | apply (stabiliser_detect_error_c M psi E);
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
-      | by apply negate_phase_simpl; apply /eqP ]
-  | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
-
-(* every error in bitflip code has unique syndrome. *)
-(* that is, they can be recovered *)
-Theorem bit_flip_code_unique_syndrome:
-  error_identified_uniquely BitFlipCode.
-Proof.
-  rewrite /error_identified_uniquely //= => E1 E2.
-  rewrite !inE -!orb_assoc => memE1 memE2.
-  case/or3P: memE1 => /eqP ->;
-  case/or3P: memE2 => /eqP ->;
-  move => H; try by contradict H.
-  clear H.
-  all: rewrite /distinguishable_by //=.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (C1) by prove_undetectable X1 Z23. 
-    replace q with (-C1) by prove_detectable X2 Z23. 
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X1 Z12. 
-    replace q with (C1) by prove_undetectable X3 Z12. 
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X2 Z23. 
-    replace q with (C1) by prove_undetectable X1 Z23.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X2 Z12. 
-    replace q with (C1) by prove_undetectable X3 Z12.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X3 Z23. 
-    replace q with (C1) by prove_undetectable X1 Z23.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace q with (-C1) by prove_detectable X2 Z12. 
-    replace r with (C1) by prove_undetectable X3 Z12.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-Qed.
-
-Definition BitFlipCorrectionCode := BuildCorrectingCode BitFlipCode bit_flip_code_unique_syndrome.
 
 End VarScope.
 
