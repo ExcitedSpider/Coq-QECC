@@ -148,7 +148,7 @@ Definition indistinguishable (edc: ErrorDetectionCode) E1 E2 :=
   forall M, M \in edc.(obs) -> 
   let psi_e1 := 'Apply E1 on edc.(code) in
   let psi_e2 := 'Apply E2 on edc.(code) in
-    ('Meas M on psi_e1 --> -1) -> ('Meas M on psi_e2 --> -1)
+    ('Meas M on psi_e1 --> -1) <-> ('Meas M on psi_e2 --> -1)
   .
 
 (* The recover is trivial: simply by apply the error again.  *)

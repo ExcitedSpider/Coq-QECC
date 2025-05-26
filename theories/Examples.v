@@ -267,30 +267,49 @@ Lemma apply_X23_effect:
 Proof. by SimplApplyPauli. Qed.
 
 (* X1 and X23 are indistinguishable errors to this code *)
-Theorem indistinguishable_X1_X23:
+Fact indistinguishable_X1_X23:
   indistinguishable BitFlipCode X1 X23.
 Proof.
+  unfold indistinguishable.
   move => M m.
   simpl.
   rewrite apply_X1_effect apply_X23_effect.
-  move: m.
-  rewrite !inE => /orP [/eqP -> | /eqP ->] H.
-  - SimplApplyPauli. lma.
-  - contradict H => F.
-    apply C1_neq_mC1.
-    apply (eigen_measure_p_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
-    + auto with wf_db.
-    + SimplApplyPauli; lma.
-    + move: F. replace (RtoC (-1)) with (-C1) by lca. 
-      auto.
-    + apply state_nonzero.
+  split.
+  {
+    move: m.
+    rewrite !inE => /orP [/eqP -> | /eqP ->] H.
+    - SimplApplyPauli. lma.
+    - contradict H => F.
+      apply C1_neq_mC1.
+      apply (eigen_measure_p_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
+      + auto with wf_db.
+      + SimplApplyPauli; lma.
+      + move: F. replace (RtoC (-1)) with (-C1) by lca. 
+        auto.
+      + rewrite -apply_X1_effect.
+        apply (applyP_nonzero _ _ _ psi_WF psi_nonzero).
+  }
+  {
+    move: m.
+    rewrite !inE => /orP [/eqP -> | /eqP ->] H.
+    - SimplApplyPauli. lma.
+    - contradict H => F.
+      apply C1_neq_mC1.
+      apply (eigen_measure_p_unique (α .* ∣ 0, 1, 1 ⟩ .+ β .* ∣ 1, 0, 0 ⟩) Z23).
+      + auto with wf_db.
+      + SimplApplyPauli; lma.
+      + move: F. replace (RtoC (-1)) with (-C1) by lca. 
+        auto.
+      + rewrite -apply_X23_effect.
+        apply (applyP_nonzero _ _ _ psi_WF psi_nonzero).
+  }
 Qed.
 
-Definition Y1: PauliOperator dim := [p Y, I, I].
+(* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
+(* Definition Y1: PauliOperator dim := [p Y, I, I].
 
 Locate negate_phase_simpl.
 
-(* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
 Theorem indistinguishable_X1_Y1:
   indistinguishable BitFlipCode X1 Y1.
 Proof.
@@ -312,7 +331,7 @@ Proof.
     + move: F. 
       replace (RtoC (-1)) with (- C1) by lca; auto. 
     + apply state_nonzero.
-Qed.
+Qed. *)
 
 End CodeLimitation.
 
