@@ -221,22 +221,26 @@ Fact flip0_recover_by_x0:
 Proof. by rewrite /recover_by; apply /eqP. Qed.
 Section CodeLimitation.
 
-Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
+Definition Z1: ErrorOperator 3 := [p Z, I, I].
 
 Fact phase_flip_error_effect:
-  ('Apply PhaseFlip0 on psi) = (α .* L0 .+ -1 * β .* L1).
-
+  ('Apply Z1 on psi) = (α .* ∣0,0,0⟩ .+ -1 * β .*∣1,1,1⟩).
 Proof. by rewrite /L0 /L1; SimplApplyPauli; lma. Qed.
+
+Print BitFlipCode.
 
 (* This code is unable to detect phase flip *)
 Fact undetectable_phase_flip_0: 
-  undetectable BitFlipCode PhaseFlip0.
+  undetectable BitFlipCode Z1.
 Proof.
-  rewrite /undetectable /= => M.
-  (* ssreflect magic *)
+  rewrite /undetectable => M.
   rewrite !inE => /orP [/eqP -> | /eqP ->].
-  - SimplApplyPauli. lma.
-  - SimplApplyPauli. lma.
+  apply stabiliser_undetectable_error.
+  + by apply stab_mem_code; auto; rewrite !inE. 
+  + by apply /eqP. 
+  apply stabiliser_undetectable_error.
+  + by apply stab_mem_code; auto; rewrite !inE. 
+  + by apply /eqP. 
 Qed.
 
 Definition X23 : PauliOperator 3 := mulg X2 X3.

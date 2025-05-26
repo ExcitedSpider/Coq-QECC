@@ -340,6 +340,18 @@ Proof.
   apply H.
 Qed.
 
+Corollary stab_mem_code:
+  forall (edc: ErrorDetectionCode) (M: PauliObservable edc.(dim)) (psi: Vector (2^(edc.(dim)))),
+  edc.(code) = psi ->  M \in edc.(obs) -> M ∝1 psi.
+Proof.
+  move => edc M psi H1 H2.
+  move: edc.(ob1).
+  rewrite /obs_be_stabiliser => Hob.
+  subst.
+  apply (Hob).
+  apply H2.
+Qed.
+
 (* If all stabiliser in a edc cannot detect an error,
 then the error is not detectable *)
 Corollary undetectable_sufficient 
