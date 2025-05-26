@@ -306,7 +306,7 @@ Proof.
     by rewrite H2. 
   apply stabiliser_detect_error_c; auto.
   by rewrite -negate_phase_Pn_correct.
-Abort.
+Qed.
 
 (* On the opposite of error detection condition *)
 (* If an stabiliser S conmmute with the error E *)
