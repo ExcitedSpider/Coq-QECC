@@ -148,7 +148,7 @@ Definition indistinguishable (edc: ErrorDetectionCode) E1 E2 :=
   forall M, M \in edc.(obs) -> 
   let psi_e1 := 'Apply E1 on edc.(code) in
   let psi_e2 := 'Apply E2 on edc.(code) in
-    ('Meas M on psi_e1 --> -1) -> ('Meas M on psi_e2 --> -1)
+    ('Meas M on psi_e1 --> -1) <-> ('Meas M on psi_e2 --> -1)
   .
 
 (* The recover is trivial: simply by apply the error again.  *)
@@ -306,7 +306,7 @@ Proof.
     by rewrite H2. 
   apply stabiliser_detect_error_c; auto.
   by rewrite -negate_phase_Pn_correct.
-Abort.
+Qed.
 
 (* On the opposite of error detection condition *)
 (* If an stabiliser S conmmute with the error E *)
@@ -338,6 +338,18 @@ Proof.
   rewrite /obs_be_stabiliser => Hob.
   apply (Hob).
   apply H.
+Qed.
+
+Corollary stab_mem_code:
+  forall (edc: ErrorDetectionCode) (M: PauliObservable edc.(dim)) (psi: Vector (2^(edc.(dim)))),
+  edc.(code) = psi ->  M \in edc.(obs) -> M ∝1 psi.
+Proof.
+  move => edc M psi H1 H2.
+  move: edc.(ob1).
+  rewrite /obs_be_stabiliser => Hob.
+  subst.
+  apply (Hob).
+  apply H2.
 Qed.
 
 (* If all stabiliser in a edc cannot detect an error,

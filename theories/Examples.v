@@ -221,25 +221,27 @@ Fact flip0_recover_by_x0:
 Proof. by rewrite /recover_by; apply /eqP. Qed.
 Section CodeLimitation.
 
-Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
+Definition Z1: ErrorOperator 3 := [p Z, I, I].
 
 Fact phase_flip_error_effect:
-  ('Apply PhaseFlip0 on psi) = (α .* L0 .+ -1 * β .* L1).
-
+  ('Apply Z1 on psi) = (α .* ∣0,0,0⟩ .+ -1 * β .*∣1,1,1⟩).
 Proof. by rewrite /L0 /L1; SimplApplyPauli; lma. Qed.
 
 (* This code is unable to detect phase flip *)
 Fact undetectable_phase_flip_0: 
-  undetectable BitFlipCode PhaseFlip0.
+  undetectable BitFlipCode Z1.
 Proof.
-  rewrite /undetectable /= => M.
-  (* ssreflect magic *)
+  rewrite /undetectable => M.
   rewrite !inE => /orP [/eqP -> | /eqP ->].
-  - SimplApplyPauli. lma.
-  - SimplApplyPauli. lma.
+  apply stabiliser_undetectable_error.
+  + by apply stab_mem_code; auto; rewrite !inE. 
+  + by apply /eqP. 
+  apply stabiliser_undetectable_error.
+  + by apply stab_mem_code; auto; rewrite !inE. 
+  + by apply /eqP. 
 Qed.
 
-Definition X23 : PauliOperator 3 := mulg X2 X3.
+Definition X23 : PauliOperator 3 := [p I, X, X].
 
 Lemma state_nonzero:
   α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩ <> Zero.
@@ -260,36 +262,54 @@ Lemma apply_X1_effect:
   ('Apply X1 on psi) = (α .* ∣1,0,0⟩ .+ β .* ∣0,1,1⟩).
 Proof. by SimplApplyPauli. Qed.
 
+Lemma apply_X23_effect:
+('Apply X23 on psi) = (α .* ∣0,1,1⟩ .+ β .* ∣1,0,0⟩).
+Proof. by SimplApplyPauli. Qed.
+
 (* X1 and X23 are indistinguishable errors to this code *)
-Theorem indistinguishable_X1_X23:
-  indistinguishable BitFlipCode
-  X1 X23.
+Fact indistinguishable_X1_X23:
+  indistinguishable BitFlipCode X1 X23.
 Proof.
+  unfold indistinguishable.
   move => M m.
   simpl.
-  rewrite apply_X1_effect.
-  assert (Hx1: ('Apply X23 on psi) = (α .* ∣0,1,1⟩ .+ β .* ∣1,0,0⟩)). {
-    by SimplApplyPauli.
+  rewrite apply_X1_effect apply_X23_effect.
+  split.
+  {
+    move: m.
+    rewrite !inE => /orP [/eqP -> | /eqP ->] H.
+    - SimplApplyPauli. lma.
+    - contradict H => F.
+      apply C1_neq_mC1.
+      apply (eigen_measure_p_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
+      + auto with wf_db.
+      + SimplApplyPauli; lma.
+      + move: F. replace (RtoC (-1)) with (-C1) by lca. 
+        auto.
+      + rewrite -apply_X1_effect.
+        apply (applyP_nonzero _ _ _ psi_WF psi_nonzero).
   }
-  rewrite Hx1; clear Hx1.
-  move: m.
-  rewrite !inE => /orP [/eqP -> | /eqP ->] H.
-  - SimplApplyPauli. lma.
-  - contradict H => F.
-    apply C1_neq_mC1.
-    apply (eigen_measure_p_unique (α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩) Z23).
-    + auto with wf_db.
-    + SimplApplyPauli; lma.
-    + move: F. replace (RtoC (-1)) with (-C1) by lca. 
-      auto.
-    + apply state_nonzero.
+  {
+    move: m.
+    rewrite !inE => /orP [/eqP -> | /eqP ->] H.
+    - SimplApplyPauli. lma.
+    - contradict H => F.
+      apply C1_neq_mC1.
+      apply (eigen_measure_p_unique (α .* ∣ 0, 1, 1 ⟩ .+ β .* ∣ 1, 0, 0 ⟩) Z23).
+      + auto with wf_db.
+      + SimplApplyPauli; lma.
+      + move: F. replace (RtoC (-1)) with (-C1) by lca. 
+        auto.
+      + rewrite -apply_X23_effect.
+        apply (applyP_nonzero _ _ _ psi_WF psi_nonzero).
+  }
 Qed.
 
-Definition Y1: PauliOperator dim := [p Y, I, I].
+(* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
+(* Definition Y1: PauliOperator dim := [p Y, I, I].
 
 Locate negate_phase_simpl.
 
-(* Bit flip code is not able to distinguish a bit-flip with a bit-phase-flip *)
 Theorem indistinguishable_X1_Y1:
   indistinguishable BitFlipCode X1 Y1.
 Proof.
@@ -311,7 +331,7 @@ Proof.
     + move: F. 
       replace (RtoC (-1)) with (- C1) by lca; auto. 
     + apply state_nonzero.
-Qed.
+Qed. *)
 
 End CodeLimitation.
 
@@ -484,6 +504,7 @@ End VarScope.
 End PhaseFlip311.
 
 Module ShorsNineQubitCode. 
+Set Bullet Behavior "Strict Subproofs".
 
 Section VarScope.
 
@@ -522,9 +543,15 @@ Qed.
 Definition obsX12: PauliOperator 9 := [p X, X, X, X, X, X, I, I, I].
 Definition obsZ12: PauliOperator 9 := [p Z, Z, I, I, I, I, I, I, I].
 
-(* Z1 is a phase flip *)
-Definition Z1: PauliOperator dim := t2o [tuple of  Z :: nseq 8 I].
-
+Definition X1: PauliOperator dim := t2o [tuple of X :: nseq 8 I].
+Definition Z1: PauliOperator dim := t2o [tuple of Z :: nseq 8 I].
+Definition Y1: PauliOperator dim := t2o [tuple of Y :: nseq 8 I].
+(*  
+This set contains a representative Pauli basis for single-qubit errors on qubit 1.
+  The ability to distinguish these errors implies that the code can correct
+  an arbitrary single-qubit error, due to the linearity of quantum error correction.
+*)
+Definition ShorErrorBasis := [set X1, Z1, Y1 ].
 
 Lemma apply_z1_L0_effect: 
   (('Apply Z1 on L0) = ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩)))).
@@ -598,8 +625,8 @@ Proof.
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
       apply (@eigen_measure_p_m1_krons 3 3).
-      + SimplApplyPauli; lma.
-      + by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; by Qsimpl.
+      by SimplApplyPauli; lma.
+      by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; by Qsimpl.
 Qed. 
 
 Lemma obsx12_err_state0:
@@ -628,20 +655,6 @@ Proof.
     SimplApplyPauli; lma.
 Qed.
 
-Theorem obsx12_detect_phase_flip:
-  'Meas obsX12 on ('Apply Z1 on psi) --> -1.
-Proof.
-  rewrite apply_z1_effect eigen_measure_p_applyP.
-  rewrite !applyP_mscale !applyP_plus !applyP_mscale.
-  remember (/ C2 * / √ 2) as norm.
-  rewrite !Mscale_assoc (Cmult_comm _ norm) -Mscale_assoc.
-  apply Mscale_simplify; auto.
-  move/eigen_measure_p_applyP : obsx12_err_state0 => ->.
-  move/eigen_measure_p_applyP : obsx12_err_state1 => ->.
-  rewrite Mscale_plus_distr_r !Mscale_assoc.
-  by rewrite !(Cmult_comm (-1)).
-Qed.
-
 (* Now we do it again but using error correct condition *)
 (* It's so much easier *)
 (* maybe we can define the negation more properly *)
@@ -655,9 +668,6 @@ Proof.
     by replace (- C1 * Ci) with (-Ci) by lca.
 Qed.
 
-Definition X1: PauliOperator dim := t2o [tuple of X :: nseq 8 I].
-Definition Y1: PauliOperator dim := t2o [tuple of Y :: nseq 8 I].
-Definition BPFlipE0 := Y1.
 
 (* Y1 is a combination of bit flip and phase flip error *)
 Lemma Y1_bit_phase_flip: mulg X1 Z1 = Y1. Proof. by apply /eqP. Qed.
@@ -678,7 +688,7 @@ Proof.
     + rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
 Qed.
 
-(* we show that shor's code is able to correct a bit-phase flip *)
+(* we show that shor's code is able to detect a bit-phase flip *)
 Theorem obsZ12_detect_bit_phase_flip:
   'Meas obsZ12 on ('Apply Y1 on psi) --> -1.
 Proof.
@@ -686,6 +696,88 @@ Proof.
   - apply obsZ12_stb.
   (* transform to group multiplication for quicker check  *)
   - by apply negate_phase_simpl; apply /eqP.
+Qed.
+
+Definition measuring_different (M: PauliObservable 9) psi_1 psi_2 :=
+  ('Meas M on psi_1--> C1) /\ ('Meas M on psi_2 --> -C1) \/
+  ('Meas M on psi_1--> -C1) /\ ('Meas M on psi_2 --> C1).
+
+Create HintDb shordb.
+Hint Resolve obsx12_stb obsZ12_stb : shordb.
+
+Lemma measuring_different_comm:
+  forall (M: PauliObservable 9) psi_1 psi_2, 
+  measuring_different M psi_2 psi_1 -> measuring_different M psi_1 psi_2.
+Proof. 
+  rewrite /measuring_different => M p1 p2 H.
+  case H => Hcase.
+  right. apply and_comm.
+  by apply Hcase.
+  left. apply and_comm.
+  by apply Hcase.
+Qed.
+  
+Lemma distinguish_xz:
+  measuring_different obsZ12 ('Apply X1 on psi) ('Apply Z1 on psi).
+Proof.
+  rewrite /measuring_different. right. split.
+  apply stabiliser_detect_error_by_negate; auto with shordb.
+  by apply /eqP.
+  apply stabiliser_undetectable_error; auto with shordb.
+  by apply /eqP.
+Qed.
+
+Lemma distinguish_xy:
+  measuring_different obsX12 ('Apply X1 on psi) ('Apply Y1 on psi).
+Proof.
+  rewrite /measuring_different. left. split.
+  apply stabiliser_undetectable_error; auto with shordb.
+  by apply /eqP.
+  apply stabiliser_detect_error_by_negate; auto with shordb.
+  by apply /eqP.
+Qed.
+
+Lemma distinguish_zy:
+  measuring_different obsZ12 ('Apply Z1 on psi) ('Apply Y1 on psi).
+Proof.
+  rewrite /measuring_different. left. split.
+  apply stabiliser_undetectable_error; auto with shordb.
+  by apply /eqP.
+  apply stabiliser_detect_error_by_negate; auto with shordb.
+  by apply /eqP.
+Qed.
+
+Theorem pauli_basis_distinguishable:
+  forall (E1 E2: ErrorOperator 9),
+  E1 \in ShorErrorBasis -> E2 \in ShorErrorBasis -> E1 <> E2 ->
+  let psi_e1 := 'Apply E1 on psi in
+  let psi_e2 := 'Apply E2 on psi in
+  exists (M: PauliObservable 9), 
+    M ∝1 psi /\ measuring_different M psi_e1 psi_e2 .
+Proof.
+  (* unfold the case analysis *)
+  move => E1 E2.
+  rewrite !inE -!orb_assoc => memE1 memE2.
+  case/or3P: memE1 => /eqP ->;
+  case/or3P: memE2 => /eqP ->;
+  move => H; try by contradict H.
+  (* start analysis *)
+  all: rewrite //=.
+  - exists obsZ12. split; auto with shordb.
+    apply distinguish_xz.
+  - exists obsX12; split; auto with shordb.
+    apply distinguish_xy.
+  - exists obsZ12; split; auto with shordb.
+    apply measuring_different_comm.
+    apply distinguish_xz.
+  - exists obsZ12; split; auto with shordb.
+    apply distinguish_zy.
+  - exists obsX12; split; auto with shordb.
+    apply measuring_different_comm.
+    apply distinguish_xy.
+  - exists obsZ12; split; auto with shordb.
+    apply measuring_different_comm.
+    apply distinguish_zy.
 Qed.
 
 End VarScope.
