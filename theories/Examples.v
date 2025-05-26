@@ -227,8 +227,6 @@ Fact phase_flip_error_effect:
   ('Apply Z1 on psi) = (α .* ∣0,0,0⟩ .+ -1 * β .*∣1,1,1⟩).
 Proof. by rewrite /L0 /L1; SimplApplyPauli; lma. Qed.
 
-Print BitFlipCode.
-
 (* This code is unable to detect phase flip *)
 Fact undetectable_phase_flip_0: 
   undetectable BitFlipCode Z1.
@@ -243,7 +241,7 @@ Proof.
   + by apply /eqP. 
 Qed.
 
-Definition X23 : PauliOperator 3 := mulg X2 X3.
+Definition X23 : PauliOperator 3 := [p I, X, X].
 
 Lemma state_nonzero:
   α .* ∣ 1, 0, 0 ⟩ .+ β .* ∣ 0, 1, 1 ⟩ <> Zero.
@@ -264,18 +262,17 @@ Lemma apply_X1_effect:
   ('Apply X1 on psi) = (α .* ∣1,0,0⟩ .+ β .* ∣0,1,1⟩).
 Proof. by SimplApplyPauli. Qed.
 
+Lemma apply_X23_effect:
+('Apply X23 on psi) = (α .* ∣0,1,1⟩ .+ β .* ∣1,0,0⟩).
+Proof. by SimplApplyPauli. Qed.
+
 (* X1 and X23 are indistinguishable errors to this code *)
 Theorem indistinguishable_X1_X23:
-  indistinguishable BitFlipCode
-  X1 X23.
+  indistinguishable BitFlipCode X1 X23.
 Proof.
   move => M m.
   simpl.
-  rewrite apply_X1_effect.
-  assert (Hx1: ('Apply X23 on psi) = (α .* ∣0,1,1⟩ .+ β .* ∣1,0,0⟩)). {
-    by SimplApplyPauli.
-  }
-  rewrite Hx1; clear Hx1.
+  rewrite apply_X1_effect apply_X23_effect.
   move: m.
   rewrite !inE => /orP [/eqP -> | /eqP ->] H.
   - SimplApplyPauli. lma.
