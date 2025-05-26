@@ -1,5 +1,7 @@
 (* We present some examples of stabiliser code for case study. *)
 
+Set Bullet Behavior "Strict Subproofs".
+
 From mathcomp Require Import all_ssreflect ssrbool 
 ssrfun eqtype ssrnat div seq tuple finset fingroup.
 Require Export SQIR.UnitaryOps.
@@ -16,23 +18,24 @@ Require Import ExtraSpecs.
 Require Import Observable.
 Require Export SQIR.UnitaryOps.
 Require Import QECC.
+Require Import PauliProps.
+
+Notation I2 := (Matrix.I 2).
+Notation "[ 'set' a1 , a2 , .. , an ]" := (setU .. (a1 |: [set a2]) .. [set an]) (at level 200): form_scope.
+Open Scope ucom.
 
 Module BitFlip311.
 
 Section VarScope.
 
-Open Scope ucom.
-
 Definition dim:nat := 3.
 
 Variable (α β : C).
-
 (* A quantum state (α .* ∣0⟩ .+ β .* ∣1⟩) is required to have norm = 1 *)
 Hypothesis norm_obligation: α^* * α + β^* * β = 1.
 
 Definition encode : base_ucom dim := 
   CNOT 0 1; CNOT 0 2.
-
 
 (* The state before encoding, labeled by 'b' *)
 Notation psi_b := ((α .* ∣0⟩ .+ β .* ∣1⟩)).
@@ -45,52 +48,6 @@ Definition psi: Vector (2^dim) := (α .* L0.+ β .* L1).
 Lemma psi_WF:
   WF_Matrix psi.
 Proof. by rewrite /psi; auto with wf_db. Qed.
-
-(* This should be make more generic, but i did not find a good one *)
-Lemma encode_by_component: forall (u: Square (2^dim)),
-  u × (∣0⟩ ⊗ ∣0,0⟩) = L0 ->
-  u × (∣1⟩ ⊗ ∣0,0⟩) = L1 ->
-  u × (psi_b ⊗ ∣0,0⟩) = psi.
-Proof.
-  move => H0 H1 H2.
-  rewrite kron_plus_distr_r Mmult_plus_distr_l.
-  rewrite !Mscale_kron_dist_l !Mscale_mult_dist_r.
-  by rewrite H1 H2.
-Qed.
-
-Set Bullet Behavior "Strict Subproofs".
-
-(* The encoding program is correct *)
-Theorem encode_correct :
-  (uc_eval encode) × ((α .* ∣0⟩ .+ β .* ∣1⟩) ⊗ ∣0,0⟩ )
-  = α .* L0 .+ β .* L1.
-Proof.
-  rewrite /= /L0 /L1.
-  apply encode_by_component;
-  autorewrite with eval_db; simpl; Qsimpl.
-  all: repeat (
-    distribute_plus;
-    repeat rewrite <- kron_assoc by auto with wf_db;
-    restore_dims
-  );
-  repeat rewrite kron_mixed_product; Qsimpl;
-  by autorewrite with ket_db.
-Qed.
-
-(* After verifing the encoding circuit, we can 
-  work sorely on abstract codespace and pauli operator
-*)
-(* If two basic states are identical, inner producr is 1 *)
-(* Else 0 *)
-Ltac simplify_inner_product :=
-  repeat match goal with
-  | |- context[⟨ ?v, ?v ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v, v ⟩ = 1)   by lca; rewrite H; clear H
-  | |- context[⟨ ?v1, ?v2 ⟩] =>
-      let H := fresh in
-      assert (H: ⟨ v1, v2 ⟩ = 0) by lca; rewrite H; clear H
-  end.
 
 Lemma psi_nonzero:
   psi <> Zero.
@@ -107,12 +64,39 @@ Proof.
   by rewrite/psi; auto with wf_db.
 Qed.
 
-Require Import PauliGroup.
+Import all_pauligroup.
 
-Notation "[ 'set' a1 , a2 , .. , an ]" := (setU .. (a1 |: [set a2]) .. [set an]) (at level 200): form_scope.
+(* Verification of Code Construction (Stabilisers and Detectable Errors) *)
+Section DetectionCode.
 
-Definition setexample := [set true, false, true ].
+(* This lemma is not necessary in proof,  *)
+(* but it makes the proof faster  *)
+Lemma encode_by_component: forall (u: Square (2^dim)),
+  u × (∣0⟩ ⊗ ∣0,0⟩) = L0 ->
+  u × (∣1⟩ ⊗ ∣0,0⟩) = L1 ->
+  u × (psi_b ⊗ ∣0,0⟩) = psi.
+Proof.
+  move => H0 H1 H2.
+  rewrite kron_plus_distr_r Mmult_plus_distr_l.
+  rewrite !Mscale_kron_dist_l !Mscale_mult_dist_r.
+  by rewrite H1 H2.
+Qed.
 
+(* The encoding program is correct *)
+Theorem encode_correct :
+  (uc_eval encode) × ((α .* ∣0⟩ .+ β .* ∣1⟩) ⊗ ∣0,0⟩ )
+  = α .* L0 .+ β .* L1.
+Proof.
+  rewrite /= /L0 /L1.
+  autorewrite with eval_db; simpl; Qsimpl.
+  all: repeat (
+    distribute_plus;
+    repeat rewrite <- kron_assoc by auto with wf_db;
+    restore_dims
+  );
+  repeat rewrite kron_mixed_product; Qsimpl;
+  by autorewrite with ket_db.
+Qed.
 
 (* Set of single-qubit bit-flip error *)
 Definition X1: PauliOperator 3 := [p X, I, I].
@@ -126,7 +110,6 @@ Definition Z12 := [p Z, Z, I].
 Definition Z23 := [p I, Z, Z].
 Definition SyndromeMeas: {set PauliObservable 3} :=
   [set Z12, Z23].
-
 
 Close Scope group_scope.
 (* Syndrome Measurement Does not change the correct code *)
@@ -143,12 +126,7 @@ Proof.
   - by replace (β * (-1) * (-1)) with (β) by lca.
   - by replace (β * (-1) * (-1)) with (β) by lca.
 Qed.
-
-Notation I2 := (Matrix.I 2).
   
-(* Apply any error in BitFlipError, there is at least one Syndrome Measurement
- can detect it *)
-
 Theorem obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
@@ -176,11 +154,72 @@ Proof.
     split. by rewrite !inE eqxx. lma.
 Qed.
 
+Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+
+Print BitFlipCode.
+
+Ltac prove_undetectable E M:=
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply stabiliser_undetectable_error;
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by rewrite /M /M //=; apply /eqP ]
+  | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
+
+Ltac prove_detectable E M :=
+  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
+  [ rewrite /applyP /psi; auto 10 with wf_db
+  | apply (stabiliser_detect_error_c M psi E);
+      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      | by apply negate_phase_simpl; apply /eqP ]
+  | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
+
+(* every error in bitflip code has unique syndrome. *)
+(* that is, they can be recovered *)
+Theorem bit_flip_code_unique_syndrome:
+  error_identified_uniquely BitFlipCode.
+Proof.
+  rewrite /error_identified_uniquely //= => E1 E2.
+  rewrite !inE -!orb_assoc => memE1 memE2.
+  case/or3P: memE1 => /eqP ->;
+  case/or3P: memE2 => /eqP ->;
+  move => H; try by contradict H.
+  clear H.
+  all: rewrite /distinguishable_by //=.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (C1) by prove_undetectable X1 Z23. 
+    replace q with (-C1) by prove_detectable X2 Z23. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X1 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12. 
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X2 Z12. 
+    replace q with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z23 => r q _ Hr Hq.
+    replace r with (-C1) by prove_detectable X3 Z23. 
+    replace q with (C1) by prove_undetectable X1 Z23.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+  - exists Z12 => r q _ Hr Hq.
+    replace q with (-C1) by prove_detectable X2 Z12. 
+    replace r with (C1) by prove_undetectable X3 Z12.
+    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
+Qed.
+
+Definition BitFlipCorrectionCode := BuildCorrectingCode BitFlipCode bit_flip_code_unique_syndrome.
+
+End DetectionCode.
+
 Fact flip0_recover_by_x0:
   (recover_by X1 X1).
 Proof. by rewrite /recover_by; apply /eqP. Qed.
-
-Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+Section CodeLimitation.
 
 Definition PhaseFlip0: PauliOperator 3 := [p Z, I, I].
 
@@ -199,8 +238,6 @@ Proof.
   - SimplApplyPauli. lma.
   - SimplApplyPauli. lma.
 Qed.
-
-
 
 Definition X23 : PauliOperator 3 := mulg X2 X3.
 
@@ -276,61 +313,7 @@ Proof.
     + apply state_nonzero.
 Qed.
 
-Ltac prove_undetectable E M:=
-  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
-  [ rewrite /applyP /psi; auto 10 with wf_db
-  | apply stabiliser_undetectable_error;
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
-      | by rewrite /M /M //=; apply /eqP ]
-  | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
-
-Ltac prove_detectable E M :=
-  apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
-  [ rewrite /applyP /psi; auto 10 with wf_db
-  | apply (stabiliser_detect_error_c M psi E);
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
-      | by apply negate_phase_simpl; apply /eqP ]
-  | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
-
-(* every error in bitflip code has unique syndrome. *)
-(* that is, they can be recovered *)
-Theorem bit_flip_code_unique_syndrome:
-  error_identified_uniquely BitFlipCode.
-Proof.
-  rewrite /error_identified_uniquely //= => E1 E2.
-  rewrite !inE -!orb_assoc => memE1 memE2.
-  case/or3P: memE1 => /eqP ->;
-  case/or3P: memE2 => /eqP ->;
-  move => H; try by contradict H.
-  clear H.
-  all: rewrite /distinguishable_by //=.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (C1) by prove_undetectable X1 Z23. 
-    replace q with (-C1) by prove_detectable X2 Z23. 
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X1 Z12. 
-    replace q with (C1) by prove_undetectable X3 Z12. 
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X2 Z23. 
-    replace q with (C1) by prove_undetectable X1 Z23.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X2 Z12. 
-    replace q with (C1) by prove_undetectable X3 Z12.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z23 => r q _ Hr Hq.
-    replace r with (-C1) by prove_detectable X3 Z23. 
-    replace q with (C1) by prove_undetectable X1 Z23.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-  - exists Z12 => r q _ Hr Hq.
-    replace q with (-C1) by prove_detectable X2 Z12. 
-    replace r with (C1) by prove_undetectable X3 Z12.
-    try apply C1_neq_mC1; symmetry; apply C1_neq_mC1.
-Qed.
-
-Definition BitFlipCorrectionCode := BuildCorrectionCode BitFlipCode bit_flip_code_unique_syndrome.
+End CodeLimitation.
 
 End VarScope.
 
