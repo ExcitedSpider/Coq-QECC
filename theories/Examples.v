@@ -553,47 +553,6 @@ This set contains a representative Pauli basis for single-qubit errors on qubit 
 *)
 Definition ShorErrorBasis := [set X1, Z1, Y1 ].
 
-Lemma apply_z1_L0_effect: 
-  (('Apply Z1 on L0) = ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩)))).
-Proof.
-  rewrite kron_n_assoc; auto with wf_db.
-  assert (H: Z1 = t2o [tuple of [p Z, I, I] ++ t2o (nseq 6 I)]). 
-    by apply /eqP.
-  rewrite H /t2o; clear H.
-  rewrite (applyP_kron ([p Z, I, I])).
-  rewrite applyP_plus applyP_id; restore_dims; auto with wf_db.
-  apply kron_simplify; auto.
-  apply Mplus_simplify.
-  - by SimplApplyPauli; lma.
-  - by SimplApplyPauli; lma.
-Qed.
-
-Lemma apply_z1_L1_effect: 
-  (('Apply Z1 on L1) = ((∣0,0,0⟩ .+ ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩)))).
-Proof.
-  rewrite kron_n_assoc; auto with wf_db.
-  assert (H: Z1 = t2o [tuple of [p Z, I, I] ++ t2o (nseq 6 I)]). 
-    by apply /eqP.
-  rewrite H /t2o; clear H.
-  rewrite (@applyP_kron 3).
-  rewrite applyP_plus applyP_id; restore_dims; auto 10 with wf_db.
-  apply kron_simplify; auto.
-  apply Mplus_simplify.
-  - by SimplApplyPauli; lma.
-  - by SimplApplyPauli; lma.
-Qed.
-
-Lemma apply_z1_effect:
-('Apply Z1 on psi) = norm .* (
-  α .* ((∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ ∣1,1,1⟩))) .+ 
-  β .* ((∣0,0,0⟩ .+ ∣1,1,1⟩) ⊗ (2 ⨂ (∣0,0,0⟩ .+ -C1 .* ∣1,1,1⟩)))).
-Proof.
-  rewrite /psi applyP_mscale.
-  rewrite applyP_plus !applyP_mscale.
-  by rewrite apply_z1_L0_effect apply_z1_L1_effect.
-Qed.
-
-
 Definition X123 :PauliOperator 3 := [p X, X, X].
 
 Lemma stb_part:
@@ -629,31 +588,6 @@ Proof.
       by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; by Qsimpl.
 Qed. 
 
-Lemma obsx12_err_state0:
-  'Meas obsX12 on (∣ 0, 0, 0 ⟩ .+ - C1 .* ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩)
-    --> -1 .
-Proof.
-  replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-  apply (@eigen_measure_p_m1_krons 3).
-  - SimplApplyPauli. lma.
-  - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
-    apply (@eigen_measure_p_11_krons 3).
-    SimplApplyPauli; lma.
-    SimplApplyPauli; lma.
-Qed.
-
-Lemma obsx12_err_state1:
-  'Meas obsX12 on (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩) ⊗ 2 ⨂ (∣ 0, 0, 0 ⟩ .+ -C1 .* ∣ 1, 1, 1 ⟩)
-    --> -1 .
-Proof.
-  replace obsX12 with [tuple of [p X, X, X] ++ ([p X, X, X, I, I, I])] by by apply /eqP.
-  apply (@eigen_measure_p_1m_krons 3).
-  - SimplApplyPauli. lma.
-  - replace ([p X,  X,  X,  I,  I,  I]) with [tuple of [p X, X, X] ++ ([p I, I, I])] by by apply /eqP.
-    apply (@eigen_measure_p_m1_krons 3).
-    SimplApplyPauli; lma.
-    SimplApplyPauli; lma.
-Qed.
 
 (* Now we do it again but using error correct condition *)
 (* It's so much easier *)
@@ -669,9 +603,6 @@ Proof.
 Qed.
 
 
-(* Y1 is a combination of bit flip and phase flip error *)
-Lemma Y1_bit_phase_flip: mulg X1 Z1 = Y1. Proof. by apply /eqP. Qed.
-
 Lemma obsZ12_stb:
   obsZ12 ∝1 psi.
 Proof.
@@ -686,16 +617,6 @@ Proof.
     apply (@eigen_measure_p_11_krons 3 6).
     + SimplApplyPauli; lma.
     + rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl; auto 10 with wf_db.
-Qed.
-
-(* we show that shor's code is able to detect a bit-phase flip *)
-Theorem obsZ12_detect_bit_phase_flip:
-  'Meas obsZ12 on ('Apply Y1 on psi) --> -1.
-Proof.
-  apply stabiliser_detect_error.
-  - apply obsZ12_stb.
-  (* transform to group multiplication for quicker check  *)
-  - by apply negate_phase_simpl; apply /eqP.
 Qed.
 
 Definition measuring_different (M: PauliObservable 9) psi_1 psi_2 :=

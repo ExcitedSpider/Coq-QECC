@@ -46,15 +46,6 @@ There are two packages in the project.
 └── readme.md
 ```
 
-## Status
-
-- Done: The single-qubit Pauli group.
-- Done: The n-qubit Pauli group
-- Done: Theorems of stabilizer theories. e.g. commute/anti-commute relations.
-- Done: Stabilizer Theories using mathcomp formalism
-- WIP: examples of proving larger QECC programs correct
-- WIP: fill in the holes of formalism.
- 
 ## Acknowledge
 
 This project is developed upon the foundations laid by the [INQWIRE/SQIR](https://github.com/inQWIRE/SQIR) framework, which has provided both inspiration and technical guidance throughout our work. 
