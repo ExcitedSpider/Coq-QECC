@@ -107,11 +107,11 @@ End QECCTheories.
 Arguments obs_be_stabiliser {dim}.
 Arguments errors_detectable {dim}.
 
-Section DetectionCode.
+Section DetectingCode.
 
 (* EDC represents a code structure in which the code space is `code`
  EDC  can detect errors \in err using stabiliser observables \in obs *)
-Record ErrorDetectionCode := BuildDetectionCode {
+Record ErrorDetectingCode := BuildDetectingCode {
   dim: nat
 (* Codespace *)
 ; code: Vector (2^dim)
@@ -129,11 +129,11 @@ Record ErrorDetectionCode := BuildDetectionCode {
   as the codespace
   There is an implicit requirement that E should be non-trivial (not I)
 *)
-Definition undetectable (edc: ErrorDetectionCode) E := 
+Definition undetectable (edc: ErrorDetectingCode) E := 
   let psi' := 'Apply E on edc.(code) in
     forall M,  M \in edc.(obs) -> 'Meas M on psi' --> 1.
 
-End DetectionCode.
+End DetectingCode.
 
 Section ErrorCorrectingCode.
 
@@ -144,7 +144,7 @@ TODO: enforce E1 to be in the correctable error set
 And derive distance of codewords based on the minimul weight of 
 indistinguishable errors.
 *)
-Definition indistinguishable (edc: ErrorDetectionCode) E1 E2 :=
+Definition indistinguishable (edc: ErrorDetectingCode) E1 E2 :=
   forall M, M \in edc.(obs) -> 
   let psi_e1 := 'Apply E1 on edc.(code) in
   let psi_e2 := 'Apply E2 on edc.(code) in
@@ -158,7 +158,7 @@ Definition get_recover {n}: (ErrorOperator n) -> (PauliOperator n) := Datatypes.
 
 (* we say two errors E1 E2 are distinguishable by M *)
 (* if they produce different measurement result *)
-Definition distinguishable_by (edc: ErrorDetectionCode) E1 E2 M :=
+Definition distinguishable_by (edc: ErrorDetectingCode) E1 E2 M :=
 forall r q,
   let psi_e1 := 'Apply E1 on edc.(code) in
   let psi_e2 := 'Apply E2 on edc.(code) in
@@ -172,14 +172,14 @@ An error correction code ECC is a detection code that satisfies:
 - error_identified_uniquely: every error E in the error set can be detect
   by a unique syndrome  
 *)
-Definition error_identified_uniquely (edc: ErrorDetectionCode): Prop := 
+Definition error_identified_uniquely (edc: ErrorDetectingCode): Prop := 
   forall (E1 E2: PauliOperator (dim edc)), 
     E1 \in edc.(err) -> E2 \in edc.(err) -> 
     E1 <> E2 -> 
     ( exists M, distinguishable_by edc E1 E2 M ).
 
 Record ErrorCorrectingCode := BuildCorrectingCode {
-  edc :> ErrorDetectionCode;
+  edc :> ErrorDetectingCode;
   correction_obligation: error_identified_uniquely edc
 }.
 
@@ -274,7 +274,7 @@ Proof.
   rewrite /applyP /eigen_measure_p -Mmult_assoc int_pn_one.
   rewrite int_pn_Mmult Hac Mscale_mult_dist_l.
   apply Mscale_simplify.
-  rewrite /stb /act_n /= /applyP in Hob.
+  rewrite /stab /act_n /= /applyP in Hob.
   rewrite -int_pn_Mmult Mmult_assoc Hob. 
   by Qsimpl.
   lca.
@@ -321,7 +321,7 @@ Proof.
   rewrite /applyP /eigen_measure_p -Mmult_assoc !int_pn_one.
   rewrite int_pn_Mmult Hac; Qsimpl.
   rewrite -int_pn_Mmult.
-  rewrite /stb /act_n /= /applyP in Hob.
+  rewrite /stab /act_n /= /applyP in Hob.
   rewrite -{2}Hob.
   by rewrite Mmult_assoc.
 Qed.
@@ -329,8 +329,8 @@ Qed.
 
 (* The specification of a member of stabilizer *)
 (* if M is an observer of edc: edc, then M stabilize edc.psi *)
-Corollary edc_stb_mem_spec:
-  forall (edc: ErrorDetectionCode) (M: PauliObservable edc.(dim)),
+Corollary edc_stab_mem_spec:
+  forall (edc: ErrorDetectingCode) (M: PauliObservable edc.(dim)),
   M \in edc.(obs) -> M ∝1 edc.(code).
 Proof.
   move => edc M H.
@@ -341,7 +341,7 @@ Proof.
 Qed.
 
 Corollary stab_mem_code:
-  forall (edc: ErrorDetectionCode) (M: PauliObservable edc.(dim)) (psi: Vector (2^(edc.(dim)))),
+  forall (edc: ErrorDetectingCode) (M: PauliObservable edc.(dim)) (psi: Vector (2^(edc.(dim)))),
   edc.(code) = psi ->  M \in edc.(obs) -> M ∝1 psi.
 Proof.
   move => edc M psi H1 H2.
@@ -355,7 +355,7 @@ Qed.
 (* If all stabiliser in a edc cannot detect an error,
 then the error is not detectable *)
 Corollary undetectable_sufficient 
-  (edc: ErrorDetectionCode) (Er: PauliOperator edc.(dim)):
+  (edc: ErrorDetectingCode) (Er: PauliOperator edc.(dim)):
   (forall (s: PauliObservable edc.(dim)), 
     s \in edc.(obs) -> mul_pn s Er = mul_pn Er s
   ) ->
@@ -365,7 +365,7 @@ Proof.
   move => H M Hm.
   apply stabiliser_undetectable_error.
   move: edc.(ob1). 
-  rewrite /obs_be_stabiliser => Hstb'; auto.
+  rewrite /obs_be_stabiliser => Hstab'; auto.
   by apply H; auto.
 Qed.
 

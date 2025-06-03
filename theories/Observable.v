@@ -63,7 +63,7 @@ Qed.
 If a quantum state ψ is stabilized by a Pauli operator p (i.e., p ψ = ψ), 
 then measuring the corresponding observable yields outcome 1 with certainty.
 *)
-Theorem stb_eigen_measure_1 {n}:
+Theorem stab_eigen_measure_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
   p ∝1 psi <-> eigen_measure 1 (int_pnb p) psi.
 Proof.
@@ -71,11 +71,11 @@ Proof.
   - rewrite /eigen_measure.
     split. apply int_pnb_wf.
     split. apply pauli_hermitian.
-    apply PauliOperator_stb in H.
+    apply PauliOperator_stab in H.
     rewrite H. by Qsimpl.
   - move: H. 
     rewrite /eigen_measure => [[_ [_ H]]].
-    rewrite /stb /act_n /applyP /=. Qsimpl.
+    rewrite /stab /act_n /applyP /=. Qsimpl.
     rewrite H. by Qsimpl.
 Qed.
 
@@ -110,15 +110,15 @@ Qed.
 
 
 
-Corollary stb_eigen_measure_p_1 {n}:
+Corollary stab_eigen_measure_p_1 {n}:
   forall (p: PauliOperator n) (psi: Vector (2^n)),
   p ∝1 psi <-> eigen_measure_p 1 p psi.
 Proof.
   split => HH.
   - rewrite eigen_measure_p_correct.
-    by apply stb_eigen_measure_1.
+    by apply stab_eigen_measure_1.
   - rewrite eigen_measure_p_correct in HH.
-    by rewrite stb_eigen_measure_1.
+    by rewrite stab_eigen_measure_1.
 Qed.
 
 Notation "''Meas' P 'on' psi '-->' m " := (eigen_measure_p m P psi)
