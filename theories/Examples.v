@@ -67,7 +67,7 @@ Qed.
 Import all_pauligroup.
 
 (* Verification of Code Construction (Stabilisers and Detectable Errors) *)
-Section DetectionCode.
+Section DetectingCode.
 
 (* This lemma is not necessary in proof,  *)
 (* but it makes the proof faster  *)
@@ -131,7 +131,7 @@ Theorem obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
   rewrite /obs_be_stabiliser => M Mmem.
-    rewrite stb_eigen_measure_p_1.
+    rewrite stab_eigen_measure_p_1.
     by apply SyndromeMeas_stab.
 Qed.
 
@@ -154,7 +154,7 @@ Proof.
     split. by rewrite !inE eqxx. lma.
 Qed.
 
-Definition BitFlipCode := BuildDetectionCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition BitFlipCode := BuildDetectingCode 3 psi SyndromeMeas BitFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Print BitFlipCode.
 
@@ -162,7 +162,7 @@ Ltac prove_undetectable E M:=
   apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
   [ rewrite /applyP /psi; auto 10 with wf_db
   | apply stabiliser_undetectable_error;
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      [ by apply (edc_stab_mem_spec BitFlipCode); rewrite !inE
       | by rewrite /M /M //=; apply /eqP ]
   | apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
 
@@ -170,7 +170,7 @@ Ltac prove_detectable E M :=
   apply (eigen_measure_p_unique ('Apply E on psi) M); auto;
   [ rewrite /applyP /psi; auto 10 with wf_db
   | apply (stabiliser_detect_error_c M psi E);
-      [ by apply (edc_stb_mem_spec BitFlipCode); rewrite !inE
+      [ by apply (edc_stab_mem_spec BitFlipCode); rewrite !inE
       | by apply negate_phase_simpl; apply /eqP ]
   | by apply applyP_nonzero; try apply psi_WF; apply psi_nonzero ].
 
@@ -214,7 +214,7 @@ Qed.
 
 Definition BitFlipCorrectionCode := BuildCorrectingCode BitFlipCode bit_flip_code_unique_syndrome.
 
-End DetectionCode.
+End DetectingCode.
 
 Fact flip0_recover_by_x0:
   (recover_by X1 X1).
@@ -317,7 +317,7 @@ Proof.
   rewrite !inE => /orP [/eqP H | /eqP H].
   - move => _.
     apply stabiliser_detect_error.
-    apply (edc_stb_mem_spec BitFlipCode); auto.
+    apply (edc_stab_mem_spec BitFlipCode); auto.
     apply negate_phase_simpl.
     rewrite H /Z12 /Y1 //=.
     by apply /eqP.
@@ -451,7 +451,7 @@ Corollary obs_be_stabiliser_i :
   obs_be_stabiliser SyndromeMeas psi.
 Proof.
   move => M.
-  rewrite stb_eigen_measure_p_1.
+  rewrite stab_eigen_measure_p_1.
   apply meas_codespace_1.
 Qed.
 
@@ -484,7 +484,7 @@ Proof.
   simpl; Qsimpl; lma.
 Qed.
 
-Definition PhaseFlipCode := BuildDetectionCode 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
+Definition PhaseFlipCode := BuildDetectingCode 3 psi SyndromeMeas PhaseFlipError obs_be_stabiliser_i errors_detectable_i.
 
 Definition BitFlip0: PauliOperator 3:= [p X, I, I].
 
@@ -555,28 +555,28 @@ Definition ShorErrorBasis := [set X1, Z1, Y1 ].
 
 Definition X123 :PauliOperator 3 := [p X, X, X].
 
-Lemma stb_part:
-  stb (X123) (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩).
+Lemma stab_part:
+  stab (X123) (∣ 0, 0, 0 ⟩ .+ ∣ 1, 1, 1 ⟩).
 Proof.
-  simpl_stbn.
+  simpl_stabn.
 Qed.
 
-Ltac unfold_stb_psi := 
+Ltac unfold_stab_psi := 
   rewrite /psi;
-  apply stb_scale; apply stb_addition; apply stb_scale;
-  rewrite stb_eigen_measure_p_1 /L0 /L1; Qsimpl.
+  apply stab_scale; apply stab_addition; apply stab_scale;
+  rewrite stab_eigen_measure_p_1 /L0 /L1; Qsimpl.
 
-Lemma obsx12_stb:
+Lemma obsx12_stab:
   obsX12 ∝1 psi.
 Proof.
-  unfold_stb_psi.
+  unfold_stab_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
     apply (@eigen_measure_p_11_krons 3 6).
     + SimplApplyPauli; lma.
     + replace ([p X, X, X, I, I, I]) with [tuple of X123 ++ (oneg (PauliOperator 3))] by by apply /eqP.
       apply (@eigen_measure_p_11_krons 3 3).
-        by rewrite -stb_eigen_measure_p_1; apply stb_part.
+        by rewrite -stab_eigen_measure_p_1; apply stab_part.
         by rewrite eigen_measure_p_applyP applyP_id; auto with wf_db; Qsimpl.
   - rewrite kron_assoc; auto with wf_db.
     replace obsX12 with [tuple of X123 ++ ([p X, X, X, I, I, I])] by by apply /eqP.
@@ -596,17 +596,17 @@ Theorem obsx12_detect_phase_flip':
   'Meas obsX12 on ('Apply Z1 on psi) --> -1.
 Proof.
   apply stabiliser_detect_error.
-  - apply obsx12_stb.
+  - apply obsx12_stab.
   - rewrite /=.  
     rewrite Mscale_assoc.
     by replace (- C1 * Ci) with (-Ci) by lca.
 Qed.
 
 
-Lemma obsZ12_stb:
+Lemma obsZ12_stab:
   obsZ12 ∝1 psi.
 Proof.
-  unfold_stb_psi.
+  unfold_stab_psi.
   - rewrite kron_assoc; auto with wf_db.
     replace obsZ12 with [tuple of ([p Z, Z, I]) ++ (oneg (PauliOperator 6))] by by apply /eqP.
     apply (@eigen_measure_p_11_krons 3 6).
@@ -624,7 +624,7 @@ Definition measuring_different (M: PauliObservable 9) psi_1 psi_2 :=
   ('Meas M on psi_1--> -C1) /\ ('Meas M on psi_2 --> C1).
 
 Create HintDb shordb.
-Hint Resolve obsx12_stb obsZ12_stb : shordb.
+Hint Resolve obsx12_stab obsZ12_stab : shordb.
 
 Lemma measuring_different_comm:
   forall (M: PauliObservable 9) psi_1 psi_2, 
@@ -673,8 +673,7 @@ Theorem pauli_basis_distinguishable:
   E1 \in ShorErrorBasis -> E2 \in ShorErrorBasis -> E1 <> E2 ->
   let psi_e1 := 'Apply E1 on psi in
   let psi_e2 := 'Apply E2 on psi in
-  exists (M: PauliObservable 9), 
-    M ∝1 psi /\ measuring_different M psi_e1 psi_e2 .
+  exists (M: PauliObservable 9), M ∝1 psi /\ measuring_different M psi_e1 psi_e2 .
 Proof.
   (* unfold the case analysis *)
   move => E1 E2.
