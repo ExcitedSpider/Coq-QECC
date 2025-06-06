@@ -12,16 +12,14 @@ https://qubit.guide/7-stabilisers
 
 ## Build this Project
 
+If you are new to Coq (Rocq), please first follow [this instruction](https://rocq-prover.org/docs/using-opam)to install opam. 
+
 ```bash
 opam repo add coq-released https://coq.inria.fr/opam/released
-pam pin coq-sqir https://github.com/inQWIRE/SQIR.git
+opam pin coq-sqir https://github.com/inQWIRE/SQIR.git
 opam install . --deps-only
 
-# compile default mathcomp version
 make 
-
-# compile barebone version
-make barebone
 ```
 
 ## Structure Description
