@@ -1,46 +1,48 @@
 # Coq-QECC
 
-# Formalism of the Stabilizer Theory 
+Author: Chew-Yi <chew.y.feng@outlook.com>
 
-Author: Chew-Yi <qiuyif@student.unimelb.edu.au>
+Coq-QECC is a Coq (Rocq) formalism of the [quantum stabiliser codes](https://qubit.guide/7-stabilisers).
+It is used to provide an abstract approach to reasoning about quantum codes in Coq. 
 
-This "Stabilizer" package is the formalism and verification of the quantum stabilizer theory.
+## Use Case
 
-## Introduction to Math Background
-
-https://qubit.guide/7-stabilisers
+See [theories/Examples.v](theories/Examples.v).
 
 ## Build this Project
 
-If you are new to Coq (Rocq), please first follow [this instruction](https://rocq-prover.org/docs/using-opam)to install opam. 
+If you are new to Coq (Rocq), please first follow [this instruction](https://rocq-prover.org/docs/using-opam) to install opam. 
+
+First, install SQIR and other dependencies:
 
 ```bash
 opam repo add coq-released https://coq.inria.fr/opam/released
 opam pin coq-sqir https://github.com/inQWIRE/SQIR.git
 opam install . --deps-only
+```
 
-make 
+Build Coq-QECC
+```bash
+make
 ```
 
 ## Structure Description
 
-There are two packages in the project.
-- theoreis-legacy. It is the initial attempt to formalize stabilizer using a from-scratch style. Only quantumLib is used in the project.
-- theories. We later did the formalization again using mathcomp and ssreflect, quantum-lib. 
-```
+The main theories
+
+``` shell
 .
 ├── theoreis
-│   ├── PauliGroup.v # Pauli group definition based on math-comp
-│   ├── Action.v # definitions of group actions
-│   ├── Stabilizer.v # quantum stabilizer theory
-│   ├── PauliProps.v # extra verified properties of pauli group
-│   ├── ExtraSpecs.v # extra definitions of specifications (TODO: replace with mathcomp)
-│   ├── WellForm.v # theories related to state well-formness 
-│   ├── Example.v # Some examples for demonstrating stabilizers
-│   ├── Assumption.v # Assumptions we used 
-│   ├── Adapter.v # adaptor to barebone.PauliString
+│   ├── PauliGroup.v # Pauli group 
+│   ├── Action.v     # group actions
+│   ├── PauliProps.v # Some verified properties of pauli group
+│   ├── ExtraSpecs.v # Some linear algebra lemmas
+│   ├── WellForm.v   # theories related to state well-formness 
+│   ├── Stabilizer.v # Quantum stabilizer theory
+│   ├── Observable.v # Pauli Observables
+│   ├── QECC.v       # Abstract Quantum Error Correction Codes 
+│   ├── Example.v    # Examples of Verified Codes
 │   └── dune
-├── theoreis_legacy
 └── readme.md
 ```
 
